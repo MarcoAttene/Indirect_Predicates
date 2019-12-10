@@ -1,0 +1,55 @@
+implicitPoint2D_SSI(p1:l1x;3;32;2.221313410988302e-015;4.000000000000004;l1y;3;32;2.221313410988302e-015;4.000000000000004;d1;2;16;8.883952601346225e-016;2.000000000000001)
+
+implicitPoint2D_SSI(p2:l2x;3;32;2.221313410988302e-015;4.000000000000004;l2y;3;32;2.221313410988302e-015;4.000000000000004;d2;2;16;8.883952601346225e-016;2.000000000000001)
+
+pcx pcy pdx pdy
+
+pdx1 = pdx * d1
+pdy1 = pdy * d1
+adx = l1x - pdx1
+ady = l1y - pdy1
+pdx2 = pdx * d2
+pdy2 = pdy * d2
+bdx = l2x - pdx2
+bdy = l2y - pdy2
+cdx = pcx - pdx
+cdy = pcy - pdy
+
+abdeta = adx * bdy
+abdetb = bdx * ady
+abdet = abdeta - abdetb
+
+bcdeta = bdx * cdy
+bcdetb = cdx * bdy
+bcdet = bcdeta - bcdetb
+
+cadeta = cdx * ady
+cadetb = adx * cdy
+cadet = cadeta - cadetb
+
+alifta = adx * adx
+aliftb = ady * ady
+aliftt = alifta + aliftb
+alift = aliftt * d2
+
+blifta = bdx * bdx
+bliftb = bdy * bdy
+blift = blifta + bliftb
+
+clifta = cdx * cdx
+cliftb = cdy * cdy
+cliftt = clifta + cliftb
+clift = cliftt * d2
+
+la = alift * bcdet
+lb = blift * cadet
+lc = clift * abdet
+lab = lc + lb
+lab2 = lab * d1
+
+L = lab2 + la
+
+
+
+
+//p3x p3y//p4x p4y////l1x2 = l1x * l1x//l1y2 = l1y * l1y//l2x2 = l2x * l2x//l2y2 = l2y * l2y//l3x2 = p3x * p3x//l3y2 = p3y * p3y//l4x2 = p4x * p4x//l4y2 = p4y * p4y//l14x = l1x * p4x//l14y = l1y * p4y//l24x = l2x * p4x//l24y = l2y * p4y//l34x = p3x * p4x//l34y = p3y * p4y//l1xy2 = l1x2 + l1y2//l2xy2 = l2x2 + l2y2//l3xy2 = l3x2 + l3y2//l4xy2 = l4x2 + l4y2//l14xy = l14x + l14y//l24xy = l24x + l24y//l34xy = l34x + l34y//d12 = d1 * d1//d22 = d2 * d2////dd1 = 2 * d1//dd2 = 2 * d2////// Make matrix first row//m11a = d1 * l1x//m11b = d12 * p4x//m11 = m11a - m11b//m12a = d1 * l1y//m12b = d12 * p4y//m12 = m12a - m12b//m13b = d12 * l4xy2//m13ab = l1xy2 + m13b//m13c = dd1 * l14xy//m13 = m13ab - m13c////// Make matrix second row//m21a = d2 * l2x//m21b = d22 * p4x//m21 = m21a - m21b//m22a = d2 * l2y//m22b = d22 * p4y//m22 = m22a - m22b//m23b = d22 * l4xy2//m23ab = l2xy2 + m23b//m23c = dd2 * l24xy//m23 = m23ab - m23c////// Make matrix third row//m31 = p3x - p4x//m32 = p3y - p4y//m33ab = l3xy2 + l4xy2//m33c = 2 * l34xy//m33 = m33ab - m33c////// Calculate determinant//tpp_a = m11 * m22//tpp_b = m12 * m21//det01 = tpp_a - tpp_b//tpq_a = m11 * m23//tpq_b = m13 * m21//det02 = tpq_a - tpq_b//tpr_a = m12 * m23//tpr_b = m13 * m22//det12 = tpr_a - tpr_b//dett1 = det01 * m33//dett2 = det02 * m32//dett3 = det12 * m31//dettt = dett1 - dett2//det012 = dettt + dett3//

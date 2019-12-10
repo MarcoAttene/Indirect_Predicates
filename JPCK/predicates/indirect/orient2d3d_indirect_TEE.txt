@@ -1,0 +1,16 @@
+implicitPoint3D_TPI(p1:l1x;7;1024;2.931951556539587e-013;144.0000000000005;l1y;7;1024;2.931951556539587e-013;144.0000000000005;l1z;7;1024;2.931951556539587e-013;144.0000000000005;d1;6;1024;8.706837334449009e-014;48.00000000000014)
+p2x p2y // Second point (explicit)
+p3x p3y // Third point (explicit)
+
+// Orient2d
+a = d1 * p2x
+c = d1 * p3y
+e = d1 * p2y
+g = d1 * p3x
+ab = a - l1x
+cd = c - l1y
+ef = e - l1y
+gh = g - l1x
+abcd = ab * cd
+efgh = ef * gh
+L = abcd - efgh

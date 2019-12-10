@@ -1,0 +1,16 @@
+implicitPoint3D_LPI(p1:l1x;4;1024;1.221613955826318e-14;12.00000000000002;l1y;4;1024;1.221613955826318e-14;12.00000000000002;l1z;4;1024;1.221613955826318e-14;12.00000000000002;d1;3;192;4.886390771174922e-015;6.000000000000006)
+p2x p2y // Explicit point 1
+p3x p3y // Explicit point 2
+
+// Orient2d
+a = d1 * p2x
+c = d1 * p3y
+e = d1 * p2y
+g = d1 * p3x
+ab = a - l1x
+cd = c - l1y
+ef = e - l1y
+gh = g - l1x
+abcd = ab * cd
+efgh = ef * gh
+L = abcd - efgh
