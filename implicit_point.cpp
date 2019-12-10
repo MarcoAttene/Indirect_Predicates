@@ -31,9 +31,9 @@
 int lessThan_EE(double x1, double y1, double z1, double x2, double y2, double z2)
 {
 	int ret;
-	if ((ret = ((x2 > x1) - (x2 < x1)))) return ret;
-	if ((ret = ((y2 > y1) - (y2 < y1)))) return ret;
-	return ((z2 > z1) - (z2 < z1));
+	if ((ret = ((x1 > x2) - (x1 < x2)))) return ret;
+	if ((ret = ((y1 > y2) - (y1 < y2)))) return ret;
+	return ((z1 > z2) - (z1 < z2));
 }
 
 int lessThan_LE(implicitPoint3D_LPI& p1, double x2, double y2, double z2)
@@ -464,6 +464,22 @@ bool genericPoint::getApproxXYCoordinates(double& x, double& y) const
 		return true;
 	}
 	ip_error("genericPoint::getApproxXYCoordinates - should not happen\n");
+	return false;
+}
+
+bool genericPoint::getApproxXYZCoordinates(double& x, double& y, double& z) const
+{
+	if (is3D())
+	{
+		explicitPoint3D op;
+		const explicitPoint3D* p = &op;
+		if (isExplicit3D()) p = &toExplicit3D();
+		else if (isLPI()) { if (!toLPI().approxExplicit(op)) return false; }
+		else if (isTPI()) { if (!toTPI().approxExplicit(op)) return false; }
+		x = p->X(); y = p->Y(); z = p->Z();
+		return true;
+	}
+	ip_error("genericPoint::getApproxXYZCoordinates - should not happen\n");
 	return false;
 }
 

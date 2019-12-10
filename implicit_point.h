@@ -96,6 +96,11 @@ public:
 	// Returns 0 if the implicit point is undefined.
 	bool getApproxXYCoordinates(double& x, double& y) const;
 
+	// Calculates the three cartesian coordinates. If the point is implicit, these
+	// coordinates are approximated due to floating point roundoff.
+	// Returns 0 if the point is not 3D or if the implicit point is undefined.
+	bool getApproxXYZCoordinates(double& x, double& y, double& z) const;
+
 	// These are the indirect predicates supported up to now
 
 	// Orient2D - fully supported
@@ -119,9 +124,9 @@ public:
 	// lessThan - partly supported (only 3D)
 	// Input points can be any combination of 3D points
 	// lessThan(a,b) =
-	// 1  - if a < b
+	// -1 - if a < b
 	// 0  - if a == b
-	// -1 - if a > b
+	// 1  - if a > b
 	// in lexicographical order
 	static int lessThan(genericPoint& a, genericPoint& b);
 };
