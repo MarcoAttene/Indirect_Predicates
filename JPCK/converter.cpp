@@ -5,6 +5,7 @@
 #include <sstream>
 #include <vector>
 #include <string>
+#include <algorithm>
 
 using namespace std;
 
@@ -31,19 +32,15 @@ void tokenize(string& line, vector<string>& tokens, char separator)
 class lambda_variable
 {
 public:
-	string name;
-	string ipoint_name;
-	//vector<int> input_pars;
-	vector<int> output_pars;
+	string name;		// Name of the implicit point type (e.g. implict2D_SSI)
+	string ipoint_name;	// Name of the implicit point variable (e.g. p1)
+	vector<int> output_pars; // Indices in all_vars of the results of getLambda() (e.s. l1x, l1y, d)
 
 	lambda_variable(string& n) : name(n) {}
 
 	void print_filtered(ofstream& file);
 	void print_interval(ofstream& file);
 	void print_exact(ofstream& file);
-	//void print_filtered_proto(ofstream& file);
-	//void print_interval_proto(ofstream& file);
-	//void print_exact_proto(ofstream& file);
 };
 
 class variable
@@ -61,7 +58,14 @@ public:
 	bool is_a_max;			// TRUE if magnitude is relevant for error bound
 	bool is_lambda_out;		// TRUE if this var is the output of a lambda calculation
 	bool is_used;			// TRUE if this var is the operand of another var
-	static bool append;
+	
+	static bool append;		// TRUE to append code to an existing file
+	static vector<variable> all_vars;	// List of all the variables
+	static vector<variable*> sign_vars;	// List of variables that determine the sign (denominators with odd exponent)
+	static vector<lambda_variable> all_lambda_vars;	// List of all the lambda variables
+	static string func_name; // Name of the function
+	static bool is_indirect; // True if function is an indirect predicate
+	static bool is_lambda;	 // True if function defines a lambda
 
 	static double ulp(double d)
 	{
@@ -71,15 +75,6 @@ public:
 		u += (u / (1 << 11)); // Comment this out to ignore INTEL's extended precision
 		return u;
 	}
-
-	inline static int max(const int a, const int b) { return (a < b) ? b : a; }
-
-	static vector<variable> all_vars;	// List of all the variables
-	static vector<variable *> sign_vars;	// List of variables that determine the sign (denominators with odd exponent)
-	static vector<lambda_variable> all_lambda_vars;	// List of all the lambda variables
-	static string func_name; // Name of the function
-	static bool is_indirect;
-	static bool is_lambda;
 
 	static void init(bool _append) 
 	{
@@ -139,7 +134,7 @@ public:
 				double u = 0.5*ulp(value_bound);
 				value_bound += u;
 				error_bound = ov1.error_bound + ov2.error_bound + u;
-				error_degree = max(ov1.error_degree, ov2.error_degree);
+				error_degree = std::max(ov1.error_degree, ov2.error_degree);
 
 				if (ov1.error_bound == 0) ov1.is_a_max = true;
 				if (ov2.error_bound == 0) ov2.is_a_max = true;
