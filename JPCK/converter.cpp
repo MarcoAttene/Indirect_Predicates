@@ -58,7 +58,7 @@ void createHeadingComment(string& s)
 
 #define MAX_STACK_SIZE	16384 // In bytes, includes all: input parameters, doubles, ints, ...
 #define MAX_STATIC_SIZE	128 // This is the maximum in any case, but might be reduced to avoid stack overflows
-#define MAX_WORTH_ERRBOUND 1.0e-7 // If the error bound is higher than this, avoid FP arithmetic at all
+#define MAX_WORTH_DEGREE 20 // If the polynomial degree is higher than this, avoid FP arithmetic at all
 
 class lambda_variable
 {
@@ -103,7 +103,7 @@ public:
 		int exp;
 		frexp(d, &exp);
 		double u = ldexp(0.5, exp - 52);
-		//u += (u / (1 << 11)); // Comment this out to ignore INTEL's extended precision
+		//u += (u / (1 << 11)); // Comment this out to ignore INTEL's x387 extended precision
 		return u;
 	}
 
@@ -276,6 +276,41 @@ public:
 		if (!is_lambda) produceMultiStageCode(func_name, filtered_funcname, interval_funcname, exact_funcname, file);
 	}
 
+	static string createParameterProtoList(string mytype)
+	{
+		bool first = true;
+		stringstream file;
+		for (lambda_variable& l : all_lambda_vars) { file << ((first) ? ("") : (", ")) << l.name << "& " << l.ipoint_name; first = false; }
+		for (variable& v : all_vars) if (v.isInput() && v.name != "2" && !v.is_lambda_out) { file << ((first) ? (mytype + " ") : (", " + mytype + " ")) << v.name; first = false; }
+		return file.str();
+	}
+
+	static string createParameterValueList()
+	{
+		bool first = true;
+		stringstream file;
+		for (lambda_variable& l : all_lambda_vars) { file << ((first) ? ("") : (", ")) << l.ipoint_name; first = false; }
+		for (variable& v : all_vars) if (v.isInput() && v.name != "2" && !v.is_lambda_out) { file << ((first) ? ("") : (", ")) << v.name; first = false; }
+		return file.str();
+	}
+
+	static void produceMultiStageCode(string& func_name, string& filtered_funcname, string& interval_funcname, string& exact_funcname, ofstream& file)
+	{
+		bool worth_a_semistatic_filter = ((*(all_vars.end() - 1)).error_degree <= MAX_WORTH_DEGREE);
+
+		string all_pars = createParameterValueList();
+		string comm = (worth_a_semistatic_filter) ? ("") : ("//");
+		file << "int " << func_name << "(" << createParameterProtoList("double") << ")\n{\n";
+		file << "   int ret;\n";
+		file << comm << "   ret = " << filtered_funcname << "(" << all_pars << ");\n";
+		file << comm << "   if (ret != Filtered_Sign::UNCERTAIN) return ret;\n";
+		file << "   ret = " << interval_funcname << "(" << all_pars << ");\n";
+		file << "   if (ret != Filtered_Sign::UNCERTAIN) return ret;\n";
+		file << "   return " << exact_funcname << "(" << all_pars << ");\n";
+		file << "}\n\n";
+	}
+
+
 	static void produceSemiStaticFilter(double epsilon, int degree, string& threshold_name, ofstream& file)
 	{
 		file << "   double " << threshold_name << " = max_var;\n";
@@ -284,42 +319,46 @@ public:
 		for (int i = 0; i < l2d; i++) { file << "   " << threshold_name << " *= " << threshold_name << ";\n"; td += td; }
 		for (int i = 0; i < (degree-td); i++) file << "   " << threshold_name << " *= max_var;\n";
 		file << "   " << threshold_name << " *= " << std::setprecision(std::numeric_limits<double>::digits10 + 1) << epsilon << ";\n";
-
-		//file << "   double " << threshold_name << " = " << std::setprecision(std::numeric_limits<double>::digits10 + 1) << epsilon;
-		//for (int j = 0; j < degree; j++) file << " * max_var";
-		//file << ";\n";
 	}
 
 	static void produceFilteredCode(string& funcname, ofstream& file)
 	{
-		// Return type and function name
-		file << ((is_lambda) ? ("bool ") : ("int ")) << funcname << "(";
-
-		// List of parameters
-		int i;
-		bool first = true;
 		bool maxes = false;
-		for (i = 1; i < (int)all_vars.size(); i++)
+
+		if (is_lambda)
 		{
-			variable& v = all_vars[i];
-			if (v.is_a_max) maxes = true;
-			if (is_lambda && v.name.substr(0, 6) == "lambda") file << ", double& " << v.name;
-			if (v.isInput() && v.is_used)
+			file << "bool " << funcname << "(";
+			bool first = true;
+			for (int i = 1; i < (int)all_vars.size(); i++)
 			{
-				if (first) file << "double " << v.name;
-				else file << ", double " << v.name;
-				first = false;
+				variable& v = all_vars[i];
+				if (v.name.substr(0, 6) == "lambda") file << ", double& " << v.name;
+				if (v.isInput() && v.is_used) { file << ((first)?(""):(", ")) << "double " << v.name; first = false; }
 			}
+
+			file << ", double& max_var)\n{\n";
 		}
+		else file << "int " << funcname << "(" << createParameterProtoList("double") << ")\n{\n";
 
-		if (variable::is_indirect) file << ", double prev_maxval";
+		for (int i = 1; i < (int)all_vars.size(); i++) if (all_vars[i].is_a_max) maxes = true;
 
-		if (is_lambda) file << ", double& max_var";
+		// Calculate lambdas
 
-		file << ")\n{\n";
+		if (is_indirect)
+		{
+			bool first;
+			file << "   double";
+			first = true; for (variable& v : all_vars) if (v.isInput() && v.is_lambda_out) { file << ((first) ? (" ") : (", ")) << v.name; first = false; }
+			file << ", max_var = 0;\n";
+
+			file << "    if (\n";
+			first = true; for (lambda_variable& l : all_lambda_vars) { file << ((first) ? ("       !") : ("       || !")); l.print_filtered(file); file << "\n"; first = false; }
+			file << "   ) return Filtered_Sign::UNCERTAIN;\n\n";
+		}
 
 		// Function body - operations
 
+		int i;
 		variable* v;
 		for (i = 1; i < (int)all_vars.size(); i++)
 		{
@@ -338,13 +377,12 @@ public:
 		if (is_lambda) file << "\n   double _tmp_fabs;\n";
 		else
 		{
-			file << "\n   double " << ((maxes) ? ("_tmp_fabs, ") : ("")) << "max_var = ";
-			file << ((variable::is_indirect) ? ("prev_maxval") : ("0"));
-			file << "; \n";
+			if (maxes) file << "\n   double _tmp_fabs;\n";
+			if (!is_indirect) file << "\n   double max_var = 0.0;\n";
 		}
 
 		for (i = 1; i < (int)all_vars.size(); i++) if (all_vars[i].is_a_max)
-				file << "   if ((_tmp_fabs = fabs(" << all_vars[i].name << ")) > max_var) max_var = _tmp_fabs;\n";
+			file << "   if ((_tmp_fabs = fabs(" << all_vars[i].name << ")) > max_var) max_var = _tmp_fabs;\n";
 
 		double epsilon = 0;
 		int degree = 0;
@@ -368,7 +406,7 @@ public:
 			if (!sign_vars.empty())
 			{
 				file << "   if ((";
-				first = true; for (variable* v : sign_vars) { file << ((first) ? ("") : (" + ")) << "(" << v->name << " < 0)"; first = false; }
+				bool first = true; for (variable* v : sign_vars) { file << ((first) ? ("") : (" + ")) << "(" << v->name << " < 0)"; first = false; }
 				file << ((sign_vars.size() > 1) ? ") & 1) " : ")) ") << outvar_name << " = -" << outvar_name << ";\n";
 			}
 
@@ -381,32 +419,134 @@ public:
 		file << "}\n\n";
 	}
 
+	//static void produceFilteredCode(string& funcname, ofstream& file)
+	//{
+	//	// Return type and function name
+	//	file << ((is_lambda) ? ("bool ") : ("int ")) << funcname << "(";
+
+	//	// List of parameters
+	//	int i;
+	//	bool first = true;
+	//	bool maxes = false;
+	//	for (i = 1; i < (int)all_vars.size(); i++)
+	//	{
+	//		variable& v = all_vars[i];
+	//		if (v.is_a_max) maxes = true;
+	//		if (is_lambda && v.name.substr(0, 6) == "lambda") file << ", double& " << v.name;
+	//		if (v.isInput() && v.is_used)
+	//		{
+	//			if (first) file << "double " << v.name;
+	//			else file << ", double " << v.name;
+	//			first = false;
+	//		}
+	//	}
+
+	//	if (variable::is_indirect) file << ", double prev_maxval";
+
+	//	if (is_lambda) file << ", double& max_var";
+
+	//	file << ")\n{\n";
+
+	//	// Function body - operations
+
+	//	variable* v;
+	//	for (i = 1; i < (int)all_vars.size(); i++)
+	//	{
+	//		v = &all_vars[i];
+	//		if (v->isInput()) continue;
+	//		string& o1 = all_vars[v->op1].name;
+	//		string& o2 = all_vars[v->op2].name;
+	//		if (is_lambda && v->name.substr(0, 6) == "lambda") file << "   ";
+	//		else file << "   double ";
+	//		file << v->name << " = " << o1 << " " << v->op << " " << o2 << ";\n";
+	//	}
+
+
+	//	// Function body - filter calculation
+
+	//	if (is_lambda) file << "\n   double _tmp_fabs;\n";
+	//	else
+	//	{
+	//		file << "\n   double " << ((maxes) ? ("_tmp_fabs, ") : ("")) << "max_var = ";
+	//		file << ((variable::is_indirect) ? ("prev_maxval") : ("0"));
+	//		file << "; \n";
+	//	}
+
+	//	for (i = 1; i < (int)all_vars.size(); i++) if (all_vars[i].is_a_max)
+	//			file << "   if ((_tmp_fabs = fabs(" << all_vars[i].name << ")) > max_var) max_var = _tmp_fabs;\n";
+
+	//	double epsilon = 0;
+	//	int degree = 0;
+	//	string eps_name = "epsilon";
+	//	string outvar_name;
+	//	for (i = 1; i < (int)all_vars.size(); i++) {
+	//		epsilon = all_vars[i].error_bound;
+	//		degree = all_vars[i].error_degree;
+	//		outvar_name = all_vars[i].name;
+	//		if (all_vars[i].name.substr(0, 8) == "lambda_d") {
+	//			eps_name = all_vars[i].name + "_eps"; break;
+	//		}
+	//	}
+	//	produceSemiStaticFilter(epsilon, degree, eps_name, file);
+
+	//	// Function body - compare with filter and return
+
+	//	if (is_lambda) file << "\n   return ( " << "(" << outvar_name << " > " << outvar_name << "_eps || " << outvar_name << " < -" << outvar_name << "_eps) );\n";
+	//	else
+	//	{
+	//		if (!sign_vars.empty())
+	//		{
+	//			file << "   if ((";
+	//			first = true; for (variable* v : sign_vars) { file << ((first) ? ("") : (" + ")) << "(" << v->name << " < 0)"; first = false; }
+	//			file << ((sign_vars.size() > 1) ? ") & 1) " : ")) ") << outvar_name << " = -" << outvar_name << ";\n";
+	//		}
+
+	//		file << "   if (" << outvar_name << " > epsilon) return IP_Sign::POSITIVE;\n";
+	//		file << "   if (-" << outvar_name << " > epsilon) return IP_Sign::NEGATIVE;\n";
+	//		file << "   return Filtered_Sign::UNCERTAIN;\n";
+	//	}
+
+	//	// Function end
+	//	file << "}\n\n";
+	//}
+
+
 	static void produceIntervalCode(string& funcname, ofstream& file)
 	{
-		// Return type and function name
-		file << ((is_lambda) ? ("bool ") : ("int ")) << funcname << "(";
-
-		// List of parameters
-		int i;
-		bool first = true;
-		for (i = 1; i < (int)all_vars.size(); i++)
+		if (is_lambda)
 		{
-			variable& v = all_vars[i];
-			if (is_lambda && v.name.substr(0, 6) == "lambda") file << ", interval_number& " << v.name;
-			if (v.isInput() && v.is_used)
+			file << "bool " << funcname << "(";
+			bool first = true;
+			for (int i = 1; i < (int)all_vars.size(); i++)
 			{
-				if (first) file << "interval_number " << v.name;
-				else file << ", interval_number " << v.name;
-				first = false;
+				variable& v = all_vars[i];
+				if (v.name.substr(0, 6) == "lambda") file << ", interval_number& " << v.name;
+				if (v.isInput() && v.is_used) { file << ((first) ? ("") : (", ")) << "interval_number " << v.name; first = false; }
 			}
+
+			file << ")\n{\n";
 		}
+		else file << "int " << funcname << "(" << createParameterProtoList("interval_number") << ")\n{\n";
+
+		// Calculate lambdas
+
+		if (is_indirect)
+		{
+			file << "   interval_number";
+			bool first = true; for (variable& v : all_vars) if (v.isInput() && v.is_lambda_out) { file << ((first) ? (" ") : (", ")) << v.name; first = false; }
+			file << ";\n";
+			file << "   if (\n";
+			first = true; for (lambda_variable& l : all_lambda_vars) { file << ((first) ? ("   !") : ("   || !")); l.print_interval(file); file << "\n"; first = false; }
+			file << "   ) return Filtered_Sign::UNCERTAIN;\n\n";
+		}
+
 
 		// Function body - operations
 
-		file << ")\n{\n   setFPUModeToRoundUP();\n";
+		file << "   setFPUModeToRoundUP();\n";
 
-		variable *v;
-		for (i=1; i < (int)all_vars.size(); i++)
+		variable* v;
+		for (int i = 1; i < (int)all_vars.size(); i++)
 		{
 			v = &all_vars[i];
 			if (v->isInput()) continue;
@@ -426,7 +566,7 @@ public:
 		{
 			file << "\n   return (\n";
 			bool first = true;
-			for (i = 1; i < (int)all_vars.size(); i++)
+			for (int i = 1; i < (int)all_vars.size(); i++)
 			{
 				variable& v = all_vars[i];
 				if (v.name.substr(0, 8) == "lambda_d")
@@ -445,14 +585,88 @@ public:
 			if (!sign_vars.empty())
 			{
 				file << "   if ((";
-				first = true; for (variable *v : sign_vars) { file << ((first) ? ("") : (" + ")) << "(" << v->name << " < 0)"; first = false; }
-				file << ((sign_vars.size()>1) ? ") & 1) " : ")) ") << "return -" << v->name << ".sign();\n   else";
+				bool first = true; for (variable* v : sign_vars) { file << ((first) ? ("") : (" + ")) << "(" << v->name << " < 0)"; first = false; }
+				file << ((sign_vars.size() > 1) ? ") & 1) " : ")) ") << "return -" << v->name << ".sign();\n   else";
 			}
 
 			file << "   return " << v->name << ".sign();\n";
 			file << "}\n\n";
 		}
 	}
+
+	//static void produceIntervalCode(string& funcname, ofstream& file)
+	//{
+	//	// Return type and function name
+	//	file << ((is_lambda) ? ("bool ") : ("int ")) << funcname << "(";
+
+	//	// List of parameters
+	//	int i;
+	//	bool first = true;
+	//	for (i = 1; i < (int)all_vars.size(); i++)
+	//	{
+	//		variable& v = all_vars[i];
+	//		if (is_lambda && v.name.substr(0, 6) == "lambda") file << ", interval_number& " << v.name;
+	//		if (v.isInput() && v.is_used)
+	//		{
+	//			if (first) file << "interval_number " << v.name;
+	//			else file << ", interval_number " << v.name;
+	//			first = false;
+	//		}
+	//	}
+
+	//	// Function body - operations
+
+	//	file << ")\n{\n   setFPUModeToRoundUP();\n";
+
+	//	variable *v;
+	//	for (i=1; i < (int)all_vars.size(); i++)
+	//	{
+	//		v = &all_vars[i];
+	//		if (v->isInput()) continue;
+	//		string& o1 = all_vars[v->op1].name;
+	//		string& o2 = all_vars[v->op2].name;
+	//		string expr = ((o1 == "2") ? (o2 + " " + v->op + " " + o1) : (o1 + " " + v->op + " " + o2));
+
+	//		if (is_lambda && v->name.substr(0, 6) == "lambda") file << "   " << v->name << " = " << expr << ";\n";
+	//		else file << "   interval_number " << v->name << "(" << expr << ");\n";
+	//	}
+
+	//	file << "   setFPUModeToRoundNEAR();\n\n";
+
+	//	// Function body - filter
+
+	//	if (is_lambda)
+	//	{
+	//		file << "\n   return (\n";
+	//		bool first = true;
+	//		for (i = 1; i < (int)all_vars.size(); i++)
+	//		{
+	//			variable& v = all_vars[i];
+	//			if (v.name.substr(0, 8) == "lambda_d")
+	//			{
+	//				if (!first) file << "      && "; else file << "      ";
+	//				file << v.name << ".signIsReliable()\n";
+	//				first = false;
+	//			}
+	//		}
+	//		file << "   );\n}\n\n";
+	//	}
+	//	else
+	//	{
+	//		file << "   if (!" << v->name << ".signIsReliable()) return Filtered_Sign::UNCERTAIN;\n";
+
+	//		if (!sign_vars.empty())
+	//		{
+	//			file << "   if ((";
+	//			first = true; for (variable *v : sign_vars) { file << ((first) ? ("") : (" + ")) << "(" << v->name << " < 0)"; first = false; }
+	//			file << ((sign_vars.size()>1) ? ") & 1) " : ")) ") << "return -" << v->name << ".sign();\n   else";
+	//		}
+
+	//		file << "   return " << v->name << ".sign();\n";
+	//		file << "}\n\n";
+	//	}
+	//}
+
 
 	static void produceExactCode(string& funcname, ofstream& file)
 	{
@@ -471,7 +685,7 @@ public:
 		{
 			local_max_size /= 2;
 			variable_stacksize = 0;
-			for (variable& v : all_vars) 
+			for (variable& v : all_vars)
 				if ((!is_lambda || v.name.substr(0, 6) != "lambda") && v.name != "2")
 				{
 					if (v.size > local_max_size) variable_stacksize += (local_max_size + 1) * 8;
@@ -482,28 +696,62 @@ public:
 		printf("STACK --- %d\n", fixed_stacksize + variable_stacksize);
 
 		// Return type and function name
-		file << ((is_lambda) ? ("void ") : ("int ")) << funcname << "(";
+		if (is_lambda)
+		{
+			file << "void " << funcname << "(";
+			bool first = true;
+			for (variable& v : all_vars) if (v.isInput() && v.name != "2" && v.is_used && !v.is_lambda_out) { file << ((first) ? ("double ") : (", double ")) << v.name; first = false; }
 
+			for (variable& v : all_vars) { if (v.name.substr(0, 6) == "lambda") file << ((first) ? ("double *") : (", double *")) << v.name << ", int& " << v.name << "_len"; first = false; }
+
+			file << ")\n{\n";
+		}
+		else file << "int " << funcname << "(" << createParameterProtoList("double") << ")\n{\n";
+
+
+		if (is_indirect)
+		{
+			file << " double return_value = 0.0;\n";
+			bool first;
+			first = true; for (variable& v : all_vars) if (v.isInput() && v.is_lambda_out)
+			{
+				if (v.size > local_max_size) file << ((first) ? (" double ") : (", ")) << v.name << "_p[" << local_max_size << "], *" << v.name << " = " << v.name << "_p";
+				else file << ((first) ? (" double ") : (", ")) << v.name << "[" << v.size << "]";
+				first = false;
+			}
+			file << ";\n";
+			first = true; for (variable& v : all_vars) if (v.isInput() && v.is_lambda_out)
+			{
+				file << ((first) ? (" int ") : (", ")) << v.name << "_len"; first = false;
+			}
+			file << ";\n";
+
+			for (lambda_variable& l : all_lambda_vars)
+			{
+				file << " "; l.print_exact(file); file << ";\n";
+			}
+
+			file << " if (";
+			first = true; for (lambda_variable& l : all_lambda_vars)
+			{
+				file << ((first) ? ("(") : (" && (")) << all_vars[l.output_pars.back()].name << "[" << all_vars[l.output_pars.back()].name << "_len - 1] != 0)";
+				first = false;
+			}
+			file << ")\n {\n";
+		}
+			   
 		int i;
-		bool first = true;
-
-		// List of parameters
-
-		first = true; for (variable& v : all_vars) if (v.isInput() && v.name != "2" && v.is_used && !v.is_lambda_out) { file << ((first) ? ("double ") : (", double ")) << v.name; first = false; }
-
-		if (is_lambda) for (variable& v : all_vars) { if (v.name.substr(0, 6) == "lambda") file << ((first) ? ("double *") : (", double *")) << v.name << ", int& " << v.name << "_len"; first = false; }
-		else for (variable& v : all_vars) { if (v.isInput() && v.is_lambda_out) { file << ((first) ? ("double *") : (", double *")) << v.name << ", int& " << v.name << "_len";  first = false; } }
 
 		for (i = 1; i < (int)all_vars.size(); i++) if (!all_vars[i].isInput()) break;
 
 		// Function body
 
-		file << ")\n{\n   expansionObject o;\n";
+		file << "   expansionObject o;\n";
 
-		variable *v;
+		variable* v;
 		int first_op = i;
 
-		for (i=1; i < (int)all_vars.size(); i++)
+		for (i = 1; i < (int)all_vars.size(); i++)
 		{
 			v = &all_vars[i];
 			if (v->isInput()) continue;
@@ -571,21 +819,22 @@ public:
 						else if (s1 == 1) file << lendec << v->name << "_len = o.Gen_Scale_With_PreAlloc(" << al2 << ", " << o2 << ", " << o1 << ", &" << v->name << ", " << lms << ");\n";
 						else file << lendec << v->name << "_len = o.Gen_Product_With_PreAlloc(" << al1 << ", " << o1 << ", " << al2 << ", " << o2 << ", &" << v->name << ", " << lms << ");\n";
 					}
-				} 
-				else
-				if (v->op == '+') file << lendec << v->name << "_len = o.Gen_Sum(" << al1 << ", " << o1 << ", " << al2 << ", " << o2 << ", " << v->name << ");\n";
-				else if (v->op == '-') file << lendec << v->name << "_len = o.Gen_Diff(" << al1 << ", " << o1 << ", " << al2 << ", " << o2 << ", " << v->name << ");\n";
-				else if (v->op == '*')
-				{
-					if (s2 == 1) file << lendec << v->name << "_len = o.Gen_Scale(" << al1 << ", " << o1 << ", " << o2 << ", " << v->name << ");\n";
-					else if (s1 == 1) file << lendec << v->name << "_len = o.Gen_Scale(" << al2 << ", " << o2 << ", " << o1 << ", " << v->name << ");\n";
-					else file << lendec << v->name << "_len = o.Gen_Product(" << al1 << ", " << o1 << ", " << al2 << ", " << o2 << ", " << v->name << ");\n";
 				}
+				else
+					if (v->op == '+') file << lendec << v->name << "_len = o.Gen_Sum(" << al1 << ", " << o1 << ", " << al2 << ", " << o2 << ", " << v->name << ");\n";
+					else if (v->op == '-') file << lendec << v->name << "_len = o.Gen_Diff(" << al1 << ", " << o1 << ", " << al2 << ", " << o2 << ", " << v->name << ");\n";
+					else if (v->op == '*')
+					{
+						if (s2 == 1) file << lendec << v->name << "_len = o.Gen_Scale(" << al1 << ", " << o1 << ", " << o2 << ", " << v->name << ");\n";
+						else if (s1 == 1) file << lendec << v->name << "_len = o.Gen_Scale(" << al2 << ", " << o2 << ", " << o1 << ", " << v->name << ");\n";
+						else file << lendec << v->name << "_len = o.Gen_Product(" << al1 << ", " << o1 << ", " << al2 << ", " << o2 << ", " << v->name << ");\n";
+					}
 				v->actual_length = v->name + "_len";
 			}
 		}
 
-		if (!is_lambda) file << "\n   double return_value = " << v->name << "[" << v->actual_length << " - 1];\n";
+		file << "\n";
+		if (!is_lambda) file << ((is_indirect)?("   "):("   double ")) << "return_value = " << v->name << "[" << v->actual_length << " - 1];\n";
 
 		for (i--; i >= first_op; i--)
 		{
@@ -598,135 +847,298 @@ public:
 			if (!sign_vars.empty())
 			{
 				file << "   if (( ";
-				first = true; for (variable *v : sign_vars) { file << ((first) ? ("") : (" + ")) << "(" << v->name << "[" << v->name << "_len -1] < 0)"; first = false; }
-				file << ((sign_vars.size()>1) ? ") & 1) " : ")) ") << "return_value = -return_value;\n";
+				bool first = true; for (variable* v : sign_vars) { file << ((first) ? ("") : (" + ")) << "(" << v->name << "[" << v->name << "_len -1] < 0)"; first = false; }
+				file << ((sign_vars.size() > 1) ? ") & 1) " : ")) ") << "return_value = -return_value;\n";
 			}
 
-			file << "\n   if (return_value > 0) return IP_Sign::POSITIVE;\n";
-			file << "   if (return_value < 0) return IP_Sign::NEGATIVE;\n";
-			file << "   return IP_Sign::ZERO;\n";
+			if (is_indirect)
+			{
+				file << " }\n\n";
+				for (variable& v : all_vars) if (v.isInput() && v.is_lambda_out)
+				{
+					if (v.size > local_max_size) file << " if (" << v.name << "_p != " << v.name << ") free(" << v.name << ");\n";
+				}			
+			}
+
+			file << "\n if (return_value > 0) return IP_Sign::POSITIVE;\n";
+			file << " if (return_value < 0) return IP_Sign::NEGATIVE;\n";
+			file << " return IP_Sign::ZERO;\n";
 		}
 		file << "}\n\n";
 	}
 
+	//static void produceExactCode(string& funcname, ofstream& file)
+	//{
+	//	// Calculate stack size
+	//	uint32_t fixed_stacksize = 152; // Accoount for expansionObject + return_value
+	//	for (variable& v : all_vars) if (v.isInput() && v.name != "2" && !v.is_lambda_out) fixed_stacksize += 8; // Size of a pointer on 64bit systems
+	//	if (is_lambda) for (variable& v : all_vars) if (v.name.substr(0, 6) == "lambda") fixed_stacksize += 16; // two pointers
+	//	else for (variable& v : all_vars) if (v.isInput() && v.is_lambda_out) fixed_stacksize += 16; // two pointers
 
-	static void produceMultiStageCode(string& func_name, string& filtered_funcname, string& interval_funcname, string& exact_funcname, ofstream& file)
-	{
-		if (is_indirect)
-		{
-			bool worth_a_semistatic_filter = ((*(all_vars.end() - 1)).error_bound < MAX_WORTH_ERRBOUND);
+	//	if (fixed_stacksize >= MAX_STACK_SIZE) error("Too many parameters - stack overflow unavoidable.\n", 0);
 
-			bool first;
-			bool explicit_pars = false;
-			for (variable& v : all_vars) if (v.isInput() && v.name != "2" && v.is_used && !v.is_lambda_out) { explicit_pars = true; break; }
+	//	uint32_t local_max_size = MAX_STATIC_SIZE * 2;
+	//	uint32_t variable_stacksize;
 
-			uint32_t local_max_size = MAX_STATIC_SIZE;
+	//	do
+	//	{
+	//		local_max_size /= 2;
+	//		variable_stacksize = 0;
+	//		for (variable& v : all_vars) 
+	//			if ((!is_lambda || v.name.substr(0, 6) != "lambda") && v.name != "2")
+	//			{
+	//				if (v.size > local_max_size) variable_stacksize += (local_max_size + 1) * 8;
+	//				else variable_stacksize += (v.size * 8);
+	//			}
+	//			else variable_stacksize += 4;
+	//	} while ((fixed_stacksize + variable_stacksize) >= MAX_STACK_SIZE);
+	//	printf("STACK --- %d\n", fixed_stacksize + variable_stacksize);
 
-			file << "int " << func_name << "(";
-			first = true;
-			for (lambda_variable& l : all_lambda_vars) { file << ((first) ? ("") : (", ")) << l.name << "& " << l.ipoint_name; first = false; }
-			for (variable& v : all_vars) if (v.isInput() && v.name != "2" && !v.is_lambda_out) { file << ((first) ? ("double ") : (", double ")) << v.name; first = false; }
-			file << ")\n{\n";
+	//	// Return type and function name
+	//	file << ((is_lambda) ? ("void ") : ("int ")) << funcname << "(";
 
-			file << "   int ret;\n";
+	//	int i;
+	//	bool first = true;
 
-			if (!worth_a_semistatic_filter) file << "   /*\n";
-			file << "   {\n    double";
-			first = true; for (variable& v : all_vars) if (v.isInput() && v.is_lambda_out) { file << ((first) ? (" ") : (", ")) << v.name; first = false; }
-			file << ", max_var = 0;\n";
+	//	// List of parameters
 
-			file << "    if (\n";
-			first = true; for (lambda_variable& l : all_lambda_vars) { file << ((first) ? ("    ") : ("    && ")); l.print_filtered(file); file << "\n"; first = false; }
-			file << "    && (ret = " << filtered_funcname << "(";
-			first = true; for (variable& v : all_vars) if (v.isInput() && v.name != "2" && v.is_used) { file << ((first) ? ("") : (", ")) << v.name; first = false; }
-			file << ", max_var)) != Filtered_Sign::UNCERTAIN) return ret;\n";
-			file << "   }\n";
-			if (!worth_a_semistatic_filter) file << "   */\n";
+	//	first = true; for (variable& v : all_vars) if (v.isInput() && v.name != "2" && v.is_used && !v.is_lambda_out) { file << ((first) ? ("double ") : (", double ")) << v.name; first = false; }
 
-			file << "   {\n";
-			file << "    interval_number";
-			first = true; for (variable& v : all_vars) if (v.isInput() && v.is_lambda_out) { file << ((first) ? (" ") : (", ")) << v.name; first = false; }
-			file << ";\n";
-			file << "    if (\n";
-			first = true; for (lambda_variable& l : all_lambda_vars) { file << ((first) ? ("    ") : ("    && ")); l.print_interval(file); file << "\n"; first = false; }
-			file << "    && (ret = " << interval_funcname << "(";
-			first = true; for (variable& v : all_vars) if (v.isInput() && v.name != "2" && v.is_used) { file << ((first) ? ("") : (", ")) << v.name; first = false; }
-			file << ")) != Filtered_Sign::UNCERTAIN) return ret;\n";
-			file << "   }\n";
+	//	if (is_lambda) for (variable& v : all_vars) { if (v.name.substr(0, 6) == "lambda") file << ((first) ? ("double *") : (", double *")) << v.name << ", int& " << v.name << "_len"; first = false; }
+	//	else for (variable& v : all_vars) { if (v.isInput() && v.is_lambda_out) { file << ((first) ? ("double *") : (", double *")) << v.name << ", int& " << v.name << "_len";  first = false; } }
 
-			first = true; for (variable& v : all_vars) if (v.isInput() && v.is_lambda_out)
-			{
-				if (v.size > local_max_size) file << ((first) ? ("   double ") : (", ")) << v.name << "_p[" << local_max_size << "], *" << v.name << " = " << v.name << "_p";
-				else file << ((first) ? ("   double ") : (", ")) << v.name << "[" << v.size << "]";
-				first = false;
-			}
-			file << ";\n";
-			first = true; for (variable& v : all_vars) if (v.isInput() && v.is_lambda_out)
-			{
-				file << ((first) ? ("   int ") : (", ")) << v.name << "_len"; first = false;
-			}
-			file << ";\n";
+	//	for (i = 1; i < (int)all_vars.size(); i++) if (!all_vars[i].isInput()) break;
 
-			for (lambda_variable& l : all_lambda_vars)
-			{
-				file << "   "; l.print_exact(file); file << ";\n";
-			}
+	//	// Function body
 
-			for (lambda_variable& l : all_lambda_vars)
-			{
-				file << "   if (" << all_vars[l.output_pars.back()].name << "[" << all_vars[l.output_pars.back()].name << "_len - 1] == 0) ret = IP_Sign::UNDEFINED;\n   else ";
-			}
+	//	file << ")\n{\n   expansionObject o;\n";
 
-			if (explicit_pars)
-			{
-				file << "ret = " << exact_funcname << "(";
-				first = true; for (variable& v : all_vars) if (v.isInput() && v.name != "2" && v.is_used && !v.is_lambda_out) { file << ((first) ? ("") : (", ")) << v.name; first = false; }
-				for (variable& v : all_vars) if (v.isInput() && v.is_lambda_out) { file << ", " << v.name << ", " << v.name << "_len"; }
-			}
-			else
-			{
-				file << "ret = " << exact_funcname << "(";
-				first = true; for (variable& v : all_vars) if (v.isInput() && v.is_lambda_out) { file << ((first) ? ("") : (", ")) << v.name << ", " << v.name << "_len"; first = false; }
-			}
-			file << ");\n";
+	//	variable *v;
+	//	int first_op = i;
 
-			for (variable& v : all_vars) if (v.isInput() && v.is_lambda_out)
-			{
-				if (v.size > local_max_size) file << "   if (" << v.name << "_p != " << v.name << ") free(" << v.name << ");\n";
-			}
+	//	for (i=1; i < (int)all_vars.size(); i++)
+	//	{
+	//		v = &all_vars[i];
+	//		if (v->isInput()) continue;
+	//		variable& op1 = all_vars[v->op1];
+	//		variable& op2 = all_vars[v->op2];
+	//		string& o1 = op1.name;
+	//		string& o2 = op2.name;
+	//		int s1 = op1.size;
+	//		int s2 = op2.size;
+	//		string& al1 = op1.actual_length;
+	//		string& al2 = op2.actual_length;
+	//		string lendec = "   int ";
 
-			file << "   return ret; \n}\n\n";
-		}
-		else
-		{
-			file << "int " << func_name << "(";
+	//		if (!is_lambda || v->name.substr(0, 6) != "lambda")
+	//		{
+	//			if (v->size > local_max_size) file << "   double " << v->name << "_p[" << local_max_size << "], *" << v->name << " = " << v->name << "_p;\n";
+	//			else file << "   double " << v->name << "[" << v->size << "];\n";
+	//		}
+	//		else lendec = "   ";
 
-			int i;
-			string cur_par, all_pars, mvs = ");\n";
+	//		// Casi noti
+	//		// [k],n *
+	//		if (o1 == string("2"))
+	//		{
+	//			if (v->size > local_max_size) file << lendec << v->name << "_len = o.Double_With_PreAlloc(" << al2 << ", " << o2 << ", &" << v->name << ", " << local_max_size << ");\n";
+	//			else file << "   o.Double(" << al2 << ", " << o2 << ", " << v->name << ");\n";
+	//			v->actual_length = al2;// v->name + "_len";
+	//		}
+	//		// 1,1 +-*^
+	//		else if (s1 == 1 && s2 == 1)
+	//		{
+	//			if (v->op == '+') file << "   o.two_Sum(" << o1 << ", " << o2 << ", " << v->name << ");\n";
+	//			else if (v->op == '-') file << "   o.two_Diff(" << o1 << ", " << o2 << ", " << v->name << ");\n";
+	//			else if (v->op == '*' && v->op1 != v->op2) file << "   o.Two_Prod(" << o1 << ", " << o2 << ", " << v->name << ");\n";
+	//			else if (v->op == '*' && v->op1 == v->op2) file << "   o.Square(" << o1 << ", " << v->name << ");\n";
+	//		}
+	//		// 2,1 *
+	//		else if (s1 == 2 && s2 == 1)
+	//		{
+	//			if (v->op == '*') file << "   o.Two_One_Prod(" << o1 << ", " << o2 << ", " << v->name << ");\n";
+	//		}
+	//		// 1,2 *
+	//		else if (s1 == 1 && s2 == 2)
+	//		{
+	//			if (v->op == '*') file << "   o.Two_One_Prod(" << o2 << ", " << o1 << ", " << v->name << ");\n";
+	//		}
+	//		// 2,2 +-*^
+	//		else if (s1 == 2 && s2 == 2 && v->op != '*') // Add Two_Square
+	//		{
+	//			if (v->op == '+') file << "   o.Two_Two_Sum(" << o1 << ", " << o2 << ", " << v->name << ");\n";
+	//			else if (v->op == '-') file << "   o.Two_Two_Diff(" << o1 << ", " << o2 << ", " << v->name << ");\n";
+	//			else if (v->op == '*') file << "   o.Two_Two_Prod(" << o1 << ", " << o2 << ", " << v->name << ");\n";
+	//		}
+	//		// n,n +-*
+	//		else
+	//		{
+	//			if (v->size > local_max_size)
+	//			{
+	//				uint32_t lms = (!is_lambda || v->name.substr(0, 6) != "lambda") ? local_max_size : MAX_STATIC_SIZE;
+	//				if (v->op == '+') file << lendec << v->name << "_len = o.Gen_Sum_With_PreAlloc(" << al1 << ", " << o1 << ", " << al2 << ", " << o2 << ", &" << v->name << ", " << lms << ");\n";
+	//				else if (v->op == '-') file << lendec << v->name << "_len = o.Gen_Diff_With_PreAlloc(" << al1 << ", " << o1 << ", " << al2 << ", " << o2 << ", &" << v->name << ", " << lms << ");\n";
+	//				else if (v->op == '*')
+	//				{
+	//					if (s2 == 1) file << lendec << v->name << "_len = o.Gen_Scale_With_PreAlloc(" << al1 << ", " << o1 << ", " << o2 << ", &" << v->name << ", " << lms << ");\n";
+	//					else if (s1 == 1) file << lendec << v->name << "_len = o.Gen_Scale_With_PreAlloc(" << al2 << ", " << o2 << ", " << o1 << ", &" << v->name << ", " << lms << ");\n";
+	//					else file << lendec << v->name << "_len = o.Gen_Product_With_PreAlloc(" << al1 << ", " << o1 << ", " << al2 << ", " << o2 << ", &" << v->name << ", " << lms << ");\n";
+	//				}
+	//			} 
+	//			else
+	//			if (v->op == '+') file << lendec << v->name << "_len = o.Gen_Sum(" << al1 << ", " << o1 << ", " << al2 << ", " << o2 << ", " << v->name << ");\n";
+	//			else if (v->op == '-') file << lendec << v->name << "_len = o.Gen_Diff(" << al1 << ", " << o1 << ", " << al2 << ", " << o2 << ", " << v->name << ");\n";
+	//			else if (v->op == '*')
+	//			{
+	//				if (s2 == 1) file << lendec << v->name << "_len = o.Gen_Scale(" << al1 << ", " << o1 << ", " << o2 << ", " << v->name << ");\n";
+	//				else if (s1 == 1) file << lendec << v->name << "_len = o.Gen_Scale(" << al2 << ", " << o2 << ", " << o1 << ", " << v->name << ");\n";
+	//				else file << lendec << v->name << "_len = o.Gen_Product(" << al1 << ", " << o1 << ", " << al2 << ", " << o2 << ", " << v->name << ");\n";
+	//			}
+	//			v->actual_length = v->name + "_len";
+	//		}
+	//	}
 
-			for (i = 1; i < (int)all_vars.size(); i++)
-			{
-				variable& v = all_vars[i];
-				if (v.isInput())
-				{
-					if (i == 1) cur_par = v.name;
-					else cur_par = ", " + v.name;
-					if (i == 1) file << "double " << v.name;
-					else file << ", double " << v.name;
-					all_pars += cur_par;
-				}
-			}
-			file << ")\n{\n";
+	//	if (!is_lambda) file << "\n   double return_value = " << v->name << "[" << v->actual_length << " - 1];\n";
 
-			file << "   int ret;\n";
-			file << "   ret = " << filtered_funcname << "(" << all_pars << mvs;
-			file << "   if (ret != Filtered_Sign::UNCERTAIN) return ret;\n";
-			file << "   ret = " << interval_funcname << "(" << all_pars << ");\n";
-			file << "   if (ret != Filtered_Sign::UNCERTAIN) return ret;\n";
-			file << "   return " << exact_funcname << "(" << all_pars << ");\n";
-			file << "}\n\n";
-		}
-	}
+	//	for (i--; i >= first_op; i--)
+	//	{
+	//		v = &all_vars[i];
+	//		if (v->size > local_max_size && (!is_lambda || v->name.substr(0, 6) != "lambda")) file << "   if (" << v->name << "_p != " << v->name << ") free(" << v->name << ");\n";
+	//	}
+
+	//	if (!is_lambda)
+	//	{
+	//		if (!sign_vars.empty())
+	//		{
+	//			file << "   if (( ";
+	//			first = true; for (variable *v : sign_vars) { file << ((first) ? ("") : (" + ")) << "(" << v->name << "[" << v->name << "_len -1] < 0)"; first = false; }
+	//			file << ((sign_vars.size()>1) ? ") & 1) " : ")) ") << "return_value = -return_value;\n";
+	//		}
+
+	//		file << "\n   if (return_value > 0) return IP_Sign::POSITIVE;\n";
+	//		file << "   if (return_value < 0) return IP_Sign::NEGATIVE;\n";
+	//		file << "   return IP_Sign::ZERO;\n";
+	//	}
+	//	file << "}\n\n";
+	//}
+
+	//static void produceMultiStageCode(string& func_name, string& filtered_funcname, string& interval_funcname, string& exact_funcname, ofstream& file)
+	//{
+	//	if (is_indirect)
+	//	{
+	//		bool worth_a_semistatic_filter = ((*(all_vars.end() - 1)).error_degree <= MAX_WORTH_DEGREE);
+
+	//		bool first;
+	//		bool explicit_pars = false;
+	//		for (variable& v : all_vars) if (v.isInput() && v.name != "2" && v.is_used && !v.is_lambda_out) { explicit_pars = true; break; }
+
+	//		uint32_t local_max_size = MAX_STATIC_SIZE;
+
+	//		file << "int " << func_name << "(";
+	//		first = true;
+	//		for (lambda_variable& l : all_lambda_vars) { file << ((first) ? ("") : (", ")) << l.name << "& " << l.ipoint_name; first = false; }
+	//		for (variable& v : all_vars) if (v.isInput() && v.name != "2" && !v.is_lambda_out) { file << ((first) ? ("double ") : (", double ")) << v.name; first = false; }
+	//		file << ")\n{\n";
+
+	//		file << "   int ret;\n";
+
+	//		if (!worth_a_semistatic_filter) file << "   /*\n";
+	//		file << "   {\n    double";
+	//		first = true; for (variable& v : all_vars) if (v.isInput() && v.is_lambda_out) { file << ((first) ? (" ") : (", ")) << v.name; first = false; }
+	//		file << ", max_var = 0;\n";
+
+	//		file << "    if (\n";
+	//		first = true; for (lambda_variable& l : all_lambda_vars) { file << ((first) ? ("    ") : ("    && ")); l.print_filtered(file); file << "\n"; first = false; }
+	//		file << "    && (ret = " << filtered_funcname << "(";
+	//		first = true; for (variable& v : all_vars) if (v.isInput() && v.name != "2" && v.is_used) { file << ((first) ? ("") : (", ")) << v.name; first = false; }
+	//		file << ", max_var)) != Filtered_Sign::UNCERTAIN) return ret;\n";
+	//		file << "   }\n";
+	//		if (!worth_a_semistatic_filter) file << "   */\n";
+
+	//		file << "   {\n";
+	//		file << "    interval_number";
+	//		first = true; for (variable& v : all_vars) if (v.isInput() && v.is_lambda_out) { file << ((first) ? (" ") : (", ")) << v.name; first = false; }
+	//		file << ";\n";
+	//		file << "    if (\n";
+	//		first = true; for (lambda_variable& l : all_lambda_vars) { file << ((first) ? ("    ") : ("    && ")); l.print_interval(file); file << "\n"; first = false; }
+	//		file << "    && (ret = " << interval_funcname << "(";
+	//		first = true; for (variable& v : all_vars) if (v.isInput() && v.name != "2" && v.is_used) { file << ((first) ? ("") : (", ")) << v.name; first = false; }
+	//		file << ")) != Filtered_Sign::UNCERTAIN) return ret;\n";
+	//		file << "   }\n";
+
+	//		first = true; for (variable& v : all_vars) if (v.isInput() && v.is_lambda_out)
+	//		{
+	//			if (v.size > local_max_size) file << ((first) ? ("   double ") : (", ")) << v.name << "_p[" << local_max_size << "], *" << v.name << " = " << v.name << "_p";
+	//			else file << ((first) ? ("   double ") : (", ")) << v.name << "[" << v.size << "]";
+	//			first = false;
+	//		}
+	//		file << ";\n";
+	//		first = true; for (variable& v : all_vars) if (v.isInput() && v.is_lambda_out)
+	//		{
+	//			file << ((first) ? ("   int ") : (", ")) << v.name << "_len"; first = false;
+	//		}
+	//		file << ";\n";
+
+	//		for (lambda_variable& l : all_lambda_vars)
+	//		{
+	//			file << "   "; l.print_exact(file); file << ";\n";
+	//		}
+
+	//		for (lambda_variable& l : all_lambda_vars)
+	//		{
+	//			file << "   if (" << all_vars[l.output_pars.back()].name << "[" << all_vars[l.output_pars.back()].name << "_len - 1] == 0) ret = IP_Sign::UNDEFINED;\n   else ";
+	//		}
+
+	//		if (explicit_pars)
+	//		{
+	//			file << "ret = " << exact_funcname << "(";
+	//			first = true; for (variable& v : all_vars) if (v.isInput() && v.name != "2" && v.is_used && !v.is_lambda_out) { file << ((first) ? ("") : (", ")) << v.name; first = false; }
+	//			for (variable& v : all_vars) if (v.isInput() && v.is_lambda_out) { file << ", " << v.name << ", " << v.name << "_len"; }
+	//		}
+	//		else
+	//		{
+	//			file << "ret = " << exact_funcname << "(";
+	//			first = true; for (variable& v : all_vars) if (v.isInput() && v.is_lambda_out) { file << ((first) ? ("") : (", ")) << v.name << ", " << v.name << "_len"; first = false; }
+	//		}
+	//		file << ");\n";
+
+	//		for (variable& v : all_vars) if (v.isInput() && v.is_lambda_out)
+	//		{
+	//			if (v.size > local_max_size) file << "   if (" << v.name << "_p != " << v.name << ") free(" << v.name << ");\n";
+	//		}
+
+	//		file << "   return ret; \n}\n\n";
+	//	}
+	//	else
+	//	{
+	//		file << "int " << func_name << "(";
+
+	//		int i;
+	//		string cur_par, all_pars, mvs = ");\n";
+
+	//		for (i = 1; i < (int)all_vars.size(); i++)
+	//		{
+	//			variable& v = all_vars[i];
+	//			if (v.isInput())
+	//			{
+	//				if (i == 1) cur_par = v.name;
+	//				else cur_par = ", " + v.name;
+	//				if (i == 1) file << "double " << v.name;
+	//				else file << ", double " << v.name;
+	//				all_pars += cur_par;
+	//			}
+	//		}
+	//		file << ")\n{\n";
+
+	//		file << "   int ret;\n";
+	//		file << "   ret = " << filtered_funcname << "(" << all_pars << mvs;
+	//		file << "   if (ret != Filtered_Sign::UNCERTAIN) return ret;\n";
+	//		file << "   ret = " << interval_funcname << "(" << all_pars << ");\n";
+	//		file << "   if (ret != Filtered_Sign::UNCERTAIN) return ret;\n";
+	//		file << "   return " << exact_funcname << "(" << all_pars << ");\n";
+	//		file << "}\n\n";
+	//	}
+	//}
 
 
 
