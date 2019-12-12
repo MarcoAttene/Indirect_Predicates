@@ -34,6 +34,35 @@
 
 #include "numerics.h"
 
+void expansionObject::Two_Two_Prod(const double a1, const double a0, const double b1, const double b0, double* h)
+{
+	double _ch, _cl, _m, _n;
+	Split(a0, _ah, _al);
+	Split(b0, _bh, _bl);
+	Two_Product_2Presplit(a0, _ah, _al, b0, _bh, _bl, _i, h[0]);
+	Split(a1, _ch, _cl);
+	Two_Product_2Presplit(a1, _ch, _cl, b0, _bh, _bl, _j, _0);
+	Two_Sum(_i, _0, _k, _1);
+	Quick_Two_Sum(_j, _k, _l, _2);
+	Split(b1, _bh, _bl);
+	Two_Product_2Presplit(a0, _ah, _al, b1, _bh, _bl, _i, _0);
+	Two_Sum(_1, _0, _k, h[1]);
+	Two_Sum(_2, _k, _j, _1);
+	Two_Sum(_l, _j, _m, _2);
+	Two_Product_2Presplit(a1, _ch, _cl, b1, _bh, _bl, _j, _0);
+	Two_Sum(_i, _0, _n, _0);
+	Two_Sum(_1, _0, _i, h[2]);
+	Two_Sum(_2, _i, _k, _1);
+	Two_Sum(_m, _k, _l, _2);
+	Two_Sum(_j, _n, _k, _0);
+	Two_Sum(_1, _0, _j, h[3]);
+	Two_Sum(_2, _j, _i, _1);
+	Two_Sum(_l, _i, _m, _2);
+	Two_Sum(_1, _k, _i, h[4]);
+	Two_Sum(_2, _i, _k, h[5]);
+	Two_Sum(_m, _k, h[7], h[6]);
+}
+
 int expansionObject::Gen_Sum(const int elen, const double *e, const int flen, const double *f, double *h)
 {
 	double Q, Qn, hh, en = e[0], fn = f[0];
@@ -155,7 +184,6 @@ void expansionObject::Two_Square(const double& a1, const double& a0, double *x)
 	Square(a1, _j, _1);
 	Two_Two_Sum(_j, _1, _l, _2, x[5], x[4], x[3], x[2]);
 }
-
 
 int expansionObject::Sub_product(const int alen, const double *a, const int blen, const double *b, double *h)
 {

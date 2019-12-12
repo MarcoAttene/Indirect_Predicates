@@ -1,3 +1,33 @@
+/****************************************************************************
+* Indirect predicates for geometric constructions					        *
+*                                                                           *
+* Consiglio Nazionale delle Ricerche                                        *
+* Istituto di Matematica Applicata e Tecnologie Informatiche                *
+* Sezione di Genova                                                         * 
+* IMATI-GE / CNR                                                            * 
+*                                                                           *
+* Authors: Marco Attene                                                     * 
+* Copyright(C) 2019: IMATI-GE / CNR                                         * 
+* All rights reserved.                                                      * 
+*                                                                           *
+* This program is free software; you can redistribute it and/or modify      * 
+* it under the terms of the GNU Lesser General Public License as published  * 
+* by the Free Software Foundation; either version 3 of the License, or (at  * 
+* your option) any later version.                                           * 
+*                                                                           *
+* This program is distributed in the hope that it will be useful, but       * 
+* WITHOUT ANY WARRANTY; without even the implied warranty of                * 
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser  * 
+* General Public License for more details.                                  * 
+*                                                                           *
+* You should have received a copy of the GNU Lesser General Public License  * 
+* along with this program.  If not, see http://www.gnu.org/licenses/.       *
+*                                                                           *
+****************************************************************************/ 
+
+/* This code was generated automatically. Do not edit unless you exactly   */
+/* know what you are doing!                                                */
+
 #include "implicit_point.h"
 
 #pragma intrinsic(fabs)
@@ -41,8 +71,10 @@ int incircle_filtered(double pax, double pay, double pbx, double pby, double pcx
    if ((_tmp_fabs = fabs(bdy)) > max_var) max_var = _tmp_fabs;
    if ((_tmp_fabs = fabs(cdx)) > max_var) max_var = _tmp_fabs;
    if ((_tmp_fabs = fabs(cdy)) > max_var) max_var = _tmp_fabs;
-   double epsilon = 1.37708854736074e-14 * max_var * max_var * max_var * max_var;
-
+   double epsilon = max_var;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= 1.376676550535194e-14;
    if (L > epsilon) return IP_Sign::POSITIVE;
    if (-L > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -185,8 +217,9 @@ int orient2d_filtered(double p1x, double p1y, double p2x, double p2y, double p3x
    if ((_tmp_fabs = fabs(a12)) > max_var) max_var = _tmp_fabs;
    if ((_tmp_fabs = fabs(a21)) > max_var) max_var = _tmp_fabs;
    if ((_tmp_fabs = fabs(a22)) > max_var) max_var = _tmp_fabs;
-   double epsilon = 8.883952601346225e-16 * max_var * max_var;
-
+   double epsilon = max_var;
+   epsilon *= epsilon;
+   epsilon *= 8.881784197001252e-16;
    if (d > epsilon) return IP_Sign::POSITIVE;
    if (-d > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -279,8 +312,10 @@ int orient3d_filtered(double px, double py, double pz, double qx, double qy, dou
    if ((_tmp_fabs = fabs(sx_px)) > max_var) max_var = _tmp_fabs;
    if ((_tmp_fabs = fabs(sy_py)) > max_var) max_var = _tmp_fabs;
    if ((_tmp_fabs = fabs(sz_pz)) > max_var) max_var = _tmp_fabs;
-   double epsilon = 4.886390771174922e-15 * max_var * max_var * max_var;
-
+   double epsilon = max_var;
+   epsilon *= epsilon;
+   epsilon *= max_var;
+   epsilon *= 4.884981308350689e-15;
    if (m012 > epsilon) return IP_Sign::POSITIVE;
    if (-m012 > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -429,8 +464,13 @@ int incircle_indirect_LEEE_filtered(double l1x, double l1y, double d1, double pb
    if ((_tmp_fabs = fabs(bdy)) > max_var) max_var = _tmp_fabs;
    if ((_tmp_fabs = fabs(cdx)) > max_var) max_var = _tmp_fabs;
    if ((_tmp_fabs = fabs(cdy)) > max_var) max_var = _tmp_fabs;
-   double epsilon = 6.464495605484923e-12 * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var;
-
+   double epsilon = max_var;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= 6.463567528425267e-12;
    if (L > epsilon) return IP_Sign::POSITIVE;
    if (-L > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -646,8 +686,12 @@ int incircle_indirect_LLEE_filtered(double l1x, double l1y, double d1, double l2
    if ((_tmp_fabs = fabs(pdy)) > max_var) max_var = _tmp_fabs;
    if ((_tmp_fabs = fabs(cdx)) > max_var) max_var = _tmp_fabs;
    if ((_tmp_fabs = fabs(cdy)) > max_var) max_var = _tmp_fabs;
-   double epsilon = 1.564589249825066e-09 * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var;
-
+   double epsilon = max_var;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= 1.564426935218861e-09;
    if (L > epsilon) return IP_Sign::POSITIVE;
    if (-L > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -893,8 +937,18 @@ int incircle_indirect_LLLE_filtered(double l1x, double l1y, double d1, double l2
    double _tmp_fabs, max_var = prev_maxval; 
    if ((_tmp_fabs = fabs(pdx)) > max_var) max_var = _tmp_fabs;
    if ((_tmp_fabs = fabs(pdy)) > max_var) max_var = _tmp_fabs;
-   double epsilon = 3.004734055733794e-07 * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var;
-
+   double epsilon = max_var;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= 3.004469273093523e-07;
    if (L > epsilon) return IP_Sign::POSITIVE;
    if (-L > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -1083,14 +1137,16 @@ int incircle_indirect_LLLE_exact(double pdx, double pdy, double *l1x, int& l1x_l
 int incircle_indirect_LLLE(implicitPoint3D_LPI& p1, implicitPoint3D_LPI& p2, implicitPoint3D_LPI& p3, double pdx, double pdy)
 {
    int ret;
-   //{
-   // double l1x, l1y, l1z, d1, l2x, l2y, l2z, d2, l3x, l3y, l3z, d3, max_var = 0;
-   // if (
-   // p1.getFilteredLambda(l1x, l1y, l1z, d1, max_var)
-   // && p2.getFilteredLambda(l2x, l2y, l2z, d2, max_var)
-   // && p3.getFilteredLambda(l3x, l3y, l3z, d3, max_var)
-   // && (ret = incircle_indirect_LLLE_filtered(l1x, l1y, d1, l2x, l2y, d2, l3x, l3y, d3, pdx, pdy, max_var)) != Filtered_Sign::UNCERTAIN) return ret;
-   //}
+   /*
+   {
+    double l1x, l1y, l1z, d1, l2x, l2y, l2z, d2, l3x, l3y, l3z, d3, max_var = 0;
+    if (
+    p1.getFilteredLambda(l1x, l1y, l1z, d1, max_var)
+    && p2.getFilteredLambda(l2x, l2y, l2z, d2, max_var)
+    && p3.getFilteredLambda(l3x, l3y, l3z, d3, max_var)
+    && (ret = incircle_indirect_LLLE_filtered(l1x, l1y, d1, l2x, l2y, d2, l3x, l3y, d3, pdx, pdy, max_var)) != Filtered_Sign::UNCERTAIN) return ret;
+   }
+   */
    {
     interval_number l1x, l1y, l1z, d1, l2x, l2y, l2z, d2, l3x, l3y, l3z, d3;
     if (
@@ -1173,8 +1229,15 @@ int incircle_indirect_LLLL_filtered(double l1x, double l1y, double d1, double l2
    double L = lab + la;
 
    double max_var = prev_maxval; 
-   double epsilon = 0.001941293225286282 * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var;
-
+   double epsilon = max_var;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= 0.001941157917940494;
    if (L > epsilon) return IP_Sign::POSITIVE;
    if (-L > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -1387,15 +1450,17 @@ int incircle_indirect_LLLL_exact(double *l1x, int& l1x_len, double *l1y, int& l1
 int incircle_indirect_LLLL(implicitPoint3D_LPI& p1, implicitPoint3D_LPI& p2, implicitPoint3D_LPI& p3, implicitPoint3D_LPI& p4)
 {
    int ret;
-   //{
-   // double l1x, l1y, l1z, d1, l2x, l2y, l2z, d2, l3x, l3y, l3z, d3, l4x, l4y, l4z, d4, max_var = 0;
-   // if (
-   // p1.getFilteredLambda(l1x, l1y, l1z, d1, max_var)
-   // && p2.getFilteredLambda(l2x, l2y, l2z, d2, max_var)
-   // && p3.getFilteredLambda(l3x, l3y, l3z, d3, max_var)
-   // && p4.getFilteredLambda(l4x, l4y, l4z, d4, max_var)
-   // && (ret = incircle_indirect_LLLL_filtered(l1x, l1y, d1, l2x, l2y, d2, l3x, l3y, d3, l4x, l4y, d4, max_var)) != Filtered_Sign::UNCERTAIN) return ret;
-   //}
+   /*
+   {
+    double l1x, l1y, l1z, d1, l2x, l2y, l2z, d2, l3x, l3y, l3z, d3, l4x, l4y, l4z, d4, max_var = 0;
+    if (
+    p1.getFilteredLambda(l1x, l1y, l1z, d1, max_var)
+    && p2.getFilteredLambda(l2x, l2y, l2z, d2, max_var)
+    && p3.getFilteredLambda(l3x, l3y, l3z, d3, max_var)
+    && p4.getFilteredLambda(l4x, l4y, l4z, d4, max_var)
+    && (ret = incircle_indirect_LLLL_filtered(l1x, l1y, d1, l2x, l2y, d2, l3x, l3y, d3, l4x, l4y, d4, max_var)) != Filtered_Sign::UNCERTAIN) return ret;
+   }
+   */
    {
     interval_number l1x, l1y, l1z, d1, l2x, l2y, l2z, d2, l3x, l3y, l3z, d3, l4x, l4y, l4z, d4;
     if (
@@ -1478,8 +1543,11 @@ int incircle_indirect_SEEE_filtered(double l1x, double l1y, double d1, double pb
    if ((_tmp_fabs = fabs(bdy)) > max_var) max_var = _tmp_fabs;
    if ((_tmp_fabs = fabs(cdx)) > max_var) max_var = _tmp_fabs;
    if ((_tmp_fabs = fabs(cdy)) > max_var) max_var = _tmp_fabs;
-   double epsilon = 5.011078357819457e-13 * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var;
-
+   double epsilon = max_var;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= 5.010124259907664e-13;
    if (L > epsilon) return IP_Sign::POSITIVE;
    if (-L > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -1687,8 +1755,15 @@ int incircle_indirect_SSEE_filtered(double l1x, double l1y, double d1, double l2
    if ((_tmp_fabs = fabs(pdy)) > max_var) max_var = _tmp_fabs;
    if ((_tmp_fabs = fabs(cdx)) > max_var) max_var = _tmp_fabs;
    if ((_tmp_fabs = fabs(cdy)) > max_var) max_var = _tmp_fabs;
-   double epsilon = 1.24460962369622e-11 * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var;
-
+   double epsilon = max_var;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= 1.244418457169165e-11;
    if (L > epsilon) return IP_Sign::POSITIVE;
    if (-L > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -1922,8 +1997,12 @@ int incircle_indirect_SSSE_filtered(double l1x, double l1y, double d1, double l2
    double _tmp_fabs, max_var = prev_maxval; 
    if ((_tmp_fabs = fabs(pdx)) > max_var) max_var = _tmp_fabs;
    if ((_tmp_fabs = fabs(pdy)) > max_var) max_var = _tmp_fabs;
-   double epsilon = 2.610072158404384e-10 * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var;
-
+   double epsilon = max_var;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= 2.609697458133566e-10;
    if (L > epsilon) return IP_Sign::POSITIVE;
    if (-L > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -2184,8 +2263,20 @@ int incircle_indirect_SSSS_filtered(double l1x, double l1y, double d1, double l2
    double L = lab + la;
 
    double max_var = prev_maxval; 
-   double epsilon = 2.107873342538397e-08 * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var;
-
+   double epsilon = max_var;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= 2.107594809785969e-08;
    if (L > epsilon) return IP_Sign::POSITIVE;
    if (-L > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -2398,6 +2489,7 @@ int incircle_indirect_SSSS_exact(double *l1x, int& l1x_len, double *l1y, int& l1
 int incircle_indirect_SSSS(implicitPoint2D_SSI& p1, implicitPoint2D_SSI& p2, implicitPoint2D_SSI& p3, implicitPoint2D_SSI& p4)
 {
    int ret;
+   /*
    {
     double l1x, l1y, d1, l2x, l2y, d2, l3x, l3y, d3, l4x, l4y, d4, max_var = 0;
     if (
@@ -2406,7 +2498,7 @@ int incircle_indirect_SSSS(implicitPoint2D_SSI& p1, implicitPoint2D_SSI& p2, imp
     && p3.getFilteredLambda(l3x, l3y, d3, max_var)
     && p4.getFilteredLambda(l4x, l4y, d4, max_var)
     && (ret = incircle_indirect_SSSS_filtered(l1x, l1y, d1, l2x, l2y, d2, l3x, l3y, d3, l4x, l4y, d4, max_var)) != Filtered_Sign::UNCERTAIN) return ret;
-   }
+   }*/
    {
     interval_number l1x, l1y, d1, l2x, l2y, d2, l3x, l3y, d3, l4x, l4y, d4;
     if (
@@ -2465,11 +2557,11 @@ bool lambda2d_SSI_filtered(double ea1x, double ea1y, double ea2x, double ea2y, d
    if ((_tmp_fabs = fabs(tx4)) > max_var) max_var = _tmp_fabs;
    if ((_tmp_fabs = fabs(ty2)) > max_var) max_var = _tmp_fabs;
    if ((_tmp_fabs = fabs(ty4)) > max_var) max_var = _tmp_fabs;
-   double lambda_det_eps = 8.883952601346225e-16 * max_var * max_var;
+   double lambda_det_eps = max_var;
+   lambda_det_eps *= lambda_det_eps;
+   lambda_det_eps *= 8.881784197001252e-16;
 
-   return (
-      (lambda_det > lambda_det_eps || lambda_det < -lambda_det_eps)
-   );
+   return ( (lambda_det > lambda_det_eps || lambda_det < -lambda_det_eps) );
 }
 
 bool lambda2d_SSI_interval(interval_number ea1x, interval_number ea1y, interval_number ea2x, interval_number ea2y, interval_number eb1x, interval_number eb1y, interval_number eb2x, interval_number eb2y, interval_number& lambda_x, interval_number& lambda_y, interval_number& lambda_det)
@@ -2601,11 +2693,12 @@ bool lambda3d_LPI_filtered(double px, double py, double pz, double qx, double qy
    if ((_tmp_fabs = fabs(px_rx)) > max_var) max_var = _tmp_fabs;
    if ((_tmp_fabs = fabs(py_ry)) > max_var) max_var = _tmp_fabs;
    if ((_tmp_fabs = fabs(pz_rz)) > max_var) max_var = _tmp_fabs;
-   double lambda_d_eps = 4.886390771174922e-15 * max_var * max_var * max_var;
+   double lambda_d_eps = max_var;
+   lambda_d_eps *= lambda_d_eps;
+   lambda_d_eps *= max_var;
+   lambda_d_eps *= 4.884981308350689e-15;
 
-   return (
-      (lambda_d > lambda_d_eps || lambda_d < -lambda_d_eps)
-   );
+   return ( (lambda_d > lambda_d_eps || lambda_d < -lambda_d_eps) );
 }
 
 bool lambda3d_LPI_interval(interval_number px, interval_number py, interval_number pz, interval_number qx, interval_number qy, interval_number qz, interval_number rx, interval_number ry, interval_number rz, interval_number sx, interval_number sy, interval_number sz, interval_number tx, interval_number ty, interval_number tz, interval_number& lambda_d, interval_number& lambda_x, interval_number& lambda_y, interval_number& lambda_z)
@@ -2885,11 +2978,14 @@ bool lambda3d_TPI_filtered(double ov1x, double ov1y, double ov1z, double ov2x, d
    if ((_tmp_fabs = fabs(u2x)) > max_var) max_var = _tmp_fabs;
    if ((_tmp_fabs = fabs(u2y)) > max_var) max_var = _tmp_fabs;
    if ((_tmp_fabs = fabs(u2z)) > max_var) max_var = _tmp_fabs;
-   double lambda_d_eps = 8.706837334449009e-14 * max_var * max_var * max_var * max_var * max_var * max_var;
+   double lambda_d_eps = max_var;
+   lambda_d_eps *= lambda_d_eps;
+   lambda_d_eps *= lambda_d_eps;
+   lambda_d_eps *= max_var;
+   lambda_d_eps *= max_var;
+   lambda_d_eps *= 8.704148513061234e-14;
 
-   return (
-      (lambda_d > lambda_d_eps || lambda_d < -lambda_d_eps)
-   );
+   return ( (lambda_d > lambda_d_eps || lambda_d < -lambda_d_eps) );
 }
 
 bool lambda3d_TPI_interval(interval_number ov1x, interval_number ov1y, interval_number ov1z, interval_number ov2x, interval_number ov2y, interval_number ov2z, interval_number ov3x, interval_number ov3y, interval_number ov3z, interval_number ow1x, interval_number ow1y, interval_number ow1z, interval_number ow2x, interval_number ow2y, interval_number ow2z, interval_number ow3x, interval_number ow3y, interval_number ow3z, interval_number ou1x, interval_number ou1y, interval_number ou1z, interval_number ou2x, interval_number ou2y, interval_number ou2z, interval_number ou3x, interval_number ou3y, interval_number ou3z, interval_number& lambda_x, interval_number& lambda_y, interval_number& lambda_z, interval_number& lambda_d)
@@ -3290,8 +3386,10 @@ int lessThanOnX_LE_filtered(double l1x, double d1, double bx, double prev_maxval
 
    double _tmp_fabs, max_var = prev_maxval; 
    if ((_tmp_fabs = fabs(bx)) > max_var) max_var = _tmp_fabs;
-   double epsilon = 1.93240605808609e-14 * max_var * max_var * max_var * max_var;
-
+   double epsilon = max_var;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= 1.932297637868842e-14;
    if (((d1 < 0))) kx = -kx;
    if (kx > epsilon) return IP_Sign::POSITIVE;
    if (-kx > epsilon) return IP_Sign::NEGATIVE;
@@ -3362,8 +3460,13 @@ int lessThanOnX_LL_filtered(double l1x, double d1, double l2x, double d2, double
    double kx = k1 - k2;
 
    double max_var = prev_maxval; 
-   double epsilon = 2.923026404255686e-13 * max_var * max_var * max_var * max_var * max_var * max_var * max_var;
-
+   double epsilon = max_var;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= 2.922887626377606e-13;
    if (((d1 < 0) + (d2 < 0)) & 1) kx = -kx;
    if (kx > epsilon) return IP_Sign::POSITIVE;
    if (-kx > epsilon) return IP_Sign::NEGATIVE;
@@ -3446,8 +3549,13 @@ int lessThanOnX_LT_filtered(double l1x, double d1, double l2x, double d2, double
    double kx = k1 - k2;
 
    double max_var = prev_maxval; 
-   double epsilon = 4.321491081649161e-12 * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var;
-
+   double epsilon = max_var;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= 4.321380059346694e-12;
    if (((d1 < 0) + (d2 < 0)) & 1) kx = -kx;
    if (kx > epsilon) return IP_Sign::POSITIVE;
    if (-kx > epsilon) return IP_Sign::NEGATIVE;
@@ -3530,8 +3638,13 @@ int lessThanOnX_TE_filtered(double l1x, double d1, double bx, double prev_maxval
 
    double _tmp_fabs, max_var = prev_maxval; 
    if ((_tmp_fabs = fabs(bx)) > max_var) max_var = _tmp_fabs;
-   double epsilon = 3.980357710098313e-13 * max_var * max_var * max_var * max_var * max_var * max_var * max_var;
-
+   double epsilon = max_var;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= 3.980270973924514e-13;
    if (((d1 < 0))) kx = -kx;
    if (kx > epsilon) return IP_Sign::POSITIVE;
    if (-kx > epsilon) return IP_Sign::NEGATIVE;
@@ -3602,8 +3715,16 @@ int lessThanOnX_TT_filtered(double l1x, double d1, double l2x, double d2, double
    double kx = k1 - k2;
 
    double max_var = prev_maxval; 
-   double epsilon = 5.504230404795897e-11 * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var;
-
+   double epsilon = max_var;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= 5.504141586953918e-11;
    if (((d1 < 0) + (d2 < 0)) & 1) kx = -kx;
    if (kx > epsilon) return IP_Sign::POSITIVE;
    if (-kx > epsilon) return IP_Sign::NEGATIVE;
@@ -3686,8 +3807,10 @@ int lessThanOnY_LE_filtered(double l1y, double d1, double by, double prev_maxval
 
    double _tmp_fabs, max_var = prev_maxval; 
    if ((_tmp_fabs = fabs(by)) > max_var) max_var = _tmp_fabs;
-   double epsilon = 1.93240605808609e-14 * max_var * max_var * max_var * max_var;
-
+   double epsilon = max_var;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= 1.932297637868842e-14;
    if (((d1 < 0))) ky = -ky;
    if (ky > epsilon) return IP_Sign::POSITIVE;
    if (-ky > epsilon) return IP_Sign::NEGATIVE;
@@ -3758,8 +3881,13 @@ int lessThanOnY_LL_filtered(double l1y, double d1, double l2y, double d2, double
    double ky = k1 - k2;
 
    double max_var = prev_maxval; 
-   double epsilon = 2.923026404255686e-13 * max_var * max_var * max_var * max_var * max_var * max_var * max_var;
-
+   double epsilon = max_var;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= 2.922887626377606e-13;
    if (((d1 < 0) + (d2 < 0)) & 1) ky = -ky;
    if (ky > epsilon) return IP_Sign::POSITIVE;
    if (-ky > epsilon) return IP_Sign::NEGATIVE;
@@ -3842,8 +3970,13 @@ int lessThanOnY_LT_filtered(double l1y, double d1, double l2y, double d2, double
    double ky = k1 - k2;
 
    double max_var = prev_maxval; 
-   double epsilon = 4.321491081649161e-12 * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var;
-
+   double epsilon = max_var;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= 4.321380059346694e-12;
    if (((d1 < 0) + (d2 < 0)) & 1) ky = -ky;
    if (ky > epsilon) return IP_Sign::POSITIVE;
    if (-ky > epsilon) return IP_Sign::NEGATIVE;
@@ -3926,8 +4059,13 @@ int lessThanOnY_TE_filtered(double l1y, double d1, double by, double prev_maxval
 
    double _tmp_fabs, max_var = prev_maxval; 
    if ((_tmp_fabs = fabs(by)) > max_var) max_var = _tmp_fabs;
-   double epsilon = 3.980357710098313e-13 * max_var * max_var * max_var * max_var * max_var * max_var * max_var;
-
+   double epsilon = max_var;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= 3.980270973924514e-13;
    if (((d1 < 0))) ky = -ky;
    if (ky > epsilon) return IP_Sign::POSITIVE;
    if (-ky > epsilon) return IP_Sign::NEGATIVE;
@@ -3998,8 +4136,16 @@ int lessThanOnY_TT_filtered(double l1y, double d1, double l2y, double d2, double
    double ky = k1 - k2;
 
    double max_var = prev_maxval; 
-   double epsilon = 5.504230404795897e-11 * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var;
-
+   double epsilon = max_var;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= 5.504141586953918e-11;
    if (((d1 < 0) + (d2 < 0)) & 1) ky = -ky;
    if (ky > epsilon) return IP_Sign::POSITIVE;
    if (-ky > epsilon) return IP_Sign::NEGATIVE;
@@ -4082,8 +4228,10 @@ int lessThanOnZ_LE_filtered(double l1z, double d1, double bz, double prev_maxval
 
    double _tmp_fabs, max_var = prev_maxval; 
    if ((_tmp_fabs = fabs(bz)) > max_var) max_var = _tmp_fabs;
-   double epsilon = 1.93240605808609e-14 * max_var * max_var * max_var * max_var;
-
+   double epsilon = max_var;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= 1.932297637868842e-14;
    if (((d1 < 0))) kz = -kz;
    if (kz > epsilon) return IP_Sign::POSITIVE;
    if (-kz > epsilon) return IP_Sign::NEGATIVE;
@@ -4154,8 +4302,13 @@ int lessThanOnZ_LL_filtered(double l1z, double d1, double l2z, double d2, double
    double kz = k1 - k2;
 
    double max_var = prev_maxval; 
-   double epsilon = 2.923026404255686e-13 * max_var * max_var * max_var * max_var * max_var * max_var * max_var;
-
+   double epsilon = max_var;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= 2.922887626377606e-13;
    if (((d1 < 0) + (d2 < 0)) & 1) kz = -kz;
    if (kz > epsilon) return IP_Sign::POSITIVE;
    if (-kz > epsilon) return IP_Sign::NEGATIVE;
@@ -4238,8 +4391,13 @@ int lessThanOnZ_LT_filtered(double l1z, double d1, double l2z, double d2, double
    double kz = k1 - k2;
 
    double max_var = prev_maxval; 
-   double epsilon = 4.321491081649161e-12 * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var;
-
+   double epsilon = max_var;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= 4.321380059346694e-12;
    if (((d1 < 0) + (d2 < 0)) & 1) kz = -kz;
    if (kz > epsilon) return IP_Sign::POSITIVE;
    if (-kz > epsilon) return IP_Sign::NEGATIVE;
@@ -4322,8 +4480,13 @@ int lessThanOnZ_TE_filtered(double l1z, double d1, double bz, double prev_maxval
 
    double _tmp_fabs, max_var = prev_maxval; 
    if ((_tmp_fabs = fabs(bz)) > max_var) max_var = _tmp_fabs;
-   double epsilon = 3.980357710098313e-13 * max_var * max_var * max_var * max_var * max_var * max_var * max_var;
-
+   double epsilon = max_var;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= 3.980270973924514e-13;
    if (((d1 < 0))) kz = -kz;
    if (kz > epsilon) return IP_Sign::POSITIVE;
    if (-kz > epsilon) return IP_Sign::NEGATIVE;
@@ -4394,8 +4557,16 @@ int lessThanOnZ_TT_filtered(double l1z, double d1, double l2z, double d2, double
    double kz = k1 - k2;
 
    double max_var = prev_maxval; 
-   double epsilon = 5.504230404795897e-11 * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var;
-
+   double epsilon = max_var;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= 5.504141586953918e-11;
    if (((d1 < 0) + (d2 < 0)) & 1) kz = -kz;
    if (kz > epsilon) return IP_Sign::POSITIVE;
    if (-kz > epsilon) return IP_Sign::NEGATIVE;
@@ -4490,8 +4661,11 @@ int orient2d3d_indirect_LEE_filtered(double l1x, double l1y, double d1, double p
    if ((_tmp_fabs = fabs(p2y)) > max_var) max_var = _tmp_fabs;
    if ((_tmp_fabs = fabs(p3x)) > max_var) max_var = _tmp_fabs;
    if ((_tmp_fabs = fabs(p3y)) > max_var) max_var = _tmp_fabs;
-   double epsilon = 1.505074710694836e-12 * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var;
-
+   double epsilon = max_var;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= 1.504941136987184e-12;
    if (L > epsilon) return IP_Sign::POSITIVE;
    if (-L > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -4607,8 +4781,14 @@ int orient2d3d_indirect_LLE_filtered(double l1x, double l1y, double d1, double l
    double _tmp_fabs, max_var = prev_maxval; 
    if ((_tmp_fabs = fabs(op3x)) > max_var) max_var = _tmp_fabs;
    if ((_tmp_fabs = fabs(op3y)) > max_var) max_var = _tmp_fabs;
-   double epsilon = 1.699816329359124e-11 * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var;
-
+   double epsilon = max_var;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= 1.699690735379461e-11;
    if (((d2 < 0))) L = -L;
    if (L > epsilon) return IP_Sign::POSITIVE;
    if (-L > epsilon) return IP_Sign::NEGATIVE;
@@ -4743,8 +4923,17 @@ int orient2d3d_indirect_LLL_filtered(double l1x, double l1y, double d1, double l
    double L = abcd - efgh;
 
    double max_var = prev_maxval; 
-   double epsilon = 1.756458312129905e-10 * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var;
-
+   double epsilon = max_var;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= 1.75634284893534e-10;
    if (((d2 < 0) + (d3 < 0)) & 1) L = -L;
    if (L > epsilon) return IP_Sign::POSITIVE;
    if (-L > epsilon) return IP_Sign::NEGATIVE;
@@ -4895,8 +5084,13 @@ int orient2d3d_indirect_LLT_filtered(double l1x, double l1y, double d1, double l
    double L = abcd - efgh;
 
    double max_var = prev_maxval; 
-   double epsilon = 2.144657118563505e-09 * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var;
-
+   double epsilon = max_var;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= max_var;
+   epsilon *= 2.144556754402072e-09;
    if (((d2 < 0) + (d3 < 0)) & 1) L = -L;
    if (L > epsilon) return IP_Sign::POSITIVE;
    if (-L > epsilon) return IP_Sign::NEGATIVE;
@@ -5047,8 +5241,17 @@ int orient2d3d_indirect_LTE_filtered(double l1x, double l1y, double d1, double l
    double _tmp_fabs, max_var = prev_maxval; 
    if ((_tmp_fabs = fabs(p3x)) > max_var) max_var = _tmp_fabs;
    if ((_tmp_fabs = fabs(p3y)) > max_var) max_var = _tmp_fabs;
-   double epsilon = 2.185064837401122e-10 * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var;
-
+   double epsilon = max_var;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= 2.184958117212875e-10;
    if (((d2 < 0))) L = -L;
    if (L > epsilon) return IP_Sign::POSITIVE;
    if (-L > epsilon) return IP_Sign::NEGATIVE;
@@ -5183,8 +5386,16 @@ int orient2d3d_indirect_LTT_filtered(double l1x, double l1y, double d1, double l
    double L = abcd - efgh;
 
    double max_var = prev_maxval; 
-   double epsilon = 2.535767729128252e-08 * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var;
-
+   double epsilon = max_var;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= 2.535681042914479e-08;
    if (((d2 < 0) + (d3 < 0)) & 1) L = -L;
    if (L > epsilon) return IP_Sign::POSITIVE;
    if (-L > epsilon) return IP_Sign::NEGATIVE;
@@ -5335,8 +5546,17 @@ int orient2d3d_indirect_TEE_filtered(double l1x, double l1y, double d1, double p
    if ((_tmp_fabs = fabs(p2y)) > max_var) max_var = _tmp_fabs;
    if ((_tmp_fabs = fabs(p3x)) > max_var) max_var = _tmp_fabs;
    if ((_tmp_fabs = fabs(p3y)) > max_var) max_var = _tmp_fabs;
-   double epsilon = 3.202504927912764e-10 * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var;
-
+   double epsilon = max_var;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= 3.202367260257704e-10;
    if (L > epsilon) return IP_Sign::POSITIVE;
    if (-L > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -5452,8 +5672,16 @@ int orient2d3d_indirect_TTE_filtered(double l1x, double l1y, double d1, double l
    double _tmp_fabs, max_var = prev_maxval; 
    if ((_tmp_fabs = fabs(p3x)) > max_var) max_var = _tmp_fabs;
    if ((_tmp_fabs = fabs(p3y)) > max_var) max_var = _tmp_fabs;
-   double epsilon = 3.307291507326263e-08 * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var;
-
+   double epsilon = max_var;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= 3.307187945722513e-08;
    if (((d2 < 0))) L = -L;
    if (L > epsilon) return IP_Sign::POSITIVE;
    if (-L > epsilon) return IP_Sign::NEGATIVE;
@@ -5588,8 +5816,22 @@ int orient2d3d_indirect_TTT_filtered(double l1x, double l1y, double d1, double l
    double L = abcd - efgh;
 
    double max_var = prev_maxval; 
-   double epsilon = 3.103252993241814e-06 * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var;
-
+   double epsilon = max_var;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= 3.103174776697444e-06;
    if (((d2 < 0) + (d3 < 0)) & 1) L = -L;
    if (L > epsilon) return IP_Sign::POSITIVE;
    if (-L > epsilon) return IP_Sign::NEGATIVE;
@@ -5681,6 +5923,7 @@ int orient2d3d_indirect_TTT_exact(double *l1x, int& l1x_len, double *l1y, int& l
 int orient2d3d_indirect_TTT(implicitPoint3D_TPI& p1, implicitPoint3D_TPI& p2, implicitPoint3D_TPI& p3)
 {
    int ret;
+   /*
    {
     double l1x, l1y, l1z, d1, l2x, l2y, l2z, d2, l3x, l3y, l3z, d3, max_var = 0;
     if (
@@ -5689,6 +5932,7 @@ int orient2d3d_indirect_TTT(implicitPoint3D_TPI& p1, implicitPoint3D_TPI& p2, im
     && p3.getFilteredLambda(l3x, l3y, l3z, d3, max_var)
     && (ret = orient2d3d_indirect_TTT_filtered(l1x, l1y, d1, l2x, l2y, d2, l3x, l3y, d3, max_var)) != Filtered_Sign::UNCERTAIN) return ret;
    }
+   */
    {
     interval_number l1x, l1y, l1z, d1, l2x, l2y, l2z, d2, l3x, l3y, l3z, d3;
     if (
@@ -5740,8 +5984,12 @@ int orient2d_indirect_SEE_filtered(double l1x, double l1y, double d1, double p2x
    if ((_tmp_fabs = fabs(p2y)) > max_var) max_var = _tmp_fabs;
    if ((_tmp_fabs = fabs(p3x)) > max_var) max_var = _tmp_fabs;
    if ((_tmp_fabs = fabs(p3y)) > max_var) max_var = _tmp_fabs;
-   double epsilon = 1.048458195263004e-13 * max_var * max_var * max_var * max_var * max_var * max_var;
-
+   double epsilon = max_var;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= 1.048310743767546e-13;
    if (L > epsilon) return IP_Sign::POSITIVE;
    if (-L > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -5845,8 +6093,11 @@ int orient2d_indirect_SSE_filtered(double l1x, double l1y, double d1, double l2x
    double _tmp_fabs, max_var = prev_maxval; 
    if ((_tmp_fabs = fabs(p3x)) > max_var) max_var = _tmp_fabs;
    if ((_tmp_fabs = fabs(p3y)) > max_var) max_var = _tmp_fabs;
-   double epsilon = 3.838353246354853e-13 * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var;
-
+   double epsilon = max_var;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= 3.837902218251096e-13;
    if (((d2 < 0))) L = -L;
    if (L > epsilon) return IP_Sign::POSITIVE;
    if (-L > epsilon) return IP_Sign::NEGATIVE;
@@ -5969,8 +6220,13 @@ int orient2d_indirect_SSS_filtered(double l1x, double l1y, double d1, double l2x
    double L = abcd - efgh;
 
    double max_var = prev_maxval; 
-   double epsilon = 1.364741653020479e-12 * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var;
-
+   double epsilon = max_var;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= 1.364575119566784e-12;
    if (((d2 < 0) + (d3 < 0)) & 1) L = -L;
    if (L > epsilon) return IP_Sign::POSITIVE;
    if (-L > epsilon) return IP_Sign::NEGATIVE;
@@ -6129,8 +6385,12 @@ int orient3d_indirect_LEEE_filtered(double l1x, double l1y, double l1z, double d
    if ((_tmp_fabs = fabs(bx_cx)) > max_var) max_var = _tmp_fabs;
    if ((_tmp_fabs = fabs(by_cy)) > max_var) max_var = _tmp_fabs;
    if ((_tmp_fabs = fabs(bz_cz)) > max_var) max_var = _tmp_fabs;
-   double epsilon = 1.861330100466631e-13 * max_var * max_var * max_var * max_var * max_var * max_var;
-
+   double epsilon = max_var;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= 1.861039534284405e-13;
    if (((d1 < 0))) m012 = -m012;
    if (m012 > epsilon) return IP_Sign::POSITIVE;
    if (-m012 > epsilon) return IP_Sign::NEGATIVE;
@@ -6323,8 +6583,12 @@ int orient3d_indirect_TEEE_filtered(double l1x, double l1y, double l1z, double d
    if ((_tmp_fabs = fabs(bx_cx)) > max_var) max_var = _tmp_fabs;
    if ((_tmp_fabs = fabs(by_cy)) > max_var) max_var = _tmp_fabs;
    if ((_tmp_fabs = fabs(bz_cz)) > max_var) max_var = _tmp_fabs;
-   double epsilon = 3.070543819205803e-12 * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var * max_var;
-
+   double epsilon = max_var;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= max_var;
+   epsilon *= 3.070283610684406e-12;
    if (((d1 < 0))) m012 = -m012;
    if (m012 > epsilon) return IP_Sign::POSITIVE;
    if (-m012 > epsilon) return IP_Sign::NEGATIVE;

@@ -223,19 +223,30 @@ int genericPoint::incircle(genericPoint& a, genericPoint& b, genericPoint& c, ge
 		if (a.isSSI() && b.isSSI() && c.isSSI() && d.isSSI())
 			return incircle_indirect_SSSS(a.toSSI(), b.toSSI(), c.toSSI(), d.toSSI());
 
-		if (a.isExplicit2D() && b.isExplicit2D() && c.isExplicit2D() && d.isSSI()) return -incircle(d, a, b, c);
-		if (a.isExplicit2D() && b.isExplicit2D() && c.isSSI() && d.isExplicit2D()) return incircle(c, a, b, d);
-		if (a.isExplicit2D() && b.isExplicit2D() && c.isSSI() && d.isSSI()) return incircle(c, d, a, b);
-		if (a.isExplicit2D() && b.isSSI() && c.isExplicit2D() && d.isExplicit2D()) return -incircle(b, a, c, d);
-		if (a.isExplicit2D() && b.isSSI() && c.isExplicit2D() && d.isSSI()) return -incircle(b, d, a, c);
-		if (a.isExplicit2D() && b.isSSI() && c.isSSI() && d.isExplicit2D()) return incircle(b, c, a, d);
-		if (a.isExplicit2D() && b.isSSI() && c.isSSI() && d.isSSI()) return -incircle(b, c, d, a);
-		if (a.isSSI() && b.isExplicit2D() && c.isExplicit2D() && d.isSSI()) return incircle(a, d, b, c);
-		if (a.isSSI() && b.isExplicit2D() && c.isSSI() && d.isExplicit2D()) return -incircle(a, c, b, d);
-		if (a.isSSI() && b.isExplicit2D() && c.isSSI() && d.isSSI()) return -incircle(a, c, b, d);
-		if (a.isSSI() && b.isSSI() && c.isExplicit2D() && d.isSSI()) return -incircle(a, b, d, c);
+		if (a.isExplicit2D() && b.isSSI() && c.isExplicit2D() && d.isExplicit2D()) //return -incircle(b, a, c, d);
+			return -incircle_indirect_SEEE(b.toSSI(), a.toExplicit2D().X(), a.toExplicit2D().Y(), c.toExplicit2D().X(), c.toExplicit2D().Y(), d.toExplicit2D().X(), d.toExplicit2D().Y());
+		if (a.isExplicit2D() && b.isExplicit2D() && c.isSSI() && d.isExplicit2D()) //return incircle(c, a, b, d);
+			return incircle_indirect_SEEE(c.toSSI(), a.toExplicit2D().X(), a.toExplicit2D().Y(), b.toExplicit2D().X(), b.toExplicit2D().Y(), d.toExplicit2D().X(), d.toExplicit2D().Y());
+		if (a.isExplicit2D() && b.isExplicit2D() && c.isExplicit2D() && d.isSSI()) //return -incircle(d, a, b, c);
+			return -incircle_indirect_SEEE(d.toSSI(), a.toExplicit2D().X(), a.toExplicit2D().Y(), b.toExplicit2D().X(), b.toExplicit2D().Y(), c.toExplicit2D().X(), c.toExplicit2D().Y());
 
-		ip_error("genericPoint::incircle - should not happen\n");
+		if (a.isExplicit2D() && b.isExplicit2D() && c.isSSI() && d.isSSI()) //return incircle(c, d, a, b);
+			return incircle_indirect_SSEE(c.toSSI(), d.toSSI(), a.toExplicit2D().X(), a.toExplicit2D().Y(), b.toExplicit2D().X(), b.toExplicit2D().Y());
+		if (a.isExplicit2D() && b.isSSI() && c.isExplicit2D() && d.isSSI()) //return -incircle(b, d, a, c);
+			return -incircle_indirect_SSEE(b.toSSI(), d.toSSI(), a.toExplicit2D().X(), a.toExplicit2D().Y(), c.toExplicit2D().X(), c.toExplicit2D().Y());
+		if (a.isExplicit2D() && b.isSSI() && c.isSSI() && d.isExplicit2D()) //return incircle(b, c, a, d);
+			return incircle_indirect_SSEE(b.toSSI(), c.toSSI(), a.toExplicit2D().X(), a.toExplicit2D().Y(), d.toExplicit2D().X(), d.toExplicit2D().Y());
+		if (a.isSSI() && b.isExplicit2D() && c.isExplicit2D() && d.isSSI()) //return incircle(a, d, b, c);
+			return incircle_indirect_SSEE(a.toSSI(), d.toSSI(), b.toExplicit2D().X(), b.toExplicit2D().Y(), c.toExplicit2D().X(), c.toExplicit2D().Y());
+		if (a.isSSI() && b.isExplicit2D() && c.isSSI() && d.isExplicit2D()) //return -incircle(a, c, b, d);
+			return -incircle_indirect_SSEE(a.toSSI(), c.toSSI(), b.toExplicit2D().X(), b.toExplicit2D().Y(), d.toExplicit2D().X(), d.toExplicit2D().Y());
+
+		if (a.isExplicit2D() && b.isSSI() && c.isSSI() && d.isSSI()) //return -incircle(b, c, d, a);
+			return -incircle_indirect_SSSE(b.toSSI(), c.toSSI(), d.toSSI(), a.toExplicit2D().X(), a.toExplicit2D().Y());
+		if (a.isSSI() && b.isExplicit2D() && c.isSSI() && d.isSSI()) //return incircle(a, c, d, b);
+			return incircle_indirect_SSSE(a.toSSI(), c.toSSI(), d.toSSI(), b.toExplicit2D().X(), b.toExplicit2D().Y());
+		if (a.isSSI() && b.isSSI() && c.isExplicit2D() && d.isSSI()) //return -incircle(a, b, d, c);
+			return -incircle_indirect_SSSE(a.toSSI(), b.toSSI(), d.toSSI(), c.toExplicit2D().X(), c.toExplicit2D().Y());
 	}
 
 	if (a.is3D())
@@ -260,7 +271,7 @@ int genericPoint::incircle(genericPoint& a, genericPoint& b, genericPoint& c, ge
 		if (a.isExplicit3D() && b.isLPI() && c.isLPI() && d.isLPI()) return -incircle(b, c, d, a);
 		if (a.isLPI() && b.isExplicit3D() && c.isExplicit3D() && d.isLPI()) return incircle(a, d, b, c);
 		if (a.isLPI() && b.isExplicit3D() && c.isLPI() && d.isExplicit3D()) return -incircle(a, c, b, d);
-		if (a.isLPI() && b.isExplicit3D() && c.isLPI() && d.isLPI()) return -incircle(a, c, b, d);
+		if (a.isLPI() && b.isExplicit3D() && c.isLPI() && d.isLPI()) return incircle(a, c, d, b);
 		if (a.isLPI() && b.isLPI() && c.isExplicit3D() && d.isLPI()) return -incircle(a, b, d, c);
 
 		ip_error("genericPoint::incircle - unsupported configuration (TPIs not implemented yet)\n");

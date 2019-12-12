@@ -298,6 +298,11 @@
 
 		// [h7,h6,...,h0] = [a1,a0]*[b1,b0]		Calculates the product of two expansions of length two.
 		// 'h' must be allocated by the caller with eight components.
+		void Two_Two_Prod(const double a1, const double a0, const double b1, const double b0, double* h);
+		inline void Two_Two_Prod(const double* a, const double* b, double* xy) { Two_Two_Prod(a[1], a[0], b[1], b[0], xy); }
+
+		// [h7,h6,...,h0] = [a1,a0]*[b1,b0]		Calculates the product of two expansions of length two.
+		// 'h' must be allocated by the caller with eight components.
 		//void Two_Two_Prod(const double a1, const double a0, const double b1, const double b0, double *h);
 		//inline void Two_Two_Prod(const double *a, const double *b, double *xy) { Two_Two_Prod(a[1], a[0], b[1], b[0], xy); }
 
