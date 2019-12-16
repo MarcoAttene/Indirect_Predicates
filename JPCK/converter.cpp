@@ -79,6 +79,7 @@ class variable
 public:
 	string name;			// Variable name
 	int op1, op2;			// Operands (indexes in all_vars. -1 if input val)
+	int op3;				// This is for FMAdd or FMSub (op = 'a' or 's' resp.)
 	char op;				// Operation (+, -, *)
 	int size;				// Variable size (expansion max length)
 	string actual_length;	// Variable length (expansion actual length)
@@ -197,6 +198,38 @@ public:
 		if (size > 2 * MAX_STATIC_SIZE) size = 2 * MAX_STATIC_SIZE;
 		actual_length = to_string(size);
 	}
+
+	variable(string& s, int o1, int o2, int o3, char o) : name(s), op1(o1), op2(o2), op3(o3), op(o), is_a_max(false), is_lambda_out(false), is_used(false)
+	{
+		variable& ov1 = all_vars[o1];
+		variable& ov2 = all_vars[o2];
+		variable& ov3 = all_vars[o3];
+		ov1.is_used = ov2.is_used = ov3.is_used = true;
+
+		if (o == '+') op = 'a';
+		else if (o == '-') op = 's';
+		else error("Unexpected op in FMA var\n", 0);
+
+		size = 2 * ov1.size * ov2.size + ov3.size;
+		value_bound = ov1.value_bound * ov2.value_bound + ov3.value_bound;
+		double u = 0.5 * ulp(value_bound);
+		value_bound += u;
+
+		error_bound = ov1.error_bound * ov2.error_bound +
+			ov1.error_bound * (ov2.value_bound - ov2.error_bound) +
+			ov2.error_bound * (ov1.value_bound - ov1.error_bound) +
+			ov3.error_bound +
+			u;
+		error_degree = std::max(ov1.error_degree + ov2.error_degree, ov3.error_degree);
+
+		if (ov1.error_bound == 0) ov1.is_a_max = true;
+		if (ov2.error_bound == 0) ov2.is_a_max = true;
+		if (ov3.error_bound == 0) ov3.is_a_max = true;
+			
+		if (size > 2 * MAX_STATIC_SIZE) size = 2 * MAX_STATIC_SIZE;
+		actual_length = to_string(size);
+	}
+
 
 	bool isInput() const { return (op1 == -1 && op2 == -1); }
 
@@ -323,6 +356,8 @@ public:
 
 	static void produceFilteredCode(string& funcname, ofstream& file)
 	{
+		const string double_type = "double";
+
 		bool maxes = false;
 
 		if (is_lambda)
@@ -347,7 +382,7 @@ public:
 		if (is_indirect)
 		{
 			bool first;
-			file << "   double";
+			file << "   " << double_type;
 			first = true; for (variable& v : all_vars) if (v.isInput() && v.is_lambda_out) { file << ((first) ? (" ") : (", ")) << v.name; first = false; }
 			file << ", max_var = 0;\n";
 
@@ -366,9 +401,25 @@ public:
 			if (v->isInput()) continue;
 			string& o1 = all_vars[v->op1].name;
 			string& o2 = all_vars[v->op2].name;
-			if (is_lambda && v->name.substr(0, 6) == "lambda") file << "   ";
-			else file << "   double ";
-			file << v->name << " = " << o1 << " " << v->op << " " << o2 << ";\n";
+			if (is_lambda && v->name.substr(0, 6) == "lambda") file << "   " << v->name;
+			else file << "   " << double_type << " " << v->name;
+
+			if (v->op == 'a')
+			{
+				string& o3 = all_vars[v->op3].name;
+				if (!is_lambda || v->name.substr(0, 6) != "lambda") file << ";\n";
+				file << "   Explicit_FMAdd(" << o1 << "," << o2 << "," << o3 << "," << v->name << ");\n";
+			}
+			else if (v->op == 's')
+			{
+				string& o3 = all_vars[v->op3].name;
+				if (!is_lambda || v->name.substr(0, 6) != "lambda") file << ";\n";
+				file << "   Explicit_FMSub(" << o1 << "," << o2 << "," << o3 << "," << v->name << ");\n";
+			}
+			else
+			{
+				file << " = " << o1 << " " << v->op << " " << o2 << ";\n";
+			}
 		}
 
 
@@ -552,8 +603,20 @@ public:
 			if (v->isInput()) continue;
 			string& o1 = all_vars[v->op1].name;
 			string& o2 = all_vars[v->op2].name;
-			string expr = ((o1 == "2") ? (o2 + " " + v->op + " " + o1) : (o1 + " " + v->op + " " + o2));
 
+			string expr;
+			if (v->op == 'a')
+			{
+				expr = "fmadd(" + o1 + "," + o2 + "," + all_vars[v->op3].name + ")";
+			}
+			else if (v->op == 's')
+			{
+				expr = "fmsub(" + o1 + "," + o2 + "," + all_vars[v->op3].name + ")";
+			}
+			else
+			{
+				expr = ((o1 == "2") ? (o2 + " " + v->op + " " + o1) : (o1 + " " + v->op + " " + o2));
+			}
 			if (is_lambda && v->name.substr(0, 6) == "lambda") file << "   " << v->name << " = " << expr << ";\n";
 			else file << "   interval_number " << v->name << "(" << expr << ");\n";
 		}
@@ -667,7 +730,6 @@ public:
 	//	}
 	//}
 
-
 	static void produceExactCode(string& funcname, ofstream& file)
 	{
 		// Calculate stack size
@@ -739,7 +801,7 @@ public:
 			}
 			file << ")\n {\n";
 		}
-			   
+
 		int i;
 
 		for (i = 1; i < (int)all_vars.size(); i++) if (!all_vars[i].isInput()) break;
@@ -772,69 +834,133 @@ public:
 			}
 			else lendec = "   ";
 
-			// Casi noti
-			// [k],n *
-			if (o1 == string("2"))
+			if (v->op == 'a' || v->op == 's') // FMA
 			{
-				if (v->size > local_max_size) file << lendec << v->name << "_len = o.Double_With_PreAlloc(" << al2 << ", " << o2 << ", &" << v->name << ", " << local_max_size << ");\n";
-				else file << "   o.Double(" << al2 << ", " << o2 << ", " << v->name << ");\n";
-				v->actual_length = al2;// v->name + "_len";
-			}
-			// 1,1 +-*^
-			else if (s1 == 1 && s2 == 1)
-			{
-				if (v->op == '+') file << "   o.two_Sum(" << o1 << ", " << o2 << ", " << v->name << ");\n";
-				else if (v->op == '-') file << "   o.two_Diff(" << o1 << ", " << o2 << ", " << v->name << ");\n";
-				else if (v->op == '*' && v->op1 != v->op2) file << "   o.Two_Prod(" << o1 << ", " << o2 << ", " << v->name << ");\n";
-				else if (v->op == '*' && v->op1 == v->op2) file << "   o.Square(" << o1 << ", " << v->name << ");\n";
-			}
-			// 2,1 *
-			else if (s1 == 2 && s2 == 1)
-			{
-				if (v->op == '*') file << "   o.Two_One_Prod(" << o1 << ", " << o2 << ", " << v->name << ");\n";
-			}
-			// 1,2 *
-			else if (s1 == 1 && s2 == 2)
-			{
-				if (v->op == '*') file << "   o.Two_One_Prod(" << o2 << ", " << o1 << ", " << v->name << ");\n";
-			}
-			// 2,2 +-*^
-			else if (s1 == 2 && s2 == 2 && v->op != '*') // Add Two_Square
-			{
-				if (v->op == '+') file << "   o.Two_Two_Sum(" << o1 << ", " << o2 << ", " << v->name << ");\n";
-				else if (v->op == '-') file << "   o.Two_Two_Diff(" << o1 << ", " << o2 << ", " << v->name << ");\n";
-				else if (v->op == '*') file << "   o.Two_Two_Prod(" << o1 << ", " << o2 << ", " << v->name << ");\n";
-			}
-			// n,n +-*
-			else
-			{
-				if (v->size > local_max_size)
+				static int tv_idx = 0;
+				tv_idx++;
+				string tvname;
+				stringstream stv;
+				stv << "tvar_" << tv_idx;
+				tvname = stv.str();
+				uint32_t tvsize = 2 * s1 * s2;
+				string alt = "" + tvsize;
+				if (tvsize > local_max_size) file << "   double " << tvname << "_p[" << local_max_size << "], *" << tvname << " = " << tvname << "_p;\n";
+				else file << "   double " << tvname << "[" << tvsize << "];\n";
+
+				if (s1 == 1 && s2 == 1)
 				{
-					uint32_t lms = (!is_lambda || v->name.substr(0, 6) != "lambda") ? local_max_size : MAX_STATIC_SIZE;
-					if (v->op == '+') file << lendec << v->name << "_len = o.Gen_Sum_With_PreAlloc(" << al1 << ", " << o1 << ", " << al2 << ", " << o2 << ", &" << v->name << ", " << lms << ");\n";
-					else if (v->op == '-') file << lendec << v->name << "_len = o.Gen_Diff_With_PreAlloc(" << al1 << ", " << o1 << ", " << al2 << ", " << o2 << ", &" << v->name << ", " << lms << ");\n";
-					else if (v->op == '*')
+					if (v->op1 != v->op2) file << "   o.Two_Prod(" << o1 << ", " << o2 << ", " << tvname << ");\n";
+					else file << "   o.Square(" << o1 << ", " << tvname << ");\n";
+				}
+				else if (s1 == 2 && s2 == 1) file << "   o.Two_One_Prod(" << o1 << ", " << o2 << ", " << tvname << ");\n";
+				else if (s1 == 1 && s2 == 2) file << "   o.Two_One_Prod(" << o2 << ", " << o1 << ", " << tvname << ");\n";
+				else
+				{
+					if (tvsize > local_max_size)
 					{
-						if (s2 == 1) file << lendec << v->name << "_len = o.Gen_Scale_With_PreAlloc(" << al1 << ", " << o1 << ", " << o2 << ", &" << v->name << ", " << lms << ");\n";
-						else if (s1 == 1) file << lendec << v->name << "_len = o.Gen_Scale_With_PreAlloc(" << al2 << ", " << o2 << ", " << o1 << ", &" << v->name << ", " << lms << ");\n";
-						else file << lendec << v->name << "_len = o.Gen_Product_With_PreAlloc(" << al1 << ", " << o1 << ", " << al2 << ", " << o2 << ", &" << v->name << ", " << lms << ");\n";
+						if (s2 == 1) file << "   int " << tvname << "_len = o.Gen_Scale_With_PreAlloc(" << al1 << ", " << o1 << ", " << o2 << ", &" << tvname << ", " << local_max_size << ");\n";
+						else if (s1 == 1) file << "   int " << tvname << "_len = o.Gen_Scale_With_PreAlloc(" << al2 << ", " << o2 << ", " << o1 << ", &" << tvname << ", " << local_max_size << ");\n";
+						else file << "   int " << tvname << "_len = o.Gen_Product_With_PreAlloc(" << al1 << ", " << o1 << ", " << al2 << ", " << o2 << ", &" << tvname << ", " << local_max_size << ");\n";
 					}
+					else
+					{
+						if (s2 == 1) file << "   int " << tvname << "_len = o.Gen_Scale(" << al1 << ", " << o1 << ", " << o2 << ", " << tvname << ");\n";
+						else if (s1 == 1) file << "   int " << tvname << "_len = o.Gen_Scale(" << al2 << ", " << o2 << ", " << o1 << ", " << tvname << ");\n";
+						else file << "   int " << tvname << "_len = o.Gen_Product(" << al1 << ", " << o1 << ", " << al2 << ", " << o2 << ", " << tvname << ");\n";
+					}
+					alt = tvname + "_len";
+				}
+
+				variable& op3 = all_vars[v->op3];
+				string& o3 = op3.name;
+				int s3 = op3.size;
+				string& al3 = op3.actual_length;
+
+				if (tvsize == 2 && s3 == 2)
+				{
+					if (v->op == 'a') file << "   o.Two_Two_Sum(" << tvname << ", " << o3 << ", " << v->name << ");\n";
+					else if (v->op == 's') file << "   o.Two_Two_Diff(" << tvname << ", " << o3 << ", " << v->name << ");\n";
 				}
 				else
-					if (v->op == '+') file << lendec << v->name << "_len = o.Gen_Sum(" << al1 << ", " << o1 << ", " << al2 << ", " << o2 << ", " << v->name << ");\n";
-					else if (v->op == '-') file << lendec << v->name << "_len = o.Gen_Diff(" << al1 << ", " << o1 << ", " << al2 << ", " << o2 << ", " << v->name << ");\n";
-					else if (v->op == '*')
+				{
+					if (v->size > local_max_size)
 					{
-						if (s2 == 1) file << lendec << v->name << "_len = o.Gen_Scale(" << al1 << ", " << o1 << ", " << o2 << ", " << v->name << ");\n";
-						else if (s1 == 1) file << lendec << v->name << "_len = o.Gen_Scale(" << al2 << ", " << o2 << ", " << o1 << ", " << v->name << ");\n";
-						else file << lendec << v->name << "_len = o.Gen_Product(" << al1 << ", " << o1 << ", " << al2 << ", " << o2 << ", " << v->name << ");\n";
+						uint32_t lms = (!is_lambda || v->name.substr(0, 6) != "lambda") ? local_max_size : MAX_STATIC_SIZE;
+						if (v->op == 'a') file << lendec << v->name << "_len = o.Gen_Sum_With_PreAlloc(" << alt << ", " << tvname << ", " << al3 << ", " << o3 << ", &" << v->name << ", " << lms << ");\n";
+						else if (v->op == 's') file << lendec << v->name << "_len = o.Gen_Diff_With_PreAlloc(" << alt << ", " << tvname << ", " << al3 << ", " << o3 << ", &" << v->name << ", " << lms << ");\n";
 					}
-				v->actual_length = v->name + "_len";
+					else
+						if (v->op == 'a') file << lendec << v->name << "_len = o.Gen_Sum(" << alt << ", " << tvname << ", " << al3 << ", " << o3 << ", " << v->name << ");\n";
+						else if (v->op == 's') file << lendec << v->name << "_len = o.Gen_Diff(" << alt << ", " << tvname << ", " << al3 << ", " << o3 << ", " << v->name << ");\n";
+					v->actual_length = v->name + "_len";
+				}
+			}
+			else
+			{
+				// Casi noti
+				// [k],n *
+				if (o1 == string("2"))
+				{
+					if (v->size > local_max_size) file << lendec << v->name << "_len = o.Double_With_PreAlloc(" << al2 << ", " << o2 << ", &" << v->name << ", " << local_max_size << ");\n";
+					else file << "   o.Double(" << al2 << ", " << o2 << ", " << v->name << ");\n";
+					v->actual_length = al2;// v->name + "_len";
+				}
+				// 1,1 +-*^
+				else if (s1 == 1 && s2 == 1)
+				{
+					if (v->op == '+') file << "   o.two_Sum(" << o1 << ", " << o2 << ", " << v->name << ");\n";
+					else if (v->op == '-') file << "   o.two_Diff(" << o1 << ", " << o2 << ", " << v->name << ");\n";
+					else if (v->op == '*' && v->op1 != v->op2) file << "   o.Two_Prod(" << o1 << ", " << o2 << ", " << v->name << ");\n";
+					else if (v->op == '*' && v->op1 == v->op2) file << "   o.Square(" << o1 << ", " << v->name << ");\n";
+				}
+				// 2,1 *
+				else if (s1 == 2 && s2 == 1)
+				{
+					if (v->op == '*') file << "   o.Two_One_Prod(" << o1 << ", " << o2 << ", " << v->name << ");\n";
+				}
+				// 1,2 *
+				else if (s1 == 1 && s2 == 2)
+				{
+					if (v->op == '*') file << "   o.Two_One_Prod(" << o2 << ", " << o1 << ", " << v->name << ");\n";
+				}
+				// 2,2 +-*^
+				else if (s1 == 2 && s2 == 2 && v->op != '*') // Add Two_Square
+				{
+					if (v->op == '+') file << "   o.Two_Two_Sum(" << o1 << ", " << o2 << ", " << v->name << ");\n";
+					else if (v->op == '-') file << "   o.Two_Two_Diff(" << o1 << ", " << o2 << ", " << v->name << ");\n";
+					else if (v->op == '*') file << "   o.Two_Two_Prod(" << o1 << ", " << o2 << ", " << v->name << ");\n";
+				}
+				// n,n +-*
+				else
+				{
+					if (v->size > local_max_size)
+					{
+						uint32_t lms = (!is_lambda || v->name.substr(0, 6) != "lambda") ? local_max_size : MAX_STATIC_SIZE;
+						if (v->op == '+') file << lendec << v->name << "_len = o.Gen_Sum_With_PreAlloc(" << al1 << ", " << o1 << ", " << al2 << ", " << o2 << ", &" << v->name << ", " << lms << ");\n";
+						else if (v->op == '-') file << lendec << v->name << "_len = o.Gen_Diff_With_PreAlloc(" << al1 << ", " << o1 << ", " << al2 << ", " << o2 << ", &" << v->name << ", " << lms << ");\n";
+						else if (v->op == '*')
+						{
+							if (s2 == 1) file << lendec << v->name << "_len = o.Gen_Scale_With_PreAlloc(" << al1 << ", " << o1 << ", " << o2 << ", &" << v->name << ", " << lms << ");\n";
+							else if (s1 == 1) file << lendec << v->name << "_len = o.Gen_Scale_With_PreAlloc(" << al2 << ", " << o2 << ", " << o1 << ", &" << v->name << ", " << lms << ");\n";
+							else file << lendec << v->name << "_len = o.Gen_Product_With_PreAlloc(" << al1 << ", " << o1 << ", " << al2 << ", " << o2 << ", &" << v->name << ", " << lms << ");\n";
+						}
+					}
+					else
+						if (v->op == '+') file << lendec << v->name << "_len = o.Gen_Sum(" << al1 << ", " << o1 << ", " << al2 << ", " << o2 << ", " << v->name << ");\n";
+						else if (v->op == '-') file << lendec << v->name << "_len = o.Gen_Diff(" << al1 << ", " << o1 << ", " << al2 << ", " << o2 << ", " << v->name << ");\n";
+						else if (v->op == '*')
+						{
+							if (s2 == 1) file << lendec << v->name << "_len = o.Gen_Scale(" << al1 << ", " << o1 << ", " << o2 << ", " << v->name << ");\n";
+							else if (s1 == 1) file << lendec << v->name << "_len = o.Gen_Scale(" << al2 << ", " << o2 << ", " << o1 << ", " << v->name << ");\n";
+							else file << lendec << v->name << "_len = o.Gen_Product(" << al1 << ", " << o1 << ", " << al2 << ", " << o2 << ", " << v->name << ");\n";
+						}
+					v->actual_length = v->name + "_len";
+				}
 			}
 		}
 
 		file << "\n";
-		if (!is_lambda) file << ((is_indirect)?("   "):("   double ")) << "return_value = " << v->name << "[" << v->actual_length << " - 1];\n";
+		if (!is_lambda) file << ((is_indirect) ? ("   ") : ("   double ")) << "return_value = " << v->name << "[" << v->actual_length << " - 1];\n";
 
 		for (i--; i >= first_op; i--)
 		{
@@ -857,7 +983,7 @@ public:
 				for (variable& v : all_vars) if (v.isInput() && v.is_lambda_out)
 				{
 					if (v.size > local_max_size) file << " if (" << v.name << "_p != " << v.name << ") free(" << v.name << ");\n";
-				}			
+				}
 			}
 
 			file << "\n if (return_value > 0) return IP_Sign::POSITIVE;\n";
@@ -866,6 +992,130 @@ public:
 		}
 		file << "}\n\n";
 	}
+
+	//static void produceExactCode(string& funcname, ofstream& file)
+	//{
+	//	// Calculate stack size
+	//	uint32_t fixed_stacksize = 152; // Accoount for expansionObject + return_value
+	//	for (variable& v : all_vars) if (v.isInput() && v.name != "2" && !v.is_lambda_out) fixed_stacksize += 8; // Size of a pointer on 64bit systems
+	//	if (is_lambda) for (variable& v : all_vars) if (v.name.substr(0, 6) == "lambda") fixed_stacksize += 16; // two pointers
+	//	else for (variable& v : all_vars) if (v.isInput() && v.is_lambda_out) fixed_stacksize += 16; // two pointers
+
+	//	if (fixed_stacksize >= MAX_STACK_SIZE) error("Too many parameters - stack overflow unavoidable.\n", 0);
+
+	//	uint32_t local_max_size = MAX_STATIC_SIZE * 2;
+	//	uint32_t variable_stacksize;
+
+	//	do
+	//	{
+	//		local_max_size /= 2;
+	//		variable_stacksize = 0;
+	//		for (variable& v : all_vars)
+	//			if ((!is_lambda || v.name.substr(0, 6) != "lambda") && v.name != "2")
+	//			{
+	//				if (v.size > local_max_size) variable_stacksize += (local_max_size + 1) * 8;
+	//				else variable_stacksize += (v.size * 8);
+	//			}
+	//			else variable_stacksize += 4;
+	//	} while ((fixed_stacksize + variable_stacksize) >= MAX_STACK_SIZE);
+	//	printf("STACK --- %d\n", fixed_stacksize + variable_stacksize);
+
+	//	// Return type and function name
+	//	if (is_lambda)
+	//	{
+	//		file << "void " << funcname << "(";
+	//		bool first = true;
+	//		for (variable& v : all_vars) if (v.isInput() && v.name != "2" && v.is_used && !v.is_lambda_out) { file << ((first) ? ("double ") : (", double ")) << v.name; first = false; }
+
+	//		for (variable& v : all_vars) { if (v.name.substr(0, 6) == "lambda") file << ((first) ? ("double *") : (", double *")) << v.name << ", int& " << v.name << "_len"; first = false; }
+
+	//		file << ")\n{\n";
+	//	}
+	//	else file << "int " << funcname << "(" << createParameterProtoList("double") << ")\n{\n";
+
+
+	//	if (is_indirect)
+	//	{
+	//		file << " double return_value = 0.0;\n";
+	//		bool first;
+	//		first = true; for (variable& v : all_vars) if (v.isInput() && v.is_lambda_out)
+	//		{
+	//			if (v.size > local_max_size) file << ((first) ? (" double ") : (", ")) << v.name << "_p[" << local_max_size << "], *" << v.name << " = " << v.name << "_p";
+	//			else file << ((first) ? (" double ") : (", ")) << v.name << "[" << v.size << "]";
+	//			first = false;
+	//		}
+	//		file << ";\n";
+	//		first = true; for (variable& v : all_vars) if (v.isInput() && v.is_lambda_out)
+	//		{
+	//			file << ((first) ? (" int ") : (", ")) << v.name << "_len"; first = false;
+	//		}
+	//		file << ";\n";
+
+	//		for (lambda_variable& l : all_lambda_vars)
+	//		{
+	//			file << " "; l.print_exact(file); file << ";\n";
+	//		}
+
+	//		file << " if (";
+	//		first = true; for (lambda_variable& l : all_lambda_vars)
+	//		{
+	//			file << ((first) ? ("(") : (" && (")) << all_vars[l.output_pars.back()].name << "[" << all_vars[l.output_pars.back()].name << "_len - 1] != 0)";
+	//			first = false;
+	//		}
+	//		file << ")\n {\n";
+	//	}
+	//		   
+	//	int i;
+
+	//	for (i = 1; i < (int)all_vars.size(); i++) if (!all_vars[i].isInput()) break;
+
+	//	// Function body
+
+	//	file << "   expansionObject o;\n";
+
+	//	variable* v;
+	//	int first_op = i;
+
+	//	for (i = 1; i < (int)all_vars.size(); i++)
+	//	{
+	//		v = &all_vars[i];
+	//		if (v->isInput()) continue;
+	//		produceSingleExactOperation(*v, local_max_size, file);
+	//	}
+
+	//	file << "\n";
+	//	if (!is_lambda) file << ((is_indirect)?("   "):("   double ")) << "return_value = " << v->name << "[" << v->actual_length << " - 1];\n";
+
+	//	for (i--; i >= first_op; i--)
+	//	{
+	//		v = &all_vars[i];
+	//		if (v->size > local_max_size && (!is_lambda || v->name.substr(0, 6) != "lambda")) file << "   if (" << v->name << "_p != " << v->name << ") free(" << v->name << ");\n";
+	//	}
+
+	//	if (!is_lambda)
+	//	{
+	//		if (!sign_vars.empty())
+	//		{
+	//			file << "   if (( ";
+	//			bool first = true; for (variable* v : sign_vars) { file << ((first) ? ("") : (" + ")) << "(" << v->name << "[" << v->name << "_len -1] < 0)"; first = false; }
+	//			file << ((sign_vars.size() > 1) ? ") & 1) " : ")) ") << "return_value = -return_value;\n";
+	//		}
+
+	//		if (is_indirect)
+	//		{
+	//			file << " }\n\n";
+	//			for (variable& v : all_vars) if (v.isInput() && v.is_lambda_out)
+	//			{
+	//				if (v.size > local_max_size) file << " if (" << v.name << "_p != " << v.name << ") free(" << v.name << ");\n";
+	//			}			
+	//		}
+
+	//		file << "\n if (return_value > 0) return IP_Sign::POSITIVE;\n";
+	//		file << " if (return_value < 0) return IP_Sign::NEGATIVE;\n";
+	//		file << " return IP_Sign::ZERO;\n";
+	//	}
+	//	file << "}\n\n";
+	//}
 
 	//static void produceExactCode(string& funcname, ofstream& file)
 	//{
@@ -1421,14 +1671,27 @@ bool parseLine(ifstream& file, int ln)
 	{
 		if (tokens[1] == "=") // Assignment
 		{
-			if (tokens.size() != 5) error("Error: unexpected number of tokens", ln);
-
-			string& newvarname = tokens[0];
-			if (variable::getVarByName(newvarname) != -1) error("Error: variable already declared", ln);
-			int op1 = variable::getVarByName(tokens[2]); if (op1 == -1) error("Error: unknown variable used", ln);
-			int op2 = variable::getVarByName(tokens[4]); if (op2 == -1) error("Error: unknown variable used", ln);
-			char op = tokens[3][0];
-			variable::all_vars.push_back(variable(newvarname, op1, op2, op));
+			if (tokens.size() == 7) // FMAdd or FMSub
+			{
+   			 string& newvarname = tokens[0];
+			 if (variable::getVarByName(newvarname) != -1) error("Error: variable already declared (fma)", ln);
+			 int op1 = variable::getVarByName(tokens[2]); if (op1 == -1) error("Error: unknown variable used", ln);
+			 int op2 = variable::getVarByName(tokens[4]); if (op2 == -1) error("Error: unknown variable used", ln);
+			 int op3 = variable::getVarByName(tokens[6]); if (op3 == -1) error("Error: unknown variable used", ln);
+			 if (tokens[3][0] != '*') error("Error: unexpected operator in FMA expression", ln);
+			 char op = tokens[5][0];
+			 variable::all_vars.push_back(variable(newvarname, op1, op2, op3, op));
+			}
+			else if (tokens.size() == 5) 
+			{
+				string& newvarname = tokens[0];
+				if (variable::getVarByName(newvarname) != -1) error("Error: variable already declared", ln);
+				int op1 = variable::getVarByName(tokens[2]); if (op1 == -1) error("Error: unknown variable used", ln);
+				int op2 = variable::getVarByName(tokens[4]); if (op2 == -1) error("Error: unknown variable used", ln);
+				char op = tokens[3][0];
+				variable::all_vars.push_back(variable(newvarname, op1, op2, op));
+			}
+			else error("Error: unexpected number of tokens", ln);
 		}
 		else // Parameter list
 		{

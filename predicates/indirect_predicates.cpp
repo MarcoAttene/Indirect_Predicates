@@ -77,6 +77,7 @@ int incircle_filtered(double pax, double pay, double pbx, double pby, double pcx
    epsilon *= epsilon;
    epsilon *= epsilon;
    epsilon *= 1.376676550535194e-14;
+
    if (L > epsilon) return IP_Sign::POSITIVE;
    if (-L > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;

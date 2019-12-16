@@ -52,6 +52,7 @@
 	// 64-bit
 #ifdef IS64BITPLATFORM
 #define USE_SIMD_INSTRUCTIONS
+//#define USE_FMA_INSTRUCTIONS
 #endif
 
 #ifdef ISVISUALSTUDIO
@@ -62,6 +63,10 @@
 	inline void setFPUModeToRoundNEAR() { _controlfp(_RC_NEAR, _MCW_RC); }
 #else
 
+#ifdef USE_SIMD_INSTRUCTIONS
+#include <stdalign.h>
+#endif
+
 #pragma STDC FENV_ACCESS ON
 
 	inline void setFPUModeToRoundUP() { fesetround(FE_UPWARD); }
@@ -71,14 +76,17 @@
 #ifdef USE_SIMD_INSTRUCTIONS
 #include <emmintrin.h>
 
+#define ALG16_Double alignas(16) double
+
 	class interval_number
 	{
-		static __m128d zero;
-		static __m128i sign_low_mask, sign_high_mask;
 
 		__m128d interval; // interval[1] = min_low, interval[0] = high
 
 	public:
+		static __m128d zero;
+		static __m128i sign_low_mask, sign_high_mask;
+
 		static void init();
 
 		const double *getInterval() const { return (const double*)&interval; }
@@ -88,6 +96,10 @@
 		inline interval_number(const double minf, const double sup) : interval(_mm_set_pd(minf, sup)) {}
 		inline interval_number(const __m128d& i) : interval(i) {}
 		inline interval_number(const interval_number& b) : interval(b.interval) {}
+
+		inline double inf() const { return -((double*)(&interval))[1]; }
+		inline double sup() const { return ((double*)(&interval))[0]; }
+		inline double width() const { return sup() - inf(); }
 
 		inline bool isNegative() const { return _mm_comilt_sd(interval, zero); }
 		inline bool isPositive() const { return _mm_comilt_sd(_mm_shuffle_pd(interval, interval, 1), zero); }
@@ -140,9 +152,108 @@
 
 			return interval_number(NAN);
 		}
+
+		friend interval_number fmadd(const interval_number& a, const interval_number& b, const interval_number& c);
+		friend interval_number fmsub(const interval_number& a, const interval_number& b, const interval_number& c);
 	};
 
+#ifdef USE_FMA_INSTRUCTIONS
+
+#include <immintrin.h>
+
+	inline interval_number fmadd(const interval_number& a, const interval_number& b, const interval_number& c)
+	{
+		__m128i ssg;
+		__m128d llhh, lhhl, ip;
+		// Move vars from in switch
+
+		switch ((_mm_movemask_pd(a.interval) << 2) | _mm_movemask_pd(b.interval))
+		{
+		case 0:
+			llhh = _mm_fmadd_pd(a.interval, b.interval, c.interval);
+			lhhl = _mm_fmadd_pd(a.interval, _mm_shuffle_pd(b.interval, b.interval, 1), c.interval);
+			return interval_number(_mm_max_pd(_mm_unpacklo_pd(llhh, lhhl), _mm_unpackhi_pd(llhh, lhhl)));
+		case 1:
+			return interval_number(_mm_fmadd_pd(_mm_shuffle_pd(b.interval, b.interval, 3), a.interval, c.interval));
+		case 2:
+			return interval_number(_mm_fmadd_pd(_mm_shuffle_pd(b.interval, b.interval, 0), a.interval, c.interval));
+		case 4:
+			return interval_number(_mm_fmadd_pd(_mm_shuffle_pd(a.interval, a.interval, 3), b.interval, c.interval));
+		case 5:
+			ip = _mm_fmadd_pd(_mm_castsi128_pd(_mm_xor_si128(_mm_castpd_si128(a.interval), interval_number::sign_high_mask)), b.interval, c.interval);
+			return interval_number(_mm_shuffle_pd(ip, ip, 1));
+		case 6:
+			ssg = _mm_xor_si128(_mm_castpd_si128(b.interval), interval_number::sign_low_mask);
+			return interval_number(_mm_fmadd_pd(a.interval, _mm_shuffle_pd(_mm_castsi128_pd(ssg), _mm_castsi128_pd(ssg), 1), c.interval));
+		case 8:
+			return interval_number(_mm_fmadd_pd(_mm_shuffle_pd(a.interval, a.interval, 0), _mm_shuffle_pd(b.interval, b.interval, 1), c.interval));
+		case 9:
+			ssg = _mm_xor_si128(_mm_castpd_si128(a.interval), interval_number::sign_low_mask);
+			return interval_number(_mm_fmadd_pd(b.interval, _mm_shuffle_pd(_mm_castsi128_pd(ssg), _mm_castsi128_pd(ssg), 1), c.interval));
+		case 10:
+			return interval_number(_mm_fmadd_pd(a.interval, _mm_castsi128_pd(_mm_xor_si128(_mm_castpd_si128(b.interval), interval_number::sign_low_mask)), c.interval));
+		}
+
+		return interval_number(NAN);
+	}
+
+	inline interval_number fmsub(const interval_number& a, const interval_number& b, const interval_number& c)
+	{
+		__m128i ssg;
+		__m128d llhh, lhhl, ip;
+		// Move vars from in switch
+
+		switch ((_mm_movemask_pd(a.interval) << 2) | _mm_movemask_pd(b.interval))
+		{
+		case 0:
+			llhh = _mm_fmsub_pd(a.interval, b.interval, c.interval);
+			lhhl = _mm_fmsub_pd(a.interval, _mm_shuffle_pd(b.interval, b.interval, 1), c.interval);
+			return interval_number(_mm_max_pd(_mm_unpacklo_pd(llhh, lhhl), _mm_unpackhi_pd(llhh, lhhl)));
+		case 1:
+			return interval_number(_mm_fmsub_pd(_mm_shuffle_pd(b.interval, b.interval, 3), a.interval, c.interval));
+		case 2:
+			return interval_number(_mm_fmsub_pd(_mm_shuffle_pd(b.interval, b.interval, 0), a.interval, c.interval));
+		case 4:
+			return interval_number(_mm_fmsub_pd(_mm_shuffle_pd(a.interval, a.interval, 3), b.interval, c.interval));
+		case 5:
+			ip = _mm_fmsub_pd(_mm_castsi128_pd(_mm_xor_si128(_mm_castpd_si128(a.interval), interval_number::sign_high_mask)), b.interval, c.interval);
+			return interval_number(_mm_shuffle_pd(ip, ip, 1));
+		case 6:
+			ssg = _mm_xor_si128(_mm_castpd_si128(b.interval), interval_number::sign_low_mask);
+			return interval_number(_mm_fmsub_pd(a.interval, _mm_shuffle_pd(_mm_castsi128_pd(ssg), _mm_castsi128_pd(ssg), 1), c.interval));
+		case 8:
+			return interval_number(_mm_fmsub_pd(_mm_shuffle_pd(a.interval, a.interval, 0), _mm_shuffle_pd(b.interval, b.interval, 1), c.interval));
+		case 9:
+			ssg = _mm_xor_si128(_mm_castpd_si128(a.interval), interval_number::sign_low_mask);
+			return interval_number(_mm_fmsub_pd(b.interval, _mm_shuffle_pd(_mm_castsi128_pd(ssg), _mm_castsi128_pd(ssg), 1), c.interval));
+		case 10:
+			return interval_number(_mm_fmsub_pd(a.interval, _mm_castsi128_pd(_mm_xor_si128(_mm_castpd_si128(b.interval), interval_number::sign_low_mask)), c.interval));
+		}
+
+		return interval_number(NAN);
+	}
+
+// All the four doubles must be aligned(16)
+// r = a*b + c
+#define Explicit_FMAdd(a,b,c,r) _mm_store_pd(&(r), _mm_fmadd_sd(_mm_load_sd(&(a)), _mm_load_sd(&(b)), _mm_load_sd(&(c))));
+
+// r = a*b - c
+#define Explicit_FMSub(a,b,c,r) _mm_store_pd(&(r), _mm_fmsub_sd(_mm_load_sd(&(a)), _mm_load_sd(&(b)), _mm_load_sd(&(c))));
+
+#else
+	inline interval_number fmadd(const interval_number& a, const interval_number& b, const interval_number& c)
+	{
+		return (a * b) + c;
+	}
+	inline interval_number fmsub(const interval_number& a, const interval_number& b, const interval_number& c)
+	{
+		return (a * b) - c;
+	}
+#endif
+
 #else // USE_SIMD_INSTRUCTIONS
+
+#define ALG16_Double double
 
 	// Interval_number
 	class interval_number
@@ -168,6 +279,10 @@
 		inline interval_number(double a) : min_low(-a), high(a) {}
 		inline interval_number(double minf, double sup) : min_low(minf), high(sup) {}
 		inline interval_number(const interval_number& b) : min_low(b.min_low), high(b.high) {}
+
+		inline double inf() const { return -min_low; }
+		inline double sup() const { return high; }
+		inline double width() const { return sup() - inf(); }
 
 		inline bool signIsReliable() const { return (min_low < 0 || high < 0); }
 		inline int sign() const { return (min_low < 0) ? (1) : ((high < 0) ? (-1) : (0)); }
@@ -209,7 +324,19 @@
 
 			return interval_number(NAN);
 		}
+	
+		friend interval_number fmsub(const interval_number& a, const interval_number& b, const interval_number& c);
+		friend interval_number fmadd(const interval_number& a, const interval_number& b, const interval_number& c);
 	};
+
+	inline interval_number fmadd(const interval_number& a, const interval_number& b, const interval_number& c)
+	{
+		return (a * b) + c;
+	}
+	inline interval_number fmsub(const interval_number& a, const interval_number& b, const interval_number& c)
+	{
+		return (a * b) - c;
+	}
 #endif // USE_SIMD_INSTRUCTIONS
 
 
