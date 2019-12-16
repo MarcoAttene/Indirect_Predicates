@@ -80,28 +80,24 @@ int genericPoint::lessThan(genericPoint& a, genericPoint& b)
 {
 	if (a.is3D()) // Here we may want to check that b is also 3D, but for now we just assume it is
 	{
-		int config = (a.getType() - Point_Type::EXPLICIT3D) + ((b.getType() - Point_Type::EXPLICIT3D) << 2);
-		switch (config)
-		{
-		case 0: // EE
+		if (a.isExplicit3D() && b.isExplicit3D())
 			return lessThan_EE(a.toExplicit3D().X(), a.toExplicit3D().Y(), a.toExplicit3D().Z(), b.toExplicit3D().X(), b.toExplicit3D().Y(), b.toExplicit3D().Z());
-		case 1: // LE
+		if (a.isLPI() && b.isExplicit3D())
 			return lessThan_LE(a.toLPI(), b.toExplicit3D().X(), b.toExplicit3D().Y(), b.toExplicit3D().Z());
-		case 2: // TE
+		if (a.isTPI() && b.isExplicit3D())
 			return lessThan_TE(a.toTPI(), b.toExplicit3D().X(), b.toExplicit3D().Y(), b.toExplicit3D().Z());
-		case 4: // EL
+		if (a.isExplicit3D() && b.isLPI())
 			return -lessThan_LE(b.toLPI(), a.toExplicit3D().X(), a.toExplicit3D().Y(), a.toExplicit3D().Z());
-		case 5: // LL
+		if (a.isLPI() && b.isLPI())
 			return lessThan_LL(a.toLPI(), b.toLPI());
-		case 6: // TL
+		if (a.isTPI() && b.isLPI())
 			return -lessThan_LT(b.toLPI(), a.toTPI());
-		case 8:
+		if (a.isExplicit3D() && b.isTPI())
 			return -lessThan_TE(b.toTPI(), a.toExplicit3D().X(), a.toExplicit3D().Y(), a.toExplicit3D().Z());
-		case 9: // LT
+		if (a.isLPI() && b.isTPI())
 			return lessThan_LT(a.toLPI(), b.toTPI());
-		case 10: // TT
+		if (a.isTPI() && b.isTPI())
 			return lessThan_TT(a.toTPI(), b.toTPI());
-		}
 	}
 	ip_error("genericPoint::lessThan - points must be 3D\n");
 }
