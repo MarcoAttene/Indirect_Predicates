@@ -90,7 +90,7 @@ public:
 	bool is_a_max;			// TRUE if magnitude is relevant for error bound
 	bool is_lambda_out;		// TRUE if this var is the output of a lambda calculation
 	bool is_used;			// TRUE if this var is the operand of another var
-	
+
 	static bool append;		// TRUE to append code to an existing file
 	static vector<variable> all_vars;	// List of all the variables
 	static vector<variable*> sign_vars;	// List of variables that determine the sign (denominators with odd exponent)
@@ -98,6 +98,7 @@ public:
 	static string func_name; // Name of the function
 	static bool is_indirect; // True if function is an indirect predicate
 	static bool is_lambda;	 // True if function defines a lambda
+	static bool is_fma;		 // TRUE if at least an FMA instruction is in expression
 
 	static double ulp(double d)
 	{
@@ -111,7 +112,7 @@ public:
 	static void init(bool _append) 
 	{
 		append = _append;
-		is_indirect = is_lambda = false;
+		is_indirect = is_lambda = is_fma = false;
 		all_vars.push_back(variable(string("2"))); // "2" is a special variable representing the constant 2
 	} 
 
@@ -204,7 +205,7 @@ public:
 		variable& ov1 = all_vars[o1];
 		variable& ov2 = all_vars[o2];
 		variable& ov3 = all_vars[o3];
-		ov1.is_used = ov2.is_used = ov3.is_used = true;
+		ov1.is_used = ov2.is_used = ov3.is_used = is_fma = true;
 
 		if (o == '+') op = 'a';
 		else if (o == '-') op = 's';
@@ -356,7 +357,7 @@ public:
 
 	static void produceFilteredCode(string& funcname, ofstream& file)
 	{
-		const string double_type = "double";
+		const string double_type = (is_fma)?("ALG16_Double"):("double");
 
 		bool maxes = false;
 
@@ -1586,6 +1587,7 @@ vector<lambda_variable> variable::all_lambda_vars;
 string variable::func_name;
 bool variable::is_indirect;
 bool variable::is_lambda;
+bool variable::is_fma;
 bool variable::append;
 
 void parseLambdaVar(string& line, int ln)

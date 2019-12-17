@@ -52,7 +52,7 @@
 	// 64-bit
 #ifdef IS64BITPLATFORM
 #define USE_SIMD_INSTRUCTIONS
-//#define USE_FMA_INSTRUCTIONS
+#define USE_FMA_INSTRUCTIONS
 #endif
 
 #ifdef ISVISUALSTUDIO
@@ -235,10 +235,10 @@
 
 // All the four doubles must be aligned(16)
 // r = a*b + c
-#define Explicit_FMAdd(a,b,c,r) _mm_store_pd(&(r), _mm_fmadd_sd(_mm_load_sd(&(a)), _mm_load_sd(&(b)), _mm_load_sd(&(c))));
+#define Explicit_FMAdd(a,b,c,d)  d = *(double *)&_mm_fmadd_sd((*(__m128d*)(&a)), (*(__m128d*)(&b)), (*(__m128d*)(&c)));\
 
 // r = a*b - c
-#define Explicit_FMSub(a,b,c,r) _mm_store_pd(&(r), _mm_fmsub_sd(_mm_load_sd(&(a)), _mm_load_sd(&(b)), _mm_load_sd(&(c))));
+#define Explicit_FMSub(a,b,c,d) d = *(double *)&_mm_fmsub_sd((*(__m128d*)(&a)), (*(__m128d*)(&b)), (*(__m128d*)(&c)));\
 
 #else
 	inline interval_number fmadd(const interval_number& a, const interval_number& b, const interval_number& c)
