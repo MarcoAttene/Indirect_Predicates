@@ -79,6 +79,15 @@ public:
 
 	// The following functions convert to explicit points.
 	// Use only after having verified the correct type through getType()
+	//
+	// Note that these violate strict aliasing rules, which has two consequences:
+	// 1) Many compilers issue annoying warnings
+	// 2) The optimizer may do wrong assumptions
+	//
+	// I do not see how an optimizer may spoil these simple functions or code around them,
+	// but if you experience strange behaviour you may try replacing the type casts
+	// with memcpy to an object and hope that the optimizer recognizes that an actual
+	// copy is not necessary.
 	inline class explicitPoint2D& toExplicit2D() { return (explicitPoint2D&)(*this); }
 	inline class implicitPoint2D_SSI& toSSI() { return (implicitPoint2D_SSI&)(*this); }
 	inline class explicitPoint3D& toExplicit3D() { return (explicitPoint3D&)(*this); }

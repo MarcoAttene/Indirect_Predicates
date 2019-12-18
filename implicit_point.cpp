@@ -114,13 +114,13 @@ int genericPoint::orient2D(genericPoint& a, genericPoint& b, genericPoint& c)
 			return orient2d_indirect_SSE(a.toSSI(), b.toSSI(), c.toExplicit2D().X(), c.toExplicit2D().Y());
 		if (a.isSSI() && b.isSSI() && c.isSSI())
 			return orient2d_indirect_SSS(a.toSSI(), b.toSSI(), c.toSSI());
-		if (a.isExplicit2D() && b.isSSI() && c.isExplicit2D()) //return orient2D(b, c, a);
+		if (a.isExplicit2D() && b.isSSI() && c.isExplicit2D())
 			return orient2d_indirect_SEE(b.toSSI(), c.toExplicit2D().X(), c.toExplicit2D().Y(), a.toExplicit2D().X(), a.toExplicit2D().Y());
-		if (a.isExplicit2D() && b.isSSI() && c.isSSI()) //return orient2D(b, c, a);
+		if (a.isExplicit2D() && b.isSSI() && c.isSSI())
 			return orient2d_indirect_SSE(b.toSSI(), c.toSSI(), a.toExplicit2D().X(), a.toExplicit2D().Y());
-		if (a.isExplicit2D() && b.isExplicit2D() && c.isSSI()) //return orient2D(c, a, b);
+		if (a.isExplicit2D() && b.isExplicit2D() && c.isSSI())
 			return orient2d_indirect_SEE(c.toSSI(), a.toExplicit2D().X(), a.toExplicit2D().Y(), b.toExplicit2D().X(), b.toExplicit2D().Y());
-		if (a.isSSI() && b.isExplicit2D() && c.isSSI()) //return orient2D(c, a, b);
+		if (a.isSSI() && b.isExplicit2D() && c.isSSI())
 			return orient2d_indirect_SSE(c.toSSI(), a.toSSI(), b.toExplicit2D().X(), b.toExplicit2D().Y());
 	}
 	
@@ -219,29 +219,29 @@ int genericPoint::incircle(genericPoint& a, genericPoint& b, genericPoint& c, ge
 		if (a.isSSI() && b.isSSI() && c.isSSI() && d.isSSI())
 			return incircle_indirect_SSSS(a.toSSI(), b.toSSI(), c.toSSI(), d.toSSI());
 
-		if (a.isExplicit2D() && b.isSSI() && c.isExplicit2D() && d.isExplicit2D()) //return -incircle(b, a, c, d);
+		if (a.isExplicit2D() && b.isSSI() && c.isExplicit2D() && d.isExplicit2D())
 			return -incircle_indirect_SEEE(b.toSSI(), a.toExplicit2D().X(), a.toExplicit2D().Y(), c.toExplicit2D().X(), c.toExplicit2D().Y(), d.toExplicit2D().X(), d.toExplicit2D().Y());
-		if (a.isExplicit2D() && b.isExplicit2D() && c.isSSI() && d.isExplicit2D()) //return incircle(c, a, b, d);
+		if (a.isExplicit2D() && b.isExplicit2D() && c.isSSI() && d.isExplicit2D())
 			return incircle_indirect_SEEE(c.toSSI(), a.toExplicit2D().X(), a.toExplicit2D().Y(), b.toExplicit2D().X(), b.toExplicit2D().Y(), d.toExplicit2D().X(), d.toExplicit2D().Y());
-		if (a.isExplicit2D() && b.isExplicit2D() && c.isExplicit2D() && d.isSSI()) //return -incircle(d, a, b, c);
+		if (a.isExplicit2D() && b.isExplicit2D() && c.isExplicit2D() && d.isSSI())
 			return -incircle_indirect_SEEE(d.toSSI(), a.toExplicit2D().X(), a.toExplicit2D().Y(), b.toExplicit2D().X(), b.toExplicit2D().Y(), c.toExplicit2D().X(), c.toExplicit2D().Y());
 
-		if (a.isExplicit2D() && b.isExplicit2D() && c.isSSI() && d.isSSI()) //return incircle(c, d, a, b);
+		if (a.isExplicit2D() && b.isExplicit2D() && c.isSSI() && d.isSSI())
 			return incircle_indirect_SSEE(c.toSSI(), d.toSSI(), a.toExplicit2D().X(), a.toExplicit2D().Y(), b.toExplicit2D().X(), b.toExplicit2D().Y());
-		if (a.isExplicit2D() && b.isSSI() && c.isExplicit2D() && d.isSSI()) //return -incircle(b, d, a, c);
+		if (a.isExplicit2D() && b.isSSI() && c.isExplicit2D() && d.isSSI())
 			return -incircle_indirect_SSEE(b.toSSI(), d.toSSI(), a.toExplicit2D().X(), a.toExplicit2D().Y(), c.toExplicit2D().X(), c.toExplicit2D().Y());
-		if (a.isExplicit2D() && b.isSSI() && c.isSSI() && d.isExplicit2D()) //return incircle(b, c, a, d);
+		if (a.isExplicit2D() && b.isSSI() && c.isSSI() && d.isExplicit2D())
 			return incircle_indirect_SSEE(b.toSSI(), c.toSSI(), a.toExplicit2D().X(), a.toExplicit2D().Y(), d.toExplicit2D().X(), d.toExplicit2D().Y());
-		if (a.isSSI() && b.isExplicit2D() && c.isExplicit2D() && d.isSSI()) //return incircle(a, d, b, c);
+		if (a.isSSI() && b.isExplicit2D() && c.isExplicit2D() && d.isSSI())
 			return incircle_indirect_SSEE(a.toSSI(), d.toSSI(), b.toExplicit2D().X(), b.toExplicit2D().Y(), c.toExplicit2D().X(), c.toExplicit2D().Y());
-		if (a.isSSI() && b.isExplicit2D() && c.isSSI() && d.isExplicit2D()) //return -incircle(a, c, b, d);
+		if (a.isSSI() && b.isExplicit2D() && c.isSSI() && d.isExplicit2D())
 			return -incircle_indirect_SSEE(a.toSSI(), c.toSSI(), b.toExplicit2D().X(), b.toExplicit2D().Y(), d.toExplicit2D().X(), d.toExplicit2D().Y());
 
-		if (a.isExplicit2D() && b.isSSI() && c.isSSI() && d.isSSI()) //return -incircle(b, c, d, a);
+		if (a.isExplicit2D() && b.isSSI() && c.isSSI() && d.isSSI())
 			return -incircle_indirect_SSSE(b.toSSI(), c.toSSI(), d.toSSI(), a.toExplicit2D().X(), a.toExplicit2D().Y());
-		if (a.isSSI() && b.isExplicit2D() && c.isSSI() && d.isSSI()) //return incircle(a, c, d, b);
+		if (a.isSSI() && b.isExplicit2D() && c.isSSI() && d.isSSI())
 			return incircle_indirect_SSSE(a.toSSI(), c.toSSI(), d.toSSI(), b.toExplicit2D().X(), b.toExplicit2D().Y());
-		if (a.isSSI() && b.isSSI() && c.isExplicit2D() && d.isSSI()) //return -incircle(a, b, d, c);
+		if (a.isSSI() && b.isSSI() && c.isExplicit2D() && d.isSSI())
 			return -incircle_indirect_SSSE(a.toSSI(), b.toSSI(), d.toSSI(), c.toExplicit2D().X(), c.toExplicit2D().Y());
 	}
 

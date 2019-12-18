@@ -52,7 +52,7 @@
 	// 64-bit
 #ifdef IS64BITPLATFORM
 #define USE_SIMD_INSTRUCTIONS
-#define USE_FMA_INSTRUCTIONS
+//#define USE_FMA_INSTRUCTIONS
 #endif
 
 #ifdef ISVISUALSTUDIO
@@ -80,12 +80,12 @@
 
 	class interval_number
 	{
-
 		__m128d interval; // interval[1] = min_low, interval[0] = high
 
-	public:
 		static __m128d zero;
 		static __m128i sign_low_mask, sign_high_mask;
+
+	public:
 
 		static void init();
 
@@ -121,7 +121,6 @@
 		{
 			__m128i ssg;
 			__m128d llhh, lhhl, ip;
-			// Move vars from in switch
 
 			switch ((_mm_movemask_pd(interval) << 2) | _mm_movemask_pd(b.interval))
 			{
@@ -153,8 +152,10 @@
 			return interval_number(NAN);
 		}
 
+#ifdef USE_FMA_INSTRUCTIONS
 		friend interval_number fmadd(const interval_number& a, const interval_number& b, const interval_number& c);
 		friend interval_number fmsub(const interval_number& a, const interval_number& b, const interval_number& c);
+#endif
 	};
 
 #ifdef USE_FMA_INSTRUCTIONS
@@ -170,9 +171,10 @@
 		switch ((_mm_movemask_pd(a.interval) << 2) | _mm_movemask_pd(b.interval))
 		{
 		case 0:
-			llhh = _mm_fmadd_pd(a.interval, b.interval, c.interval);
-			lhhl = _mm_fmadd_pd(a.interval, _mm_shuffle_pd(b.interval, b.interval, 1), c.interval);
-			return interval_number(_mm_max_pd(_mm_unpacklo_pd(llhh, lhhl), _mm_unpackhi_pd(llhh, lhhl)));
+			// This case must be optimized by using fmadd!
+			llhh = _mm_mul_pd(a.interval, b.interval);
+			lhhl = _mm_mul_pd(a.interval, _mm_shuffle_pd(b.interval, b.interval, 1));
+			return interval_number(_mm_add_pd(_mm_max_pd(_mm_unpacklo_pd(llhh, lhhl), _mm_unpackhi_pd(llhh, lhhl)), c.interval));
 		case 1:
 			return interval_number(_mm_fmadd_pd(_mm_shuffle_pd(b.interval, b.interval, 3), a.interval, c.interval));
 		case 2:
@@ -180,8 +182,9 @@
 		case 4:
 			return interval_number(_mm_fmadd_pd(_mm_shuffle_pd(a.interval, a.interval, 3), b.interval, c.interval));
 		case 5:
-			ip = _mm_fmadd_pd(_mm_castsi128_pd(_mm_xor_si128(_mm_castpd_si128(a.interval), interval_number::sign_high_mask)), b.interval, c.interval);
-			return interval_number(_mm_shuffle_pd(ip, ip, 1));
+			// This case must be optimized by using fmadd!
+			ip = _mm_mul_pd(_mm_castsi128_pd(_mm_xor_si128(_mm_castpd_si128(a.interval), interval_number::sign_high_mask)), b.interval);
+			return interval_number(_mm_add_pd(_mm_shuffle_pd(ip, ip, 1), c.interval));
 		case 6:
 			ssg = _mm_xor_si128(_mm_castpd_si128(b.interval), interval_number::sign_low_mask);
 			return interval_number(_mm_fmadd_pd(a.interval, _mm_shuffle_pd(_mm_castsi128_pd(ssg), _mm_castsi128_pd(ssg), 1), c.interval));
@@ -206,49 +209,42 @@
 		switch ((_mm_movemask_pd(a.interval) << 2) | _mm_movemask_pd(b.interval))
 		{
 		case 0:
-			llhh = _mm_fmsub_pd(a.interval, b.interval, c.interval);
-			lhhl = _mm_fmsub_pd(a.interval, _mm_shuffle_pd(b.interval, b.interval, 1), c.interval);
-			return interval_number(_mm_max_pd(_mm_unpacklo_pd(llhh, lhhl), _mm_unpackhi_pd(llhh, lhhl)));
+			// This case must be optimized by using fmadd!
+			llhh = _mm_mul_pd(a.interval, b.interval);
+			lhhl = _mm_mul_pd(a.interval, _mm_shuffle_pd(b.interval, b.interval, 1));
+			return interval_number(_mm_add_pd(_mm_max_pd(_mm_unpacklo_pd(llhh, lhhl), _mm_unpackhi_pd(llhh, lhhl)), _mm_shuffle_pd(c.interval, c.interval, 1)));
 		case 1:
-			return interval_number(_mm_fmsub_pd(_mm_shuffle_pd(b.interval, b.interval, 3), a.interval, c.interval));
+			return interval_number(_mm_fmadd_pd(_mm_shuffle_pd(b.interval, b.interval, 3), a.interval, _mm_shuffle_pd(c.interval, c.interval, 1)));
 		case 2:
-			return interval_number(_mm_fmsub_pd(_mm_shuffle_pd(b.interval, b.interval, 0), a.interval, c.interval));
+			return interval_number(_mm_fmadd_pd(_mm_shuffle_pd(b.interval, b.interval, 0), a.interval, _mm_shuffle_pd(c.interval, c.interval, 1)));
 		case 4:
-			return interval_number(_mm_fmsub_pd(_mm_shuffle_pd(a.interval, a.interval, 3), b.interval, c.interval));
+			return interval_number(_mm_fmadd_pd(_mm_shuffle_pd(a.interval, a.interval, 3), b.interval, _mm_shuffle_pd(c.interval, c.interval, 1)));
 		case 5:
-			ip = _mm_fmsub_pd(_mm_castsi128_pd(_mm_xor_si128(_mm_castpd_si128(a.interval), interval_number::sign_high_mask)), b.interval, c.interval);
-			return interval_number(_mm_shuffle_pd(ip, ip, 1));
+			// This case must be optimized by using fmadd!
+			ip = _mm_mul_pd(_mm_castsi128_pd(_mm_xor_si128(_mm_castpd_si128(a.interval), interval_number::sign_high_mask)), b.interval);
+			return interval_number(_mm_add_pd(_mm_shuffle_pd(ip, ip, 1), _mm_shuffle_pd(c.interval, c.interval, 1)));
 		case 6:
 			ssg = _mm_xor_si128(_mm_castpd_si128(b.interval), interval_number::sign_low_mask);
-			return interval_number(_mm_fmsub_pd(a.interval, _mm_shuffle_pd(_mm_castsi128_pd(ssg), _mm_castsi128_pd(ssg), 1), c.interval));
+			return interval_number(_mm_fmadd_pd(a.interval, _mm_shuffle_pd(_mm_castsi128_pd(ssg), _mm_castsi128_pd(ssg), 1), _mm_shuffle_pd(c.interval, c.interval, 1)));
 		case 8:
-			return interval_number(_mm_fmsub_pd(_mm_shuffle_pd(a.interval, a.interval, 0), _mm_shuffle_pd(b.interval, b.interval, 1), c.interval));
+			return interval_number(_mm_fmadd_pd(_mm_shuffle_pd(a.interval, a.interval, 0), _mm_shuffle_pd(b.interval, b.interval, 1), _mm_shuffle_pd(c.interval, c.interval, 1)));
 		case 9:
 			ssg = _mm_xor_si128(_mm_castpd_si128(a.interval), interval_number::sign_low_mask);
-			return interval_number(_mm_fmsub_pd(b.interval, _mm_shuffle_pd(_mm_castsi128_pd(ssg), _mm_castsi128_pd(ssg), 1), c.interval));
+			return interval_number(_mm_fmadd_pd(b.interval, _mm_shuffle_pd(_mm_castsi128_pd(ssg), _mm_castsi128_pd(ssg), 1), _mm_shuffle_pd(c.interval, c.interval, 1)));
 		case 10:
-			return interval_number(_mm_fmsub_pd(a.interval, _mm_castsi128_pd(_mm_xor_si128(_mm_castpd_si128(b.interval), interval_number::sign_low_mask)), c.interval));
+			return interval_number(_mm_fmadd_pd(a.interval, _mm_castsi128_pd(_mm_xor_si128(_mm_castpd_si128(b.interval), interval_number::sign_low_mask)), _mm_shuffle_pd(c.interval, c.interval, 1)));
 		}
 
 		return interval_number(NAN);
 	}
 
 // All the four doubles must be aligned(16)
-// r = a*b + c
-#define Explicit_FMAdd(a,b,c,d)  d = *(double *)&_mm_fmadd_sd((*(__m128d*)(&a)), (*(__m128d*)(&b)), (*(__m128d*)(&c)));\
+// d = a*b + c
+#define Explicit_FMAdd(a,b,c,d) _mm_store_sd(&d,_mm_fmadd_sd((*(__m128d*)(&a)), (*(__m128d*)(&b)), (*(__m128d*)(&c))));
 
-// r = a*b - c
-#define Explicit_FMSub(a,b,c,d) d = *(double *)&_mm_fmsub_sd((*(__m128d*)(&a)), (*(__m128d*)(&b)), (*(__m128d*)(&c)));\
+// d = a*b - c
+#define Explicit_FMSub(a,b,c,d) _mm_store_sd(&d,_mm_fmsub_sd((*(__m128d*)(&a)), (*(__m128d*)(&b)), (*(__m128d*)(&c))));
 
-#else
-	inline interval_number fmadd(const interval_number& a, const interval_number& b, const interval_number& c)
-	{
-		return (a * b) + c;
-	}
-	inline interval_number fmsub(const interval_number& a, const interval_number& b, const interval_number& c)
-	{
-		return (a * b) - c;
-	}
 #endif
 
 #else // USE_SIMD_INSTRUCTIONS
@@ -324,19 +320,7 @@
 
 			return interval_number(NAN);
 		}
-	
-		friend interval_number fmsub(const interval_number& a, const interval_number& b, const interval_number& c);
-		friend interval_number fmadd(const interval_number& a, const interval_number& b, const interval_number& c);
 	};
-
-	inline interval_number fmadd(const interval_number& a, const interval_number& b, const interval_number& c)
-	{
-		return (a * b) + c;
-	}
-	inline interval_number fmsub(const interval_number& a, const interval_number& b, const interval_number& c)
-	{
-		return (a * b) - c;
-	}
 #endif // USE_SIMD_INSTRUCTIONS
 
 
