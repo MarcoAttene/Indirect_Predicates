@@ -280,7 +280,7 @@ int genericPoint::incircle(genericPoint& a, genericPoint& b, genericPoint& c, ge
 
 #ifdef USE_CACHED_VALUES
 
-bool implicitPoint2D_SSI::getFilteredLambda(double& lx, double& ly, double &d, double& mv)
+bool implicitPoint2D_SSI::getFilteredLambda(double& lx, double& ly, double &d, double& mv) const
 {
 	if (needsFilteredLambda())
 		lambda2d_SSI_filtered(l1_1.X(), l1_1.Y(), l1_2.X(), l1_2.Y(), l2_1.X(), l2_1.Y(), l2_2.X(), l2_2.Y(), ssfilter_lambda_x, ssfilter_lambda_y, ssfilter_denominator, ssfilter_max_val);
@@ -292,7 +292,7 @@ bool implicitPoint2D_SSI::getFilteredLambda(double& lx, double& ly, double &d, d
 	return (ssfilter_denominator != 0);
 }
 
-bool implicitPoint2D_SSI::getIntervalLambda(interval_number& lx, interval_number& ly, interval_number &d)
+bool implicitPoint2D_SSI::getIntervalLambda(interval_number& lx, interval_number& ly, interval_number &d) const
 {
 	if (needsIntervalLambda())
 		lambda2d_SSI_interval(l1_1.X(), l1_1.Y(), l1_2.X(), l1_2.Y(), l2_1.X(), l2_1.Y(), l2_2.X(), l2_2.Y(), dfilter_lambda_x, dfilter_lambda_y, dfilter_denominator);
@@ -303,7 +303,7 @@ bool implicitPoint2D_SSI::getIntervalLambda(interval_number& lx, interval_number
 	return (dfilter_denominator.signIsReliable());
 }
 
-bool implicitPoint3D_LPI::getFilteredLambda(double& lx, double& ly, double& lz, double &d, double& mv)
+bool implicitPoint3D_LPI::getFilteredLambda(double& lx, double& ly, double& lz, double &d, double& mv) const
 {
 	if (needsFilteredLambda())
 		lambda3d_LPI_filtered(P().X(), P().Y(), P().Z(), Q().X(), Q().Y(), Q().Z(), R().X(), R().Y(), R().Z(), S().X(), S().Y(), S().Z(), T().X(), T().Y(), T().Z(), ssfilter_denominator, ssfilter_lambda_x, ssfilter_lambda_y, ssfilter_lambda_z, ssfilter_max_val);
@@ -316,7 +316,7 @@ bool implicitPoint3D_LPI::getFilteredLambda(double& lx, double& ly, double& lz, 
 	return (ssfilter_denominator != 0);
 }
 
-bool implicitPoint3D_LPI::getIntervalLambda(interval_number& lx, interval_number& ly, interval_number& lz, interval_number &d)
+bool implicitPoint3D_LPI::getIntervalLambda(interval_number& lx, interval_number& ly, interval_number& lz, interval_number &d) const
 {
 	if (needsIntervalLambda())
 		lambda3d_LPI_interval(P().X(), P().Y(), P().Z(), Q().X(), Q().Y(), Q().Z(), R().X(), R().Y(), R().Z(), S().X(), S().Y(), S().Z(), T().X(), T().Y(), T().Z(), dfilter_denominator, dfilter_lambda_x, dfilter_lambda_y, dfilter_lambda_z);
@@ -328,7 +328,7 @@ bool implicitPoint3D_LPI::getIntervalLambda(interval_number& lx, interval_number
 	return (dfilter_denominator.signIsReliable());
 }
 
-bool implicitPoint3D_TPI::getFilteredLambda(double& lx, double& ly, double& lz, double &d, double& mv)
+bool implicitPoint3D_TPI::getFilteredLambda(double& lx, double& ly, double& lz, double &d, double& mv) const
 {
 	if (needsFilteredLambda())
 		lambda3d_TPI_filtered(
@@ -345,7 +345,7 @@ bool implicitPoint3D_TPI::getFilteredLambda(double& lx, double& ly, double& lz, 
 	return (ssfilter_denominator != 0);
 }
 
-bool implicitPoint3D_TPI::getIntervalLambda(interval_number& lx, interval_number& ly, interval_number& lz, interval_number &d)
+bool implicitPoint3D_TPI::getIntervalLambda(interval_number& lx, interval_number& ly, interval_number& lz, interval_number &d) const
 {
 	if (needsIntervalLambda())
 		lambda3d_TPI_interval(
@@ -362,29 +362,29 @@ bool implicitPoint3D_TPI::getIntervalLambda(interval_number& lx, interval_number
 }
 
 #else
-bool implicitPoint2D_SSI::getFilteredLambda(double& lx, double& ly, double &d, double& mv)
+bool implicitPoint2D_SSI::getFilteredLambda(double& lx, double& ly, double &d, double& mv) const
 {
 	return lambda2d_SSI_filtered(l1_1.X(), l1_1.Y(), l1_2.X(), l1_2.Y(), l2_1.X(), l2_1.Y(), l2_2.X(), l2_2.Y(), lx, ly, d, mv);
 }
 
-bool implicitPoint2D_SSI::getIntervalLambda(interval_number& lx, interval_number& ly, interval_number &d)
+bool implicitPoint2D_SSI::getIntervalLambda(interval_number& lx, interval_number& ly, interval_number &d) const
 {
 	return lambda2d_SSI_interval(l1_1.X(), l1_1.Y(), l1_2.X(), l1_2.Y(), l2_1.X(), l2_1.Y(), l2_2.X(), l2_2.Y(), lx, ly, d);
 }
 
-bool implicitPoint3D_LPI::getFilteredLambda(double& lx, double& ly, double& lz, double& d, double& mv)
+bool implicitPoint3D_LPI::getFilteredLambda(double& lx, double& ly, double& lz, double& d, double& mv) const
 {
 	return
 		lambda3d_LPI_filtered(P().X(), P().Y(), P().Z(), Q().X(), Q().Y(), Q().Z(), R().X(), R().Y(), R().Z(), S().X(), S().Y(), S().Z(), T().X(), T().Y(), T().Z(), d, lx, ly, lz, mv);
 }
 
-bool implicitPoint3D_LPI::getIntervalLambda(interval_number& lx, interval_number& ly, interval_number& lz, interval_number& d)
+bool implicitPoint3D_LPI::getIntervalLambda(interval_number& lx, interval_number& ly, interval_number& lz, interval_number& d) const
 {
 	return
 		lambda3d_LPI_interval(P().X(), P().Y(), P().Z(), Q().X(), Q().Y(), Q().Z(), R().X(), R().Y(), R().Z(), S().X(), S().Y(), S().Z(), T().X(), T().Y(), T().Z(), d, lx, ly, lz);
 }
 
-bool implicitPoint3D_TPI::getFilteredLambda(double& lx, double& ly, double& lz, double& d, double& mv)
+bool implicitPoint3D_TPI::getFilteredLambda(double& lx, double& ly, double& lz, double& d, double& mv) const
 {
 	return lambda3d_TPI_filtered(
 		V1().X(), V1().Y(), V1().Z(), V2().X(), V2().Y(), V2().Z(), V3().X(), V3().Y(), V3().Z(),
@@ -393,7 +393,7 @@ bool implicitPoint3D_TPI::getFilteredLambda(double& lx, double& ly, double& lz, 
 		lx, ly, lz, d, mv);
 }
 
-bool implicitPoint3D_TPI::getIntervalLambda(interval_number& lx, interval_number& ly, interval_number& lz, interval_number& d)
+bool implicitPoint3D_TPI::getIntervalLambda(interval_number& lx, interval_number& ly, interval_number& lz, interval_number& d) const
 {
 	return lambda3d_TPI_interval(
 		V1().X(), V1().Y(), V1().Z(), V2().X(), V2().Y(), V2().Z(), V3().X(), V3().Y(), V3().Z(),
@@ -404,17 +404,17 @@ bool implicitPoint3D_TPI::getIntervalLambda(interval_number& lx, interval_number
 
 #endif
 
-void implicitPoint2D_SSI::getExactLambda(double *lx, int& lxl, double *ly, int& lyl, double *d, int& dl)
+void implicitPoint2D_SSI::getExactLambda(double *lx, int& lxl, double *ly, int& lyl, double *d, int& dl) const
 {
 	lambda2d_SSI_exact(l1_1.X(), l1_1.Y(), l1_2.X(), l1_2.Y(), l2_1.X(), l2_1.Y(), l2_2.X(), l2_2.Y(), lx, lxl, ly, lyl, d, dl);
 }
 
-void implicitPoint3D_LPI::getExactLambda(double *lx, int& lxl, double *ly, int& lyl, double *lz, int& lzl, double *d, int& dl)
+void implicitPoint3D_LPI::getExactLambda(double *lx, int& lxl, double *ly, int& lyl, double *lz, int& lzl, double *d, int& dl) const
 {
 	lambda3d_LPI_exact(P().X(), P().Y(), P().Z(), Q().X(), Q().Y(), Q().Z(), R().X(), R().Y(), R().Z(), S().X(), S().Y(), S().Z(), T().X(), T().Y(), T().Z(), d, dl, lx, lxl, ly, lyl, lz, lzl);
 }
 
-void implicitPoint3D_TPI::getExactLambda(double *lx, int& lxl, double *ly, int& lyl, double *lz, int& lzl, double *d, int& dl)
+void implicitPoint3D_TPI::getExactLambda(double *lx, int& lxl, double *ly, int& lyl, double *lz, int& lzl, double *d, int& dl) const
 {
 	lambda3d_TPI_exact(V1().X(), V1().Y(), V1().Z(), V2().X(), V2().Y(), V2().Z(), V3().X(), V3().Y(), V3().Z(),
 		W1().X(), W1().Y(), W1().Z(), W2().X(), W2().Y(), W2().Z(), W3().X(), W3().Y(), W3().Z(),
@@ -425,8 +425,7 @@ void implicitPoint3D_TPI::getExactLambda(double *lx, int& lxl, double *ly, int& 
 bool implicitPoint2D_SSI::approxExplicit(explicitPoint2D& e) const
 {
 	double lambda_x, lambda_y, lambda_d, max_var;
-	if (!lambda2d_SSI_filtered(l1_1.X(), l1_1.Y(), l1_2.X(), l1_2.Y(), l2_1.X(), l2_1.Y(), l2_2.X(), l2_2.Y(), lambda_x, lambda_y, lambda_d, max_var))
-		return false;
+	if (!getFilteredLambda(lambda_x, lambda_y, lambda_d, max_var)) return false;
 	e = explicitPoint2D(lambda_x / lambda_d, lambda_y / lambda_d);
 	return true;
 }
@@ -434,8 +433,7 @@ bool implicitPoint2D_SSI::approxExplicit(explicitPoint2D& e) const
 bool implicitPoint3D_LPI::approxExplicit(explicitPoint3D& e) const
 {
 	double lambda_x, lambda_y, lambda_z, lambda_d, max_var;
-	if (!lambda3d_LPI_filtered(ip.X(), ip.Y(), ip.Z(), iq.X(), iq.Y(), iq.Z(), ir.X(), ir.Y(), ir.Z(), is.X(), is.Y(), is.Z(), it.X(), it.Y(), it.Z(), lambda_d, lambda_x, lambda_y, lambda_z, max_var))
-		return false;
+	if (!getFilteredLambda(lambda_x, lambda_y, lambda_z, lambda_d, max_var)) return false;
 	e = explicitPoint3D(lambda_x / lambda_d, lambda_y / lambda_d, lambda_z / lambda_d);
 	return true;
 }
@@ -443,8 +441,7 @@ bool implicitPoint3D_LPI::approxExplicit(explicitPoint3D& e) const
 bool implicitPoint3D_TPI::approxExplicit(explicitPoint3D& e) const
 {
 	double lambda_x, lambda_y, lambda_z, lambda_d, max_var;
-	if (!lambda3d_TPI_filtered(iv1.X(), iv1.Y(), iv1.Z(), iv2.X(), iv2.Y(), iv2.Z(), iv3.X(), iv3.Y(), iv3.Z(), iw1.X(), iw1.Y(), iw1.Z(), iw2.X(), iw2.Y(), iw2.Z(), iw3.X(), iw3.Y(), iw3.Z(), iu1.X(), iu1.Y(), iu1.Z(), iu2.X(), iu2.Y(), iu2.Z(), iu3.X(), iu3.Y(), iu3.Z(), lambda_x, lambda_y, lambda_z, lambda_d, max_var))
-		return false;
+	if (!getFilteredLambda(lambda_x, lambda_y, lambda_z, lambda_d, max_var)) return false;
 	e = explicitPoint3D(lambda_x / lambda_d, lambda_y / lambda_d, lambda_z / lambda_d);
 	return true;
 }

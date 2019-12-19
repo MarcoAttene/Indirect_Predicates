@@ -188,17 +188,17 @@ public:
 
 #ifdef USE_CACHED_VALUES
 private: // Cached values
-	double ssfilter_lambda_x, ssfilter_lambda_y, ssfilter_denominator, ssfilter_max_val;
-	interval_number dfilter_lambda_x, dfilter_lambda_y, dfilter_denominator;
+	mutable double ssfilter_lambda_x, ssfilter_lambda_y, ssfilter_denominator, ssfilter_max_val;
+	mutable interval_number dfilter_lambda_x, dfilter_lambda_y, dfilter_denominator;
 
 	inline bool needsFilteredLambda() const { return (ssfilter_denominator != ssfilter_denominator); } // TRUE if NAN
 	inline bool needsIntervalLambda() const { return (dfilter_denominator.isNAN()); } // TRUE if NAN
 #endif
 
 public:
-	bool getFilteredLambda(double& lx, double& ly, double &d, double& mv);
-	bool getIntervalLambda(interval_number& lx, interval_number& ly, interval_number &d);
-	void getExactLambda(double *lx, int& lxl, double *ly, int& lyl, double *d, int& dl);
+	bool getFilteredLambda(double& lx, double& ly, double &d, double& mv) const;
+	bool getIntervalLambda(interval_number& lx, interval_number& ly, interval_number &d) const;
+	void getExactLambda(double *lx, int& lxl, double *ly, int& lyl, double *d, int& dl) const;
 };
 
 
@@ -249,17 +249,17 @@ public:
 
 #ifdef USE_CACHED_VALUES
 private: // Cached values
-	double ssfilter_lambda_x, ssfilter_lambda_y, ssfilter_lambda_z, ssfilter_denominator, ssfilter_max_val;
-	interval_number dfilter_lambda_x, dfilter_lambda_y, dfilter_lambda_z, dfilter_denominator;
+	mutable double ssfilter_lambda_x, ssfilter_lambda_y, ssfilter_lambda_z, ssfilter_denominator, ssfilter_max_val;
+	mutable interval_number dfilter_lambda_x, dfilter_lambda_y, dfilter_lambda_z, dfilter_denominator;
 
 	inline bool needsFilteredLambda() const { return (ssfilter_denominator != ssfilter_denominator); } // TRUE if NAN
 	inline bool needsIntervalLambda() const { return (dfilter_denominator.isNAN()); } // TRUE if NAN
 #endif
 
 public:
-	bool getFilteredLambda(double& lx, double& ly, double& lz, double &d, double& mv);
-	bool getIntervalLambda(interval_number& lx, interval_number& ly, interval_number& lz, interval_number &d);
-	void getExactLambda(double *lx, int& lxl, double *ly, int& lyl, double *lz, int& lzl, double *d, int& dl);
+	bool getFilteredLambda(double& lx, double& ly, double& lz, double &d, double& mv) const;
+	bool getIntervalLambda(interval_number& lx, interval_number& ly, interval_number& lz, interval_number &d) const;
+	void getExactLambda(double *lx, int& lxl, double *ly, int& lyl, double *lz, int& lzl, double *d, int& dl) const;
 };
 
 
@@ -295,17 +295,17 @@ public:
 
 #ifdef USE_CACHED_VALUES
 private: // Cached values
-	double ssfilter_lambda_x, ssfilter_lambda_y, ssfilter_lambda_z, ssfilter_denominator, ssfilter_max_val;
-	interval_number dfilter_lambda_x, dfilter_lambda_y, dfilter_lambda_z, dfilter_denominator;
+	mutable double ssfilter_lambda_x, ssfilter_lambda_y, ssfilter_lambda_z, ssfilter_denominator, ssfilter_max_val;
+	mutable interval_number dfilter_lambda_x, dfilter_lambda_y, dfilter_lambda_z, dfilter_denominator;
 
 	inline bool needsFilteredLambda() const { return (ssfilter_denominator != ssfilter_denominator); } // TRUE if NAN
 	inline bool needsIntervalLambda() const { return (dfilter_denominator.isNAN()); } // TRUE if NAN
 #endif
 
 public:
-	bool getFilteredLambda(double& lx, double& ly, double& lz, double &d, double& mv);
-	bool getIntervalLambda(interval_number& lx, interval_number& ly, interval_number& lz, interval_number &d);
-	void getExactLambda(double *lx, int& lxl, double *ly, int& lyl, double *lz, int& lzl, double *d, int& dl);
+	bool getFilteredLambda(double& lx, double& ly, double& lz, double &d, double& mv) const;
+	bool getIntervalLambda(interval_number& lx, interval_number& ly, interval_number& lz, interval_number &d) const;
+	void getExactLambda(double *lx, int& lxl, double *ly, int& lyl, double *lz, int& lzl, double *d, int& dl) const;
 };
 
 //////////////////////////////////////////////////////////////////////////////////////
