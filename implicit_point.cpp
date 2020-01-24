@@ -497,3 +497,99 @@ ostream& operator<<(ostream& os, const genericPoint& p)
 	else ip_error("genericPoint::operator<< - should not happen\n");
 	return os;
 }
+
+int maxComponentInTriangleNormal_filtered(double ov1x, double ov1y, double ov1z, double ov2x, double ov2y, double ov2z, double ov3x, double ov3y, double ov3z)
+{
+	double v3x = ov3x - ov2x;
+	double v3y = ov3y - ov2y;
+	double v3z = ov3z - ov2z;
+	double v2x = ov2x - ov1x;
+	double v2y = ov2y - ov1y;
+	double v2z = ov2z - ov1z;
+	double nvx1 = v2y * v3z;
+	double nvx2 = v2z * v3y;
+	double nvx = nvx1 - nvx2;
+	double nvy1 = v3x * v2z;
+	double nvy2 = v3z * v2x;
+	double nvy = nvy1 - nvy2;
+	double nvz1 = v2x * v3y;
+	double nvz2 = v2y * v3x;
+	double nvz = nvz1 - nvz2;
+
+	double _tmp_fabs, max_var = 0;
+	if ((_tmp_fabs = fabs(v3x)) > max_var) max_var = _tmp_fabs;
+	if ((_tmp_fabs = fabs(v3y)) > max_var) max_var = _tmp_fabs;
+	if ((_tmp_fabs = fabs(v3z)) > max_var) max_var = _tmp_fabs;
+	if ((_tmp_fabs = fabs(v2x)) > max_var) max_var = _tmp_fabs;
+	if ((_tmp_fabs = fabs(v2y)) > max_var) max_var = _tmp_fabs;
+	if ((_tmp_fabs = fabs(v2z)) > max_var) max_var = _tmp_fabs;
+	double epsilon = 8.88395e-016 * max_var * max_var;
+
+	double nvxc = fabs(nvx);
+	double nvyc = fabs(nvy);
+	double nvzc = fabs(nvz);
+	double nv = nvxc;
+	if (nvyc > nv) nv = nvyc;
+	if (nvzc > nv) nv = nvzc;
+
+	if (nv > epsilon)
+	{
+		if (nv == nvx) return 0;
+		if (nv == nvy) return 1;
+		if (nv == nvz) return 2;
+	}
+	return -1;
+}
+
+int maxComponentInTriangleNormal_exact(double ov1x, double ov1y, double ov1z, double ov2x, double ov2y, double ov2z, double ov3x, double ov3y, double ov3z)
+{
+	expansionObject o;
+	double v3x[2];
+	o.two_Diff(ov3x, ov2x, v3x);
+	double v3y[2];
+	o.two_Diff(ov3y, ov2y, v3y);
+	double v3z[2];
+	o.two_Diff(ov3z, ov2z, v3z);
+	double v2x[2];
+	o.two_Diff(ov2x, ov1x, v2x);
+	double v2y[2];
+	o.two_Diff(ov2y, ov1y, v2y);
+	double v2z[2];
+	o.two_Diff(ov2z, ov1z, v2z);
+	double nvx1[8];
+	o.Two_Two_Prod(v2y, v3z, nvx1);
+	double nvx2[8];
+	o.Two_Two_Prod(v2z, v3y, nvx2);
+	double nvx[16];
+	int nvx_len = o.Gen_Diff(8, nvx1, 8, nvx2, nvx);
+	double nvy1[8];
+	o.Two_Two_Prod(v3x, v2z, nvy1);
+	double nvy2[8];
+	o.Two_Two_Prod(v3z, v2x, nvy2);
+	double nvy[16];
+	int nvy_len = o.Gen_Diff(8, nvy1, 8, nvy2, nvy);
+	double nvz1[8];
+	o.Two_Two_Prod(v2x, v3y, nvz1);
+	double nvz2[8];
+	o.Two_Two_Prod(v2y, v3x, nvz2);
+	double nvz[16];
+	int nvz_len = o.Gen_Diff(8, nvz1, 8, nvz2, nvz);
+
+	double nvxc = fabs(nvx[nvx_len - 1]);
+	double nvyc = fabs(nvy[nvy_len - 1]);
+	double nvzc = fabs(nvz[nvz_len - 1]);
+	double nv = nvxc;
+	if (nvyc > nv) nv = nvyc;
+	if (nvzc > nv) nv = nvzc;
+
+	if (nv == nvxc) return 0;
+	if (nv == nvyc) return 1;
+	if (nv == nvzc) return 2;
+}
+
+int genericPoint::maxComponentInTriangleNormal(double ov1x, double ov1y, double ov1z, double ov2x, double ov2y, double ov2z, double ov3x, double ov3y, double ov3z)
+{
+	int ret;
+	if ((ret = maxComponentInTriangleNormal_filtered(ov1x, ov1y, ov1z, ov2x, ov2y, ov2z, ov3x, ov3y, ov3z)) >= 0) return ret;
+	return maxComponentInTriangleNormal_exact(ov1x, ov1y, ov1z, ov2x, ov2y, ov2z, ov3x, ov3y, ov3z);
+}

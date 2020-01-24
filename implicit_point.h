@@ -138,6 +138,15 @@ public:
 	// 1  - if a > b
 	// in lexicographical order
 	static int lessThan(genericPoint& a, genericPoint& b);
+
+	// Let n = (x,y,z) be the normal of the triangle <v1,v2,v3>
+	// and let m be the absolute value of its largest component.
+	// That is, m = max(|x|, |y|, |z|).
+	// maxComponentInTriangleNormal(v1,v2,v3) returns:
+	// 0 - if m == |x|
+	// 1 - if m == |y|
+	// 2 - if m == |z|
+	static int maxComponentInTriangleNormal(double v1x, double v1y, double v1z, double v2x, double v2y, double v2z, double v3x, double v3y, double v3z);
 };
 
 
