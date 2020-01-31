@@ -116,19 +116,22 @@ public:
 	// Input points can be:
 	// 1) any combination of 2D points (explicit or SSI)
 	// 2) any combination of 3D points (explicit, LPI or TPI). Orientation is computed on XY.
-	static int orient2D(genericPoint& a, genericPoint& b, genericPoint& c);
+	static int orient2D(const genericPoint& a, const genericPoint& b, const genericPoint& c);
 
-	// Orient3D - partly supported
+	// Orient3D - fully supported
 	// Input can be:
-	// 1) four explicit 3D points
-	// 2) one implicit (LPI or TPI) and three explicit points
-	static int orient3D(genericPoint& a, genericPoint& b, genericPoint& c, genericPoint& d);
+	// 1) any combination of 3D points (explicit, LPI or TPI)
+	static int orient3D(const genericPoint& a, const genericPoint& b, const genericPoint& c, const genericPoint& d);
 
 	// incircle - partly supported
 	// Input points can be:
 	// 1) any combination of 2D points (explicit or SSI)
 	// 2) any combination of either explicit or LPI 3D points. Incircle is computed on XY.
-	static int incircle(genericPoint& a, genericPoint& b, genericPoint& c, genericPoint& d);
+	static int incircle(const genericPoint& a, const genericPoint& b, const genericPoint& c, const genericPoint& d);
+
+	// inSphere - partly supported
+	// Input points can be only explicit
+	static int inSphere(const genericPoint& a, const genericPoint& b, const genericPoint& c, const genericPoint& d, const genericPoint& e);
 
 	// lessThan - partly supported (only 3D)
 	// Input points can be any combination of 3D points
@@ -137,7 +140,7 @@ public:
 	// 0  - if a == b
 	// 1  - if a > b
 	// in lexicographical order
-	static int lessThan(genericPoint& a, genericPoint& b);
+	static int lessThan(const genericPoint& a, const genericPoint& b);
 
 	// Let n = (x,y,z) be the normal of the triangle <v1,v2,v3>
 	// and let m be the absolute value of its largest component.
@@ -146,6 +149,8 @@ public:
 	// 0 - if m == |x|
 	// 1 - if m == |y|
 	// 2 - if m == |z|
+	//
+	// Warning: this function assumes that the triangle is not exactly degenerate. It may crash otherwise.
 	static int maxComponentInTriangleNormal(double v1x, double v1y, double v1z, double v2x, double v2y, double v2z, double v3x, double v3y, double v3z);
 };
 
@@ -165,6 +170,7 @@ public:
 	inline explicitPoint2D(const explicitPoint2D& b) : genericPoint(Point_Type::EXPLICIT2D), x(b.x), y(b.y) {}
 
 	inline void operator=(const explicitPoint2D& b) { type = Point_Type::EXPLICIT2D; x = b.x; y = b.y; }
+	inline void set(double a, double b) { x = a; y = b; }
 
 	inline double X() const { return x; }
 	inline double Y() const { return y; }
@@ -226,6 +232,7 @@ public:
 	inline explicitPoint3D(const explicitPoint3D& b) : genericPoint(Point_Type::EXPLICIT3D), x(b.x), y(b.y), z(b.z) {}
 
 	inline void operator=(const explicitPoint3D& b) { type = Point_Type::EXPLICIT3D; x = b.x; y = b.y; z = b.z; }
+	inline void set(double a, double b, double c) { x = a; y = b; z = c; }
 
 	inline double X() const { return x; }
 	inline double Y() const { return y; }

@@ -61,6 +61,7 @@
 
 	inline void setFPUModeToRoundUP() { _controlfp(_RC_UP, _MCW_RC); }
 	inline void setFPUModeToRoundNEAR() { _controlfp(_RC_NEAR, _MCW_RC); }
+
 #else
 
 #ifdef USE_SIMD_INSTRUCTIONS

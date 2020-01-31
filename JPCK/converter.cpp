@@ -314,7 +314,7 @@ public:
 	{
 		bool first = true;
 		stringstream file;
-		for (lambda_variable& l : all_lambda_vars) { file << ((first) ? ("") : (", ")) << l.name << "& " << l.ipoint_name; first = false; }
+		for (lambda_variable& l : all_lambda_vars) { file << ((first) ? ("const ") : (", const ")) << l.name << "& " << l.ipoint_name; first = false; }
 		for (variable& v : all_vars) if (v.isInput() && v.name != "2" && !v.is_lambda_out) { file << ((first) ? (mytype + " ") : (", " + mytype + " ")) << v.name; first = false; }
 		return file.str();
 	}
@@ -1401,7 +1401,7 @@ public:
 		{
 			file << "int " << func_name << "(";
 			first = true;
-			for (lambda_variable& l : all_lambda_vars) { file << ((first) ? ("") : (", ")) << l.name << "& " << l.ipoint_name; first = false; }
+			for (lambda_variable& l : all_lambda_vars) { file << ((first) ? ("const ") : (", const ")) << l.name << "& " << l.ipoint_name; first = false; }
 			for (variable& v : all_vars) if (v.isInput() && v.name != "2" && !v.is_lambda_out) { file << ((first) ? ("double ") : (", double ")) << v.name; first = false; }
 			file << ");\n";
 		}
