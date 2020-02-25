@@ -5118,30 +5118,32 @@ int orient2d3d_indirect_LEE_filtered(const implicitPoint3D_LPI& p1, double p2x, 
        !p1.getFilteredLambda(l1x, l1y, l1z, d1, max_var)
    ) return Filtered_Sign::UNCERTAIN;
 
-   double a = d1 * p2x;
-   double c = d1 * p3y;
-   double e = d1 * p2y;
-   double g = d1 * p3x;
-   double ab = a - l1x;
-   double cd = c - l1y;
-   double ef = e - l1y;
-   double gh = g - l1x;
-   double abcd = ab * cd;
-   double efgh = ef * gh;
-   double L = abcd - efgh;
+   double t1x = p2y - p3y;
+   double t1y = p3x - p2x;
+   double e2 = l1x * t1x;
+   double e3 = l1y * t1y;
+   double e = e2 + e3;
+   double pr1 = p2x * p3y;
+   double pr2 = p2y * p3x;
+   double pr = pr1 - pr2;
+   double dpr = d1 * pr;
+   double det = dpr + e;
 
    double _tmp_fabs;
    if ((_tmp_fabs = fabs(p2x)) > max_var) max_var = _tmp_fabs;
    if ((_tmp_fabs = fabs(p2y)) > max_var) max_var = _tmp_fabs;
    if ((_tmp_fabs = fabs(p3x)) > max_var) max_var = _tmp_fabs;
    if ((_tmp_fabs = fabs(p3y)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(t1x)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(t1y)) > max_var) max_var = _tmp_fabs;
    double epsilon = max_var;
    epsilon *= epsilon;
    epsilon *= epsilon;
-   epsilon *= epsilon;
-   epsilon *= 1.504941136987184e-12;
-   if (L > epsilon) return IP_Sign::POSITIVE;
-   if (-L > epsilon) return IP_Sign::NEGATIVE;
+   epsilon *= max_var;
+   epsilon *= 4.75277369543781e-14;
+   if (((d1 < 0))) det = -det;
+   if (det > epsilon) return IP_Sign::POSITIVE;
+   if (-det > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
 }
 
@@ -5153,21 +5155,21 @@ int orient2d3d_indirect_LEE_interval(const implicitPoint3D_LPI& p1, interval_num
    ) return Filtered_Sign::UNCERTAIN;
 
    setFPUModeToRoundUP();
-   interval_number a(d1 * p2x);
-   interval_number c(d1 * p3y);
-   interval_number e(d1 * p2y);
-   interval_number g(d1 * p3x);
-   interval_number ab(a - l1x);
-   interval_number cd(c - l1y);
-   interval_number ef(e - l1y);
-   interval_number gh(g - l1x);
-   interval_number abcd(ab * cd);
-   interval_number efgh(ef * gh);
-   interval_number L(abcd - efgh);
+   interval_number t1x(p2y - p3y);
+   interval_number t1y(p3x - p2x);
+   interval_number e2(l1x * t1x);
+   interval_number e3(l1y * t1y);
+   interval_number e(e2 + e3);
+   interval_number pr1(p2x * p3y);
+   interval_number pr2(p2y * p3x);
+   interval_number pr(pr1 - pr2);
+   interval_number dpr(d1 * pr);
+   interval_number det(dpr + e);
    setFPUModeToRoundNEAR();
 
-   if (!L.signIsReliable()) return Filtered_Sign::UNCERTAIN;
-   return L.sign();
+   if (!det.signIsReliable()) return Filtered_Sign::UNCERTAIN;
+   if (((d1 < 0))) return -det.sign();
+   else   return det.sign();
 }
 
 int orient2d3d_indirect_LEE_exact(const implicitPoint3D_LPI& p1, double p2x, double p2y, double p3x, double p3y)
@@ -5179,41 +5181,34 @@ int orient2d3d_indirect_LEE_exact(const implicitPoint3D_LPI& p1, double p2x, dou
  if ((d1[d1_len - 1] != 0))
  {
    expansionObject o;
-   double a_p[128], *a = a_p;
-   int a_len = o.Gen_Scale_With_PreAlloc(d1_len, d1, p2x, &a, 128);
-   double c_p[128], *c = c_p;
-   int c_len = o.Gen_Scale_With_PreAlloc(d1_len, d1, p3y, &c, 128);
+   double t1x[2];
+   o.two_Diff(p2y, p3y, t1x);
+   double t1y[2];
+   o.two_Diff(p3x, p2x, t1y);
+   double e2_p[128], *e2 = e2_p;
+   int e2_len = o.Gen_Product_With_PreAlloc(l1x_len, l1x, 2, t1x, &e2, 128);
+   double e3_p[128], *e3 = e3_p;
+   int e3_len = o.Gen_Product_With_PreAlloc(l1y_len, l1y, 2, t1y, &e3, 128);
    double e_p[128], *e = e_p;
-   int e_len = o.Gen_Scale_With_PreAlloc(d1_len, d1, p2y, &e, 128);
-   double g_p[128], *g = g_p;
-   int g_len = o.Gen_Scale_With_PreAlloc(d1_len, d1, p3x, &g, 128);
-   double ab_p[128], *ab = ab_p;
-   int ab_len = o.Gen_Diff_With_PreAlloc(a_len, a, l1x_len, l1x, &ab, 128);
-   double cd_p[128], *cd = cd_p;
-   int cd_len = o.Gen_Diff_With_PreAlloc(c_len, c, l1y_len, l1y, &cd, 128);
-   double ef_p[128], *ef = ef_p;
-   int ef_len = o.Gen_Diff_With_PreAlloc(e_len, e, l1y_len, l1y, &ef, 128);
-   double gh_p[128], *gh = gh_p;
-   int gh_len = o.Gen_Diff_With_PreAlloc(g_len, g, l1x_len, l1x, &gh, 128);
-   double abcd_p[128], *abcd = abcd_p;
-   int abcd_len = o.Gen_Product_With_PreAlloc(ab_len, ab, cd_len, cd, &abcd, 128);
-   double efgh_p[128], *efgh = efgh_p;
-   int efgh_len = o.Gen_Product_With_PreAlloc(ef_len, ef, gh_len, gh, &efgh, 128);
-   double L_p[128], *L = L_p;
-   int L_len = o.Gen_Diff_With_PreAlloc(abcd_len, abcd, efgh_len, efgh, &L, 128);
+   int e_len = o.Gen_Sum_With_PreAlloc(e2_len, e2, e3_len, e3, &e, 128);
+   double pr1[2];
+   o.Two_Prod(p2x, p3y, pr1);
+   double pr2[2];
+   o.Two_Prod(p2y, p3x, pr2);
+   double pr[4];
+   o.Two_Two_Diff(pr1, pr2, pr);
+   double dpr_p[128], *dpr = dpr_p;
+   int dpr_len = o.Gen_Product_With_PreAlloc(d1_len, d1, 4, pr, &dpr, 128);
+   double det_p[128], *det = det_p;
+   int det_len = o.Gen_Sum_With_PreAlloc(dpr_len, dpr, e_len, e, &det, 128);
 
-   return_value = L[L_len - 1];
-   if (L_p != L) free(L);
-   if (efgh_p != efgh) free(efgh);
-   if (abcd_p != abcd) free(abcd);
-   if (gh_p != gh) free(gh);
-   if (ef_p != ef) free(ef);
-   if (cd_p != cd) free(cd);
-   if (ab_p != ab) free(ab);
-   if (g_p != g) free(g);
+   return_value = det[det_len - 1];
+   if (det_p != det) free(det);
+   if (dpr_p != dpr) free(dpr);
    if (e_p != e) free(e);
-   if (c_p != c) free(c);
-   if (a_p != a) free(a);
+   if (e3_p != e3) free(e3);
+   if (e2_p != e2) free(e2);
+   if (( (d1[d1_len -1] < 0))) return_value = -return_value;
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -6019,36 +6014,32 @@ int orient2d3d_indirect_TEE_filtered(const implicitPoint3D_TPI& p1, double p2x, 
        !p1.getFilteredLambda(l1x, l1y, l1z, d1, max_var)
    ) return Filtered_Sign::UNCERTAIN;
 
-   double a = d1 * p2x;
-   double c = d1 * p3y;
-   double e = d1 * p2y;
-   double g = d1 * p3x;
-   double ab = a - l1x;
-   double cd = c - l1y;
-   double ef = e - l1y;
-   double gh = g - l1x;
-   double abcd = ab * cd;
-   double efgh = ef * gh;
-   double L = abcd - efgh;
+   double t1x = p2y - p3y;
+   double t1y = p3x - p2x;
+   double e2 = l1x * t1x;
+   double e3 = l1y * t1y;
+   double e = e2 + e3;
+   double pr1 = p2x * p3y;
+   double pr2 = p2y * p3x;
+   double pr = pr1 - pr2;
+   double dpr = d1 * pr;
+   double det = dpr + e;
 
    double _tmp_fabs;
    if ((_tmp_fabs = fabs(p2x)) > max_var) max_var = _tmp_fabs;
    if ((_tmp_fabs = fabs(p2y)) > max_var) max_var = _tmp_fabs;
    if ((_tmp_fabs = fabs(p3x)) > max_var) max_var = _tmp_fabs;
    if ((_tmp_fabs = fabs(p3y)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(t1x)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(t1y)) > max_var) max_var = _tmp_fabs;
    double epsilon = max_var;
    epsilon *= epsilon;
    epsilon *= epsilon;
    epsilon *= epsilon;
-   epsilon *= max_var;
-   epsilon *= max_var;
-   epsilon *= max_var;
-   epsilon *= max_var;
-   epsilon *= max_var;
-   epsilon *= max_var;
-   epsilon *= 3.202367260257704e-10;
-   if (L > epsilon) return IP_Sign::POSITIVE;
-   if (-L > epsilon) return IP_Sign::NEGATIVE;
+   epsilon *= 9.061883188277186e-13;
+   if (((d1 < 0))) det = -det;
+   if (det > epsilon) return IP_Sign::POSITIVE;
+   if (-det > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
 }
 
@@ -6060,21 +6051,21 @@ int orient2d3d_indirect_TEE_interval(const implicitPoint3D_TPI& p1, interval_num
    ) return Filtered_Sign::UNCERTAIN;
 
    setFPUModeToRoundUP();
-   interval_number a(d1 * p2x);
-   interval_number c(d1 * p3y);
-   interval_number e(d1 * p2y);
-   interval_number g(d1 * p3x);
-   interval_number ab(a - l1x);
-   interval_number cd(c - l1y);
-   interval_number ef(e - l1y);
-   interval_number gh(g - l1x);
-   interval_number abcd(ab * cd);
-   interval_number efgh(ef * gh);
-   interval_number L(abcd - efgh);
+   interval_number t1x(p2y - p3y);
+   interval_number t1y(p3x - p2x);
+   interval_number e2(l1x * t1x);
+   interval_number e3(l1y * t1y);
+   interval_number e(e2 + e3);
+   interval_number pr1(p2x * p3y);
+   interval_number pr2(p2y * p3x);
+   interval_number pr(pr1 - pr2);
+   interval_number dpr(d1 * pr);
+   interval_number det(dpr + e);
    setFPUModeToRoundNEAR();
 
-   if (!L.signIsReliable()) return Filtered_Sign::UNCERTAIN;
-   return L.sign();
+   if (!det.signIsReliable()) return Filtered_Sign::UNCERTAIN;
+   if (((d1 < 0))) return -det.sign();
+   else   return det.sign();
 }
 
 int orient2d3d_indirect_TEE_exact(const implicitPoint3D_TPI& p1, double p2x, double p2y, double p3x, double p3y)
@@ -6086,41 +6077,34 @@ int orient2d3d_indirect_TEE_exact(const implicitPoint3D_TPI& p1, double p2x, dou
  if ((d1[d1_len - 1] != 0))
  {
    expansionObject o;
-   double a_p[128], *a = a_p;
-   int a_len = o.Gen_Scale_With_PreAlloc(d1_len, d1, p2x, &a, 128);
-   double c_p[128], *c = c_p;
-   int c_len = o.Gen_Scale_With_PreAlloc(d1_len, d1, p3y, &c, 128);
+   double t1x[2];
+   o.two_Diff(p2y, p3y, t1x);
+   double t1y[2];
+   o.two_Diff(p3x, p2x, t1y);
+   double e2_p[128], *e2 = e2_p;
+   int e2_len = o.Gen_Product_With_PreAlloc(l1x_len, l1x, 2, t1x, &e2, 128);
+   double e3_p[128], *e3 = e3_p;
+   int e3_len = o.Gen_Product_With_PreAlloc(l1y_len, l1y, 2, t1y, &e3, 128);
    double e_p[128], *e = e_p;
-   int e_len = o.Gen_Scale_With_PreAlloc(d1_len, d1, p2y, &e, 128);
-   double g_p[128], *g = g_p;
-   int g_len = o.Gen_Scale_With_PreAlloc(d1_len, d1, p3x, &g, 128);
-   double ab_p[128], *ab = ab_p;
-   int ab_len = o.Gen_Diff_With_PreAlloc(a_len, a, l1x_len, l1x, &ab, 128);
-   double cd_p[128], *cd = cd_p;
-   int cd_len = o.Gen_Diff_With_PreAlloc(c_len, c, l1y_len, l1y, &cd, 128);
-   double ef_p[128], *ef = ef_p;
-   int ef_len = o.Gen_Diff_With_PreAlloc(e_len, e, l1y_len, l1y, &ef, 128);
-   double gh_p[128], *gh = gh_p;
-   int gh_len = o.Gen_Diff_With_PreAlloc(g_len, g, l1x_len, l1x, &gh, 128);
-   double abcd_p[128], *abcd = abcd_p;
-   int abcd_len = o.Gen_Product_With_PreAlloc(ab_len, ab, cd_len, cd, &abcd, 128);
-   double efgh_p[128], *efgh = efgh_p;
-   int efgh_len = o.Gen_Product_With_PreAlloc(ef_len, ef, gh_len, gh, &efgh, 128);
-   double L_p[128], *L = L_p;
-   int L_len = o.Gen_Diff_With_PreAlloc(abcd_len, abcd, efgh_len, efgh, &L, 128);
+   int e_len = o.Gen_Sum_With_PreAlloc(e2_len, e2, e3_len, e3, &e, 128);
+   double pr1[2];
+   o.Two_Prod(p2x, p3y, pr1);
+   double pr2[2];
+   o.Two_Prod(p2y, p3x, pr2);
+   double pr[4];
+   o.Two_Two_Diff(pr1, pr2, pr);
+   double dpr_p[128], *dpr = dpr_p;
+   int dpr_len = o.Gen_Product_With_PreAlloc(d1_len, d1, 4, pr, &dpr, 128);
+   double det_p[128], *det = det_p;
+   int det_len = o.Gen_Sum_With_PreAlloc(dpr_len, dpr, e_len, e, &det, 128);
 
-   return_value = L[L_len - 1];
-   if (L_p != L) free(L);
-   if (efgh_p != efgh) free(efgh);
-   if (abcd_p != abcd) free(abcd);
-   if (gh_p != gh) free(gh);
-   if (ef_p != ef) free(ef);
-   if (cd_p != cd) free(cd);
-   if (ab_p != ab) free(ab);
-   if (g_p != g) free(g);
+   return_value = det[det_len - 1];
+   if (det_p != det) free(det);
+   if (dpr_p != dpr) free(dpr);
    if (e_p != e) free(e);
-   if (c_p != c) free(c);
-   if (a_p != a) free(a);
+   if (e3_p != e3) free(e3);
+   if (e2_p != e2) free(e2);
+   if (( (d1[d1_len -1] < 0))) return_value = -return_value;
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -6465,31 +6449,31 @@ int orient2d_indirect_SEE_filtered(const implicitPoint2D_SSI& p1, double p2x, do
        !p1.getFilteredLambda(l1x, l1y, d1, max_var)
    ) return Filtered_Sign::UNCERTAIN;
 
-   double a = d1 * p2x;
-   double c = d1 * p3y;
-   double e = d1 * p2y;
-   double g = d1 * p3x;
-   double ab = a - l1x;
-   double cd = c - l1y;
-   double ef = e - l1y;
-   double gh = g - l1x;
-   double abcd = ab * cd;
-   double efgh = ef * gh;
-   double L = abcd - efgh;
+   double t1x = p2y - p3y;
+   double t1y = p3x - p2x;
+   double e2 = l1x * t1x;
+   double e3 = l1y * t1y;
+   double e = e2 + e3;
+   double pr1 = p2x * p3y;
+   double pr2 = p2y * p3x;
+   double pr = pr1 - pr2;
+   double dpr = d1 * pr;
+   double det = dpr + e;
 
    double _tmp_fabs;
    if ((_tmp_fabs = fabs(p2x)) > max_var) max_var = _tmp_fabs;
    if ((_tmp_fabs = fabs(p2y)) > max_var) max_var = _tmp_fabs;
    if ((_tmp_fabs = fabs(p3x)) > max_var) max_var = _tmp_fabs;
    if ((_tmp_fabs = fabs(p3y)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(t1x)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(t1y)) > max_var) max_var = _tmp_fabs;
    double epsilon = max_var;
    epsilon *= epsilon;
    epsilon *= epsilon;
-   epsilon *= max_var;
-   epsilon *= max_var;
-   epsilon *= 1.048310743767546e-13;
-   if (L > epsilon) return IP_Sign::POSITIVE;
-   if (-L > epsilon) return IP_Sign::NEGATIVE;
+   epsilon *= 1.110439865059654e-14;
+   if (((d1 < 0))) det = -det;
+   if (det > epsilon) return IP_Sign::POSITIVE;
+   if (-det > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
 }
 
@@ -6501,21 +6485,21 @@ int orient2d_indirect_SEE_interval(const implicitPoint2D_SSI& p1, interval_numbe
    ) return Filtered_Sign::UNCERTAIN;
 
    setFPUModeToRoundUP();
-   interval_number a(d1 * p2x);
-   interval_number c(d1 * p3y);
-   interval_number e(d1 * p2y);
-   interval_number g(d1 * p3x);
-   interval_number ab(a - l1x);
-   interval_number cd(c - l1y);
-   interval_number ef(e - l1y);
-   interval_number gh(g - l1x);
-   interval_number abcd(ab * cd);
-   interval_number efgh(ef * gh);
-   interval_number L(abcd - efgh);
+   interval_number t1x(p2y - p3y);
+   interval_number t1y(p3x - p2x);
+   interval_number e2(l1x * t1x);
+   interval_number e3(l1y * t1y);
+   interval_number e(e2 + e3);
+   interval_number pr1(p2x * p3y);
+   interval_number pr2(p2y * p3x);
+   interval_number pr(pr1 - pr2);
+   interval_number dpr(d1 * pr);
+   interval_number det(dpr + e);
    setFPUModeToRoundNEAR();
 
-   if (!L.signIsReliable()) return Filtered_Sign::UNCERTAIN;
-   return L.sign();
+   if (!det.signIsReliable()) return Filtered_Sign::UNCERTAIN;
+   if (((d1 < 0))) return -det.sign();
+   else   return det.sign();
 }
 
 int orient2d_indirect_SEE_exact(const implicitPoint2D_SSI& p1, double p2x, double p2y, double p3x, double p3y)
@@ -6527,33 +6511,31 @@ int orient2d_indirect_SEE_exact(const implicitPoint2D_SSI& p1, double p2x, doubl
  if ((d1[d1_len - 1] != 0))
  {
    expansionObject o;
-   double a[32];
-   int a_len = o.Gen_Scale(d1_len, d1, p2x, a);
-   double c[32];
-   int c_len = o.Gen_Scale(d1_len, d1, p3y, c);
-   double e[32];
-   int e_len = o.Gen_Scale(d1_len, d1, p2y, e);
-   double g[32];
-   int g_len = o.Gen_Scale(d1_len, d1, p3x, g);
-   double ab[64];
-   int ab_len = o.Gen_Diff(a_len, a, l1x_len, l1x, ab);
-   double cd[64];
-   int cd_len = o.Gen_Diff(c_len, c, l1y_len, l1y, cd);
-   double ef[64];
-   int ef_len = o.Gen_Diff(e_len, e, l1y_len, l1y, ef);
-   double gh[64];
-   int gh_len = o.Gen_Diff(g_len, g, l1x_len, l1x, gh);
-   double abcd_p[128], *abcd = abcd_p;
-   int abcd_len = o.Gen_Product_With_PreAlloc(ab_len, ab, cd_len, cd, &abcd, 128);
-   double efgh_p[128], *efgh = efgh_p;
-   int efgh_len = o.Gen_Product_With_PreAlloc(ef_len, ef, gh_len, gh, &efgh, 128);
-   double L_p[128], *L = L_p;
-   int L_len = o.Gen_Diff_With_PreAlloc(abcd_len, abcd, efgh_len, efgh, &L, 128);
+   double t1x[2];
+   o.two_Diff(p2y, p3y, t1x);
+   double t1y[2];
+   o.two_Diff(p3x, p2x, t1y);
+   double e2[128];
+   int e2_len = o.Gen_Product(l1x_len, l1x, 2, t1x, e2);
+   double e3[128];
+   int e3_len = o.Gen_Product(l1y_len, l1y, 2, t1y, e3);
+   double e_p[128], *e = e_p;
+   int e_len = o.Gen_Sum_With_PreAlloc(e2_len, e2, e3_len, e3, &e, 128);
+   double pr1[2];
+   o.Two_Prod(p2x, p3y, pr1);
+   double pr2[2];
+   o.Two_Prod(p2y, p3x, pr2);
+   double pr[4];
+   o.Two_Two_Diff(pr1, pr2, pr);
+   double dpr[128];
+   int dpr_len = o.Gen_Product(d1_len, d1, 4, pr, dpr);
+   double det_p[128], *det = det_p;
+   int det_len = o.Gen_Sum_With_PreAlloc(dpr_len, dpr, e_len, e, &det, 128);
 
-   return_value = L[L_len - 1];
-   if (L_p != L) free(L);
-   if (efgh_p != efgh) free(efgh);
-   if (abcd_p != abcd) free(abcd);
+   return_value = det[det_len - 1];
+   if (det_p != det) free(det);
+   if (e_p != e) free(e);
+   if (( (d1[d1_len -1] < 0))) return_value = -return_value;
  }
 
 

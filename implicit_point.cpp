@@ -281,7 +281,7 @@ int genericPoint::orient3D(const genericPoint& a, const genericPoint& b, const g
 
 	int i = a.isExplicit3D() + b.isExplicit3D() + c.isExplicit3D() + d.isExplicit3D();
 
-	if (i == 4) orient3d_EEEE(a, b, c, d);
+	if (i == 4) return orient3d_EEEE(a, b, c, d);
 	
 	if (i == 3)
 	{

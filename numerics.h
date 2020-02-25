@@ -52,7 +52,6 @@
 	// 64-bit
 #ifdef IS64BITPLATFORM
 #define USE_SIMD_INSTRUCTIONS
-//#define USE_FMA_INSTRUCTIONS
 #endif
 
 #ifdef ISVISUALSTUDIO
@@ -77,8 +76,6 @@
 #ifdef USE_SIMD_INSTRUCTIONS
 #include <emmintrin.h>
 
-#define ALG16_Double alignas(16) double
-
 	class interval_number
 	{
 		__m128d interval; // interval[1] = min_low, interval[0] = high
@@ -87,7 +84,6 @@
 		static __m128i sign_low_mask, sign_high_mask;
 
 	public:
-
 		static void init();
 
 		const double *getInterval() const { return (const double*)&interval; }
@@ -153,104 +149,9 @@
 			return interval_number(NAN);
 		}
 
-#ifdef USE_FMA_INSTRUCTIONS
-		friend interval_number fmadd(const interval_number& a, const interval_number& b, const interval_number& c);
-		friend interval_number fmsub(const interval_number& a, const interval_number& b, const interval_number& c);
-#endif
 	};
 
-#ifdef USE_FMA_INSTRUCTIONS
-
-#include <immintrin.h>
-
-	inline interval_number fmadd(const interval_number& a, const interval_number& b, const interval_number& c)
-	{
-		__m128i ssg;
-		__m128d llhh, lhhl, ip;
-		// Move vars from in switch
-
-		switch ((_mm_movemask_pd(a.interval) << 2) | _mm_movemask_pd(b.interval))
-		{
-		case 0:
-			// This case must be optimized by using fmadd!
-			llhh = _mm_mul_pd(a.interval, b.interval);
-			lhhl = _mm_mul_pd(a.interval, _mm_shuffle_pd(b.interval, b.interval, 1));
-			return interval_number(_mm_add_pd(_mm_max_pd(_mm_unpacklo_pd(llhh, lhhl), _mm_unpackhi_pd(llhh, lhhl)), c.interval));
-		case 1:
-			return interval_number(_mm_fmadd_pd(_mm_shuffle_pd(b.interval, b.interval, 3), a.interval, c.interval));
-		case 2:
-			return interval_number(_mm_fmadd_pd(_mm_shuffle_pd(b.interval, b.interval, 0), a.interval, c.interval));
-		case 4:
-			return interval_number(_mm_fmadd_pd(_mm_shuffle_pd(a.interval, a.interval, 3), b.interval, c.interval));
-		case 5:
-			// This case must be optimized by using fmadd!
-			ip = _mm_mul_pd(_mm_castsi128_pd(_mm_xor_si128(_mm_castpd_si128(a.interval), interval_number::sign_high_mask)), b.interval);
-			return interval_number(_mm_add_pd(_mm_shuffle_pd(ip, ip, 1), c.interval));
-		case 6:
-			ssg = _mm_xor_si128(_mm_castpd_si128(b.interval), interval_number::sign_low_mask);
-			return interval_number(_mm_fmadd_pd(a.interval, _mm_shuffle_pd(_mm_castsi128_pd(ssg), _mm_castsi128_pd(ssg), 1), c.interval));
-		case 8:
-			return interval_number(_mm_fmadd_pd(_mm_shuffle_pd(a.interval, a.interval, 0), _mm_shuffle_pd(b.interval, b.interval, 1), c.interval));
-		case 9:
-			ssg = _mm_xor_si128(_mm_castpd_si128(a.interval), interval_number::sign_low_mask);
-			return interval_number(_mm_fmadd_pd(b.interval, _mm_shuffle_pd(_mm_castsi128_pd(ssg), _mm_castsi128_pd(ssg), 1), c.interval));
-		case 10:
-			return interval_number(_mm_fmadd_pd(a.interval, _mm_castsi128_pd(_mm_xor_si128(_mm_castpd_si128(b.interval), interval_number::sign_low_mask)), c.interval));
-		}
-
-		return interval_number(NAN);
-	}
-
-	inline interval_number fmsub(const interval_number& a, const interval_number& b, const interval_number& c)
-	{
-		__m128i ssg;
-		__m128d llhh, lhhl, ip;
-		// Move vars from in switch
-
-		switch ((_mm_movemask_pd(a.interval) << 2) | _mm_movemask_pd(b.interval))
-		{
-		case 0:
-			// This case must be optimized by using fmadd!
-			llhh = _mm_mul_pd(a.interval, b.interval);
-			lhhl = _mm_mul_pd(a.interval, _mm_shuffle_pd(b.interval, b.interval, 1));
-			return interval_number(_mm_add_pd(_mm_max_pd(_mm_unpacklo_pd(llhh, lhhl), _mm_unpackhi_pd(llhh, lhhl)), _mm_shuffle_pd(c.interval, c.interval, 1)));
-		case 1:
-			return interval_number(_mm_fmadd_pd(_mm_shuffle_pd(b.interval, b.interval, 3), a.interval, _mm_shuffle_pd(c.interval, c.interval, 1)));
-		case 2:
-			return interval_number(_mm_fmadd_pd(_mm_shuffle_pd(b.interval, b.interval, 0), a.interval, _mm_shuffle_pd(c.interval, c.interval, 1)));
-		case 4:
-			return interval_number(_mm_fmadd_pd(_mm_shuffle_pd(a.interval, a.interval, 3), b.interval, _mm_shuffle_pd(c.interval, c.interval, 1)));
-		case 5:
-			// This case must be optimized by using fmadd!
-			ip = _mm_mul_pd(_mm_castsi128_pd(_mm_xor_si128(_mm_castpd_si128(a.interval), interval_number::sign_high_mask)), b.interval);
-			return interval_number(_mm_add_pd(_mm_shuffle_pd(ip, ip, 1), _mm_shuffle_pd(c.interval, c.interval, 1)));
-		case 6:
-			ssg = _mm_xor_si128(_mm_castpd_si128(b.interval), interval_number::sign_low_mask);
-			return interval_number(_mm_fmadd_pd(a.interval, _mm_shuffle_pd(_mm_castsi128_pd(ssg), _mm_castsi128_pd(ssg), 1), _mm_shuffle_pd(c.interval, c.interval, 1)));
-		case 8:
-			return interval_number(_mm_fmadd_pd(_mm_shuffle_pd(a.interval, a.interval, 0), _mm_shuffle_pd(b.interval, b.interval, 1), _mm_shuffle_pd(c.interval, c.interval, 1)));
-		case 9:
-			ssg = _mm_xor_si128(_mm_castpd_si128(a.interval), interval_number::sign_low_mask);
-			return interval_number(_mm_fmadd_pd(b.interval, _mm_shuffle_pd(_mm_castsi128_pd(ssg), _mm_castsi128_pd(ssg), 1), _mm_shuffle_pd(c.interval, c.interval, 1)));
-		case 10:
-			return interval_number(_mm_fmadd_pd(a.interval, _mm_castsi128_pd(_mm_xor_si128(_mm_castpd_si128(b.interval), interval_number::sign_low_mask)), _mm_shuffle_pd(c.interval, c.interval, 1)));
-		}
-
-		return interval_number(NAN);
-	}
-
-// All the four doubles must be aligned(16)
-// d = a*b + c
-#define Explicit_FMAdd(a,b,c,d) _mm_store_sd(&d,_mm_fmadd_sd((*(__m128d*)(&a)), (*(__m128d*)(&b)), (*(__m128d*)(&c))));
-
-// d = a*b - c
-#define Explicit_FMSub(a,b,c,d) _mm_store_sd(&d,_mm_fmsub_sd((*(__m128d*)(&a)), (*(__m128d*)(&b)), (*(__m128d*)(&c))));
-
-#endif
-
 #else // USE_SIMD_INSTRUCTIONS
-
-#define ALG16_Double double
 
 	// Interval_number
 	class interval_number
@@ -354,55 +255,55 @@
 	public:
 		expansionObject() {}
 
-		inline void two_Sum(const double& a, const double& b, double* xy) { Two_Sum(a, b, xy[1], xy[0]); }
+		inline void two_Sum(const double a, const double b, double* xy) { Two_Sum(a, b, xy[1], xy[0]); }
 
-		inline void two_Diff(const double& a, const double& b, double* xy) { Two_Diff(a, b, xy[1], xy[0]); }
+		inline void two_Diff(const double a, const double b, double* xy) { Two_Diff(a, b, xy[1], xy[0]); }
 
 		// [x,y] = [a]*[b]		 Multiplies two expansions [a] and [b] of length one
-		inline void Two_Prod(const double& a, const double& b, double& x, double& y)
+		inline void Two_Prod(const double a, const double b, double& x, double& y)
 		{
 			x = a * b;
 			Split(a, _ah, _al); Split(b, _bh, _bl);
 			y = ((_ah * _bh - x) + _ah * _bl + _al * _bh) + _al * _bl;
 		}
-		inline void Two_Prod(const double& a, const double& b, double* xy) { Two_Prod(a, b, xy[1], xy[0]); }
+		inline void Two_Prod(const double a, const double b, double* xy) { Two_Prod(a, b, xy[1], xy[0]); }
 
 
 		// [x,y] = [a]^2		Squares an expansion of length one
-		inline void Square(const double& a, double& x, double& y)
+		inline void Square(const double a, double& x, double& y)
 		{
 			x = a * a;
 			Split(a, _ah, _al);
 			y = (_al * _al) - ((x - (_ah * _ah)) - ((_ah + _ah) * _al));
 		}
-		inline void Square(const double& a, double* xy) { Square(a, xy[1], xy[0]); }
+		inline void Square(const double a, double* xy) { Square(a, xy[1], xy[0]); }
 
 		// [x3,x2,x1,x0] = [a1,a0]*[b]		Multiplies an expansion [a1,a0] of length two by an expansion [b] of length one
-		inline void Two_One_Prod(const double& a1, const double& a0, const double& b, double& x3, double& x2, double& x1, double& x0)
+		inline void Two_One_Prod(const double a1, const double a0, const double b, double& x3, double& x2, double& x1, double& x0)
 		{
 			Split(b, _bh, _bl);
 			Two_Prod_PreSplit(a0, b, _bh, _bl, _i, x0); Two_Prod_PreSplit(a1, b, _bh, _bl, _j, _0);
 			Two_Sum(_i, _0, _k, x1); Quick_Two_Sum(_j, _k, x3, x2);
 		}
-		inline void Two_One_Prod(const double* a, const double& b, double* x) { Two_One_Prod(a[1], a[0], b, x[3], x[2], x[1], x[0]); }
+		inline void Two_One_Prod(const double* a, const double b, double* x) { Two_One_Prod(a[1], a[0], b, x[3], x[2], x[1], x[0]); }
 
 		// [x3,x2,x1,x0] = [a1,a0]+[b1,b0]		Calculates the sum of two expansions of length two
-		inline void Two_Two_Sum(const double& a1, const double& a0, const double& b1, const double& b0, double& x3, double& x2, double& x1, double& x0)
+		inline void Two_Two_Sum(const double a1, const double a0, const double b1, const double b0, double& x3, double& x2, double& x1, double& x0)
 		{
 			Two_One_Sum(a1, a0, b0, _j, _0, x0); Two_One_Sum(_j, _0, b1, x3, x2, x1);
 		}
 		inline void Two_Two_Sum(const double* a, const double* b, double* xy) { Two_Two_Sum(a[1], a[0], b[1], b[0], xy[3], xy[2], xy[1], xy[0]); }
 
 		// [x3,x2,x1,x0] = [a1,a0]-[b1,b0]		Calculates the difference between two expansions of length two
-		inline void Two_Two_Diff(const double& a1, const double& a0, const double& b1, const double& b0, double& x3, double& x2, double& x1, double& x0)
+		inline void Two_Two_Diff(const double a1, const double a0, const double b1, const double b0, double& x3, double& x2, double& x1, double& x0)
 		{
 			Two_One_Diff(a1, a0, b0, _j, _0, x0); Two_One_Diff(_j, _0, b1, _u3, x2, x1); x3 = _u3;
 		}
 		inline void Two_Two_Diff(const double* a, const double* b, double* x) { Two_Two_Diff(a[1], a[0], b[1], b[0], x[3], x[2], x[1], x[0]); }
 
 		// Calculates the second component 'y' of the expansion [x,y] = [a]-[b] when 'x' is known
-		inline void Two_Diff_Back(const double& a, const double& b, double& x, double& y) { _bv = a - x; y = (a - (x + _bv)) + (_bv - b); }
-		inline void Two_Diff_Back(const double& a, const double& b, double* xy) { Two_Diff_Back(a, b, xy[1], xy[0]); }
+		inline void Two_Diff_Back(const double a, const double b, double& x, double& y) { _bv = a - x; y = (a - (x + _bv)) + (_bv - b); }
+		inline void Two_Diff_Back(const double a, const double b, double* xy) { Two_Diff_Back(a, b, xy[1], xy[0]); }
 
 		// [h] = [a1,a0]^2		Squares an expansion of length 2
 		// 'h' must be allocated by the caller with 6 components.
