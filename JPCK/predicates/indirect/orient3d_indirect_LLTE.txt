@@ -38,4 +38,4 @@ mt3 = m12 * p3p4x
 mtt = mt2 - mt1
 m012 = mtt - mt3
 
-SIGN d1 d2 d3
+// SIGN d1 d2 d3

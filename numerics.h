@@ -98,6 +98,8 @@
 		inline double sup() const { return ((double*)(&interval))[0]; }
 		inline double width() const { return sup() - inf(); }
 
+		inline void invert() { interval = _mm_shuffle_pd(interval, interval, 1); }
+
 		inline bool isNegative() const { return _mm_comilt_sd(interval, zero); }
 		inline bool isPositive() const { return _mm_comilt_sd(_mm_shuffle_pd(interval, interval, 1), zero); }
 
@@ -181,6 +183,9 @@
 		inline double inf() const { return -min_low; }
 		inline double sup() const { return high; }
 		inline double width() const { return sup() - inf(); }
+
+		inline bool isNegative() const { return (high < 0); }
+		inline void invert() { double tmp = -min_low; min_low = -high; high = tmp; }
 
 		inline bool signIsReliable() const { return (min_low < 0 || high < 0); }
 		inline int sign() const { return (min_low < 0) ? (1) : ((high < 0) ? (-1) : (0)); }
@@ -319,8 +324,8 @@
 		//void Two_Two_Prod(const double a1, const double a0, const double b1, const double b0, double *h);
 		//inline void Two_Two_Prod(const double *a, const double *b, double *xy) { Two_Two_Prod(a[1], a[0], b[1], b[0], xy); }
 
-		// [e] <- 2*[e]		Inplace inversion
-		inline void Gen_Invert(const int elen, double* e) { for (int i = 0; i < elen; i++) e[i] = -e[i]; }
+		// [e] = -[e]		Inplace inversion
+		static void Gen_Invert(const int elen, double* e) { for (int i = 0; i < elen; i++) e[i] = -e[i]; }
 
 		// [h] = [e] + [f]		Sums two expansions and returns number of components of result
 		// 'h' must be allocated by the caller with at least elen+flen components.

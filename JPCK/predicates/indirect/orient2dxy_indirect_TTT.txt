@@ -19,4 +19,4 @@ abcd = ab * cd
 efgh = ef * gh
 L = abcd - efgh
 
-SIGN d2 d3
+// SIGN d2 d3

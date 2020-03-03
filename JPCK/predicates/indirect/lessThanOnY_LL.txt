@@ -5,4 +5,4 @@ k1 = d2 * l1y
 k2 = d1 * l2y
 ky = k1 - k2
 
-SIGN d1 d2
+// SIGN d1 d2

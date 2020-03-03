@@ -6,6 +6,7 @@ Each line must be one of the following:
 4) An empty line
 5) A lambda declaration
 6) A sign declaration
+7) A nonzero declaration
 
 1) Explicit parameter declaration (any number of different variable names)
 v1
@@ -43,6 +44,10 @@ The aforementioned four values are produced when compiling the lambda code.
 6) Sign declaration
 SIGN d1 d2 ... dn
 where di are normally lambda outputs that determine the final sign
+
+7) Nonzero declaration
+NONZERO v1 v2 ... vn
+means that the predicate returns a boolean value if any of the v's is nonzero
 
 
 **********************************

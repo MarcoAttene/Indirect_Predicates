@@ -191,7 +191,8 @@ int incircle_exact(double pax, double pay, double pbx, double pby, double pcx, d
 
  if (return_value > 0) return IP_Sign::POSITIVE;
  if (return_value < 0) return IP_Sign::NEGATIVE;
- return IP_Sign::ZERO;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
 }
 
 int incircle(double pax, double pay, double pbx, double pby, double pcx, double pcy, double pdx, double pdy)
@@ -584,7 +585,8 @@ int inSphere_exact(double pax, double pay, double paz, double pbx, double pby, d
 
  if (return_value > 0) return IP_Sign::POSITIVE;
  if (return_value < 0) return IP_Sign::NEGATIVE;
- return IP_Sign::ZERO;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
 }
 
 int inSphere(double pax, double pay, double paz, double pbx, double pby, double pbz, double pcx, double pcy, double pcz, double pdx, double pdy, double pdz, double pex, double pey, double pez)
@@ -595,6 +597,114 @@ int inSphere(double pax, double pay, double paz, double pbx, double pby, double 
    ret = inSphere_interval(pax, pay, paz, pbx, pby, pbz, pcx, pcy, pcz, pdx, pdy, pdz, pex, pey, pez);
    if (ret != Filtered_Sign::UNCERTAIN) return ret;
    return inSphere_exact(pax, pay, paz, pbx, pby, pbz, pcx, pcy, pcz, pdx, pdy, pdz, pex, pey, pez);
+}
+
+bool misaligned3d_filtered(double ax, double ay, double az, double bx, double by, double bz, double cx, double cy, double cz)
+{
+   double dx = cx - bx;
+   double dy = cy - by;
+   double dz = cz - bz;
+   double ex = bx - ax;
+   double ey = by - ay;
+   double ez = bz - az;
+   double px1 = dy * ez;
+   double px2 = dz * ey;
+   double px = px1 - px2;
+   double py1 = dz * ex;
+   double py2 = dx * ez;
+   double py = py1 - py2;
+   double pz1 = dx * ey;
+   double pz2 = dy * ex;
+   double pz = pz1 - pz2;
+
+   double _tmp_fabs;
+
+   double max_var = 0.0;
+   if ((_tmp_fabs = fabs(dx)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(dy)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(dz)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(ex)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(ey)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(ez)) > max_var) max_var = _tmp_fabs;
+   double epsilon = max_var;
+   epsilon *= epsilon;
+   epsilon *= 8.881784197001252e-16;
+
+   return ( (px > epsilon || -px < epsilon) || (py > epsilon || -py < epsilon) || (pz > epsilon || -pz < epsilon) );
+}
+
+bool misaligned3d_interval(interval_number ax, interval_number ay, interval_number az, interval_number bx, interval_number by, interval_number bz, interval_number cx, interval_number cy, interval_number cz)
+{
+   setFPUModeToRoundUP();
+   interval_number dx(cx - bx);
+   interval_number dy(cy - by);
+   interval_number dz(cz - bz);
+   interval_number ex(bx - ax);
+   interval_number ey(by - ay);
+   interval_number ez(bz - az);
+   interval_number px1(dy * ez);
+   interval_number px2(dz * ey);
+   interval_number px(px1 - px2);
+   interval_number py1(dz * ex);
+   interval_number py2(dx * ez);
+   interval_number py(py1 - py2);
+   interval_number pz1(dx * ey);
+   interval_number pz2(dy * ex);
+   interval_number pz(pz1 - pz2);
+   setFPUModeToRoundNEAR();
+
+   return (
+      px.signIsReliable()
+      || py.signIsReliable()
+      || pz.signIsReliable()
+   );
+}
+
+int misaligned3d_exact(double ax, double ay, double az, double bx, double by, double bz, double cx, double cy, double cz)
+{
+   expansionObject o;
+   double dx[2];
+   o.two_Diff(cx, bx, dx);
+   double dy[2];
+   o.two_Diff(cy, by, dy);
+   double dz[2];
+   o.two_Diff(cz, bz, dz);
+   double ex[2];
+   o.two_Diff(bx, ax, ex);
+   double ey[2];
+   o.two_Diff(by, ay, ey);
+   double ez[2];
+   o.two_Diff(bz, az, ez);
+   double px1[8];
+   int px1_len = o.Gen_Product(2, dy, 2, ez, px1);
+   double px2[8];
+   int px2_len = o.Gen_Product(2, dz, 2, ey, px2);
+   double px[16];
+   int px_len = o.Gen_Diff(px1_len, px1, px2_len, px2, px);
+   double py1[8];
+   int py1_len = o.Gen_Product(2, dz, 2, ex, py1);
+   double py2[8];
+   int py2_len = o.Gen_Product(2, dx, 2, ez, py2);
+   double py[16];
+   int py_len = o.Gen_Diff(py1_len, py1, py2_len, py2, py);
+   double pz1[8];
+   int pz1_len = o.Gen_Product(2, dx, 2, ey, pz1);
+   double pz2[8];
+   int pz2_len = o.Gen_Product(2, dy, 2, ex, pz2);
+   double pz[16];
+   int pz_len = o.Gen_Diff(pz1_len, pz1, pz2_len, pz2, pz);
+
+ return ( (px[px_len - 1] != 0) || (py[py_len - 1] != 0) || (pz[pz_len - 1] != 0) );
+}
+
+int misaligned3d(double ax, double ay, double az, double bx, double by, double bz, double cx, double cy, double cz)
+{
+   int ret;
+   ret = misaligned3d_filtered(ax, ay, az, bx, by, bz, cx, cy, cz);
+   if (ret != Filtered_Sign::UNCERTAIN) return ret;
+   ret = misaligned3d_interval(ax, ay, az, bx, by, bz, cx, cy, cz);
+   if (ret != Filtered_Sign::UNCERTAIN) return ret;
+   return misaligned3d_exact(ax, ay, az, bx, by, bz, cx, cy, cz);
 }
 
 int orient2d_filtered(double p1x, double p1y, double p2x, double p2y, double p3x, double p3y)
@@ -660,7 +770,8 @@ int orient2d_exact(double p1x, double p1y, double p2x, double p2y, double p3x, d
 
  if (return_value > 0) return IP_Sign::POSITIVE;
  if (return_value < 0) return IP_Sign::NEGATIVE;
- return IP_Sign::ZERO;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
 }
 
 int orient2d(double p1x, double p1y, double p2x, double p2y, double p3x, double p3y)
@@ -807,7 +918,8 @@ int orient3d_exact(double px, double py, double pz, double qx, double qy, double
 
  if (return_value > 0) return IP_Sign::POSITIVE;
  if (return_value < 0) return IP_Sign::NEGATIVE;
- return IP_Sign::ZERO;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
 }
 
 int orient3d(double px, double py, double pz, double qx, double qy, double qz, double rx, double ry, double rz, double sx, double sy, double sz)
@@ -820,7 +932,210 @@ int orient3d(double px, double py, double pz, double qx, double qy, double qz, d
    return orient3d_exact(px, py, pz, qx, qy, qz, rx, ry, rz, sx, sy, sz);
 }
 
-int incircle_indirect_LEEE_filtered(const implicitPoint3D_LPI& p1, double pbx, double pby, double pcx, double pcy, double pdx, double pdy)
+int relativeOrientation_filtered(double ax, double ay, double az, double bx, double by, double bz, double px, double py, double pz, double qx, double qy, double qz)
+{
+   double v1x = px - ax;
+   double v1y = py - ay;
+   double v1z = pz - az;
+   double v2x = px - bx;
+   double v2y = py - by;
+   double v2z = pz - bz;
+   double v3x = qx - ax;
+   double v3y = qy - ay;
+   double v3z = qz - az;
+   double v4x = qx - bx;
+   double v4y = qy - by;
+   double v4z = qz - bz;
+   double c1x1 = v1y * v2z;
+   double c1x2 = v1z * v2y;
+   double c1x = c1x1 - c1x2;
+   double c1y1 = v1z * v2x;
+   double c1y2 = v1x * v2z;
+   double c1y = c1y1 - c1y2;
+   double c1z1 = v1x * v2y;
+   double c1z2 = v1y * v2x;
+   double c1z = c1z1 - c1z2;
+   double c2x1 = v3y * v4z;
+   double c2x2 = v3z * v4y;
+   double c2x = c2x1 - c2x2;
+   double c2y1 = v3z * v4x;
+   double c2y2 = v3x * v4z;
+   double c2y = c2y1 - c2y2;
+   double c2z1 = v3x * v4y;
+   double c2z2 = v3y * v4x;
+   double c2z = c2z1 - c2z2;
+   double dpx = c1x * c2x;
+   double dpy = c1y * c2y;
+   double dpz = c1z * c2z;
+   double dpxy = dpx + dpy;
+   double dp = dpxy + dpz;
+
+   double _tmp_fabs;
+
+   double max_var = 0.0;
+   if ((_tmp_fabs = fabs(v1x)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(v1y)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(v1z)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(v2x)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(v2y)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(v2z)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(v3x)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(v3y)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(v3z)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(v4x)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(v4y)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(v4z)) > max_var) max_var = _tmp_fabs;
+   double epsilon = max_var;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= 1.376676550535194e-14;
+   if (dp > epsilon) return IP_Sign::POSITIVE;
+   if (-dp > epsilon) return IP_Sign::NEGATIVE;
+   return Filtered_Sign::UNCERTAIN;
+}
+
+int relativeOrientation_interval(interval_number ax, interval_number ay, interval_number az, interval_number bx, interval_number by, interval_number bz, interval_number px, interval_number py, interval_number pz, interval_number qx, interval_number qy, interval_number qz)
+{
+   setFPUModeToRoundUP();
+   interval_number v1x(px - ax);
+   interval_number v1y(py - ay);
+   interval_number v1z(pz - az);
+   interval_number v2x(px - bx);
+   interval_number v2y(py - by);
+   interval_number v2z(pz - bz);
+   interval_number v3x(qx - ax);
+   interval_number v3y(qy - ay);
+   interval_number v3z(qz - az);
+   interval_number v4x(qx - bx);
+   interval_number v4y(qy - by);
+   interval_number v4z(qz - bz);
+   interval_number c1x1(v1y * v2z);
+   interval_number c1x2(v1z * v2y);
+   interval_number c1x(c1x1 - c1x2);
+   interval_number c1y1(v1z * v2x);
+   interval_number c1y2(v1x * v2z);
+   interval_number c1y(c1y1 - c1y2);
+   interval_number c1z1(v1x * v2y);
+   interval_number c1z2(v1y * v2x);
+   interval_number c1z(c1z1 - c1z2);
+   interval_number c2x1(v3y * v4z);
+   interval_number c2x2(v3z * v4y);
+   interval_number c2x(c2x1 - c2x2);
+   interval_number c2y1(v3z * v4x);
+   interval_number c2y2(v3x * v4z);
+   interval_number c2y(c2y1 - c2y2);
+   interval_number c2z1(v3x * v4y);
+   interval_number c2z2(v3y * v4x);
+   interval_number c2z(c2z1 - c2z2);
+   interval_number dpx(c1x * c2x);
+   interval_number dpy(c1y * c2y);
+   interval_number dpz(c1z * c2z);
+   interval_number dpxy(dpx + dpy);
+   interval_number dp(dpxy + dpz);
+   setFPUModeToRoundNEAR();
+
+   if (!dp.signIsReliable()) return Filtered_Sign::UNCERTAIN;
+   return dp.sign();
+}
+
+int relativeOrientation_exact(double ax, double ay, double az, double bx, double by, double bz, double px, double py, double pz, double qx, double qy, double qz)
+{
+   expansionObject o;
+   double v1x[2];
+   o.two_Diff(px, ax, v1x);
+   double v1y[2];
+   o.two_Diff(py, ay, v1y);
+   double v1z[2];
+   o.two_Diff(pz, az, v1z);
+   double v2x[2];
+   o.two_Diff(px, bx, v2x);
+   double v2y[2];
+   o.two_Diff(py, by, v2y);
+   double v2z[2];
+   o.two_Diff(pz, bz, v2z);
+   double v3x[2];
+   o.two_Diff(qx, ax, v3x);
+   double v3y[2];
+   o.two_Diff(qy, ay, v3y);
+   double v3z[2];
+   o.two_Diff(qz, az, v3z);
+   double v4x[2];
+   o.two_Diff(qx, bx, v4x);
+   double v4y[2];
+   o.two_Diff(qy, by, v4y);
+   double v4z[2];
+   o.two_Diff(qz, bz, v4z);
+   double c1x1[8];
+   int c1x1_len = o.Gen_Product(2, v1y, 2, v2z, c1x1);
+   double c1x2[8];
+   int c1x2_len = o.Gen_Product(2, v1z, 2, v2y, c1x2);
+   double c1x[16];
+   int c1x_len = o.Gen_Diff(c1x1_len, c1x1, c1x2_len, c1x2, c1x);
+   double c1y1[8];
+   int c1y1_len = o.Gen_Product(2, v1z, 2, v2x, c1y1);
+   double c1y2[8];
+   int c1y2_len = o.Gen_Product(2, v1x, 2, v2z, c1y2);
+   double c1y[16];
+   int c1y_len = o.Gen_Diff(c1y1_len, c1y1, c1y2_len, c1y2, c1y);
+   double c1z1[8];
+   int c1z1_len = o.Gen_Product(2, v1x, 2, v2y, c1z1);
+   double c1z2[8];
+   int c1z2_len = o.Gen_Product(2, v1y, 2, v2x, c1z2);
+   double c1z[16];
+   int c1z_len = o.Gen_Diff(c1z1_len, c1z1, c1z2_len, c1z2, c1z);
+   double c2x1[8];
+   int c2x1_len = o.Gen_Product(2, v3y, 2, v4z, c2x1);
+   double c2x2[8];
+   int c2x2_len = o.Gen_Product(2, v3z, 2, v4y, c2x2);
+   double c2x[16];
+   int c2x_len = o.Gen_Diff(c2x1_len, c2x1, c2x2_len, c2x2, c2x);
+   double c2y1[8];
+   int c2y1_len = o.Gen_Product(2, v3z, 2, v4x, c2y1);
+   double c2y2[8];
+   int c2y2_len = o.Gen_Product(2, v3x, 2, v4z, c2y2);
+   double c2y[16];
+   int c2y_len = o.Gen_Diff(c2y1_len, c2y1, c2y2_len, c2y2, c2y);
+   double c2z1[8];
+   int c2z1_len = o.Gen_Product(2, v3x, 2, v4y, c2z1);
+   double c2z2[8];
+   int c2z2_len = o.Gen_Product(2, v3y, 2, v4x, c2z2);
+   double c2z[16];
+   int c2z_len = o.Gen_Diff(c2z1_len, c2z1, c2z2_len, c2z2, c2z);
+   double dpx_p[128], *dpx = dpx_p;
+   int dpx_len = o.Gen_Product_With_PreAlloc(c1x_len, c1x, c2x_len, c2x, &dpx, 128);
+   double dpy_p[128], *dpy = dpy_p;
+   int dpy_len = o.Gen_Product_With_PreAlloc(c1y_len, c1y, c2y_len, c2y, &dpy, 128);
+   double dpz_p[128], *dpz = dpz_p;
+   int dpz_len = o.Gen_Product_With_PreAlloc(c1z_len, c1z, c2z_len, c2z, &dpz, 128);
+   double dpxy_p[128], *dpxy = dpxy_p;
+   int dpxy_len = o.Gen_Sum_With_PreAlloc(dpx_len, dpx, dpy_len, dpy, &dpxy, 128);
+   double dp_p[128], *dp = dp_p;
+   int dp_len = o.Gen_Sum_With_PreAlloc(dpxy_len, dpxy, dpz_len, dpz, &dp, 128);
+
+   double return_value = dp[dp_len - 1];
+   if (dp_p != dp) free(dp);
+   if (dpxy_p != dpxy) free(dpxy);
+   if (dpz_p != dpz) free(dpz);
+   if (dpy_p != dpy) free(dpy);
+   if (dpx_p != dpx) free(dpx);
+
+ if (return_value > 0) return IP_Sign::POSITIVE;
+ if (return_value < 0) return IP_Sign::NEGATIVE;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
+}
+
+int relativeOrientation(double ax, double ay, double az, double bx, double by, double bz, double px, double py, double pz, double qx, double qy, double qz)
+{
+   int ret;
+   ret = relativeOrientation_filtered(ax, ay, az, bx, by, bz, px, py, pz, qx, qy, qz);
+   if (ret != Filtered_Sign::UNCERTAIN) return ret;
+   ret = relativeOrientation_interval(ax, ay, az, bx, by, bz, px, py, pz, qx, qy, qz);
+   if (ret != Filtered_Sign::UNCERTAIN) return ret;
+   return relativeOrientation_exact(ax, ay, az, bx, by, bz, px, py, pz, qx, qy, qz);
+}
+
+int incirclexy_indirect_LEEE_filtered(const implicitPoint3D_LPI& p1, double pbx, double pby, double pcx, double pcy, double pdx, double pdy)
 {
    double l1x, l1y, l1z, d1, max_var = 0;
     if (
@@ -880,7 +1195,7 @@ int incircle_indirect_LEEE_filtered(const implicitPoint3D_LPI& p1, double pbx, d
    return Filtered_Sign::UNCERTAIN;
 }
 
-int incircle_indirect_LEEE_interval(const implicitPoint3D_LPI& p1, interval_number pbx, interval_number pby, interval_number pcx, interval_number pcy, interval_number pdx, interval_number pdy)
+int incirclexy_indirect_LEEE_interval(const implicitPoint3D_LPI& p1, interval_number pbx, interval_number pby, interval_number pcx, interval_number pcy, interval_number pdx, interval_number pdy)
 {
    interval_number l1x, l1y, l1z, d1;
    if (
@@ -927,9 +1242,9 @@ int incircle_indirect_LEEE_interval(const implicitPoint3D_LPI& p1, interval_numb
    return L.sign();
 }
 
-int incircle_indirect_LEEE_exact(const implicitPoint3D_LPI& p1, double pbx, double pby, double pcx, double pcy, double pdx, double pdy)
+int incirclexy_indirect_LEEE_exact(const implicitPoint3D_LPI& p1, double pbx, double pby, double pcx, double pcy, double pdx, double pdy)
 {
- double return_value = 0.0;
+ double return_value = NAN;
  double l1x_p[64], *l1x = l1x_p, l1y_p[64], *l1y = l1y_p, l1z_p[64], *l1z = l1z_p, d1_p[64], *d1 = d1_p;
  int l1x_len, l1y_len, l1z_len, d1_len;
  p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, l1z, l1z_len, d1, d1_len);
@@ -1033,20 +1348,21 @@ int incircle_indirect_LEEE_exact(const implicitPoint3D_LPI& p1, double pbx, doub
 
  if (return_value > 0) return IP_Sign::POSITIVE;
  if (return_value < 0) return IP_Sign::NEGATIVE;
- return IP_Sign::ZERO;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
 }
 
-int incircle_indirect_LEEE(const implicitPoint3D_LPI& p1, double pbx, double pby, double pcx, double pcy, double pdx, double pdy)
+int incirclexy_indirect_LEEE(const implicitPoint3D_LPI& p1, double pbx, double pby, double pcx, double pcy, double pdx, double pdy)
 {
    int ret;
-   ret = incircle_indirect_LEEE_filtered(p1, pbx, pby, pcx, pcy, pdx, pdy);
+   ret = incirclexy_indirect_LEEE_filtered(p1, pbx, pby, pcx, pcy, pdx, pdy);
    if (ret != Filtered_Sign::UNCERTAIN) return ret;
-   ret = incircle_indirect_LEEE_interval(p1, pbx, pby, pcx, pcy, pdx, pdy);
+   ret = incirclexy_indirect_LEEE_interval(p1, pbx, pby, pcx, pcy, pdx, pdy);
    if (ret != Filtered_Sign::UNCERTAIN) return ret;
-   return incircle_indirect_LEEE_exact(p1, pbx, pby, pcx, pcy, pdx, pdy);
+   return incirclexy_indirect_LEEE_exact(p1, pbx, pby, pcx, pcy, pdx, pdy);
 }
 
-int incircle_indirect_LLEE_filtered(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, double pcx, double pcy, double pdx, double pdy)
+int incirclexy_indirect_LLEE_filtered(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, double pcx, double pcy, double pdx, double pdy)
 {
    double l1x, l1y, l1z, d1, l2x, l2y, l2z, d2, max_var = 0;
     if (
@@ -1107,7 +1423,7 @@ int incircle_indirect_LLEE_filtered(const implicitPoint3D_LPI& p1, const implici
    return Filtered_Sign::UNCERTAIN;
 }
 
-int incircle_indirect_LLEE_interval(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, interval_number pcx, interval_number pcy, interval_number pdx, interval_number pdy)
+int incirclexy_indirect_LLEE_interval(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, interval_number pcx, interval_number pcy, interval_number pdx, interval_number pdy)
 {
    interval_number l1x, l1y, l1z, d1, l2x, l2y, l2z, d2;
    if (
@@ -1158,9 +1474,9 @@ int incircle_indirect_LLEE_interval(const implicitPoint3D_LPI& p1, const implici
    return L.sign();
 }
 
-int incircle_indirect_LLEE_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, double pcx, double pcy, double pdx, double pdy)
+int incirclexy_indirect_LLEE_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, double pcx, double pcy, double pdx, double pdy)
 {
- double return_value = 0.0;
+ double return_value = NAN;
  double l1x_p[32], *l1x = l1x_p, l1y_p[32], *l1y = l1y_p, l1z_p[32], *l1z = l1z_p, d1_p[32], *d1 = d1_p, l2x_p[32], *l2x = l2x_p, l2y_p[32], *l2y = l2y_p, l2z_p[32], *l2z = l2z_p, d2_p[32], *d2 = d2_p;
  int l1x_len, l1y_len, l1z_len, d1_len, l2x_len, l2y_len, l2z_len, d2_len;
  p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, l1z, l1z_len, d1, d1_len);
@@ -1286,20 +1602,21 @@ int incircle_indirect_LLEE_exact(const implicitPoint3D_LPI& p1, const implicitPo
 
  if (return_value > 0) return IP_Sign::POSITIVE;
  if (return_value < 0) return IP_Sign::NEGATIVE;
- return IP_Sign::ZERO;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
 }
 
-int incircle_indirect_LLEE(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, double pcx, double pcy, double pdx, double pdy)
+int incirclexy_indirect_LLEE(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, double pcx, double pcy, double pdx, double pdy)
 {
    int ret;
-   ret = incircle_indirect_LLEE_filtered(p1, p2, pcx, pcy, pdx, pdy);
+   ret = incirclexy_indirect_LLEE_filtered(p1, p2, pcx, pcy, pdx, pdy);
    if (ret != Filtered_Sign::UNCERTAIN) return ret;
-   ret = incircle_indirect_LLEE_interval(p1, p2, pcx, pcy, pdx, pdy);
+   ret = incirclexy_indirect_LLEE_interval(p1, p2, pcx, pcy, pdx, pdy);
    if (ret != Filtered_Sign::UNCERTAIN) return ret;
-   return incircle_indirect_LLEE_exact(p1, p2, pcx, pcy, pdx, pdy);
+   return incirclexy_indirect_LLEE_exact(p1, p2, pcx, pcy, pdx, pdy);
 }
 
-int incircle_indirect_LLLE_filtered(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, const implicitPoint3D_LPI& p3, double pdx, double pdy)
+int incirclexy_indirect_LLLE_filtered(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, const implicitPoint3D_LPI& p3, double pdx, double pdy)
 {
    double l1x, l1y, l1z, d1, l2x, l2y, l2z, d2, l3x, l3y, l3z, d3, max_var = 0;
     if (
@@ -1369,7 +1686,7 @@ int incircle_indirect_LLLE_filtered(const implicitPoint3D_LPI& p1, const implici
    return Filtered_Sign::UNCERTAIN;
 }
 
-int incircle_indirect_LLLE_interval(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, const implicitPoint3D_LPI& p3, interval_number pdx, interval_number pdy)
+int incirclexy_indirect_LLLE_interval(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, const implicitPoint3D_LPI& p3, interval_number pdx, interval_number pdy)
 {
    interval_number l1x, l1y, l1z, d1, l2x, l2y, l2z, d2, l3x, l3y, l3z, d3;
    if (
@@ -1425,9 +1742,9 @@ int incircle_indirect_LLLE_interval(const implicitPoint3D_LPI& p1, const implici
    return L.sign();
 }
 
-int incircle_indirect_LLLE_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, const implicitPoint3D_LPI& p3, double pdx, double pdy)
+int incirclexy_indirect_LLLE_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, const implicitPoint3D_LPI& p3, double pdx, double pdy)
 {
- double return_value = 0.0;
+ double return_value = NAN;
  double l1x_p[32], *l1x = l1x_p, l1y_p[32], *l1y = l1y_p, l1z_p[32], *l1z = l1z_p, d1_p[32], *d1 = d1_p, l2x_p[32], *l2x = l2x_p, l2y_p[32], *l2y = l2y_p, l2z_p[32], *l2z = l2z_p, d2_p[32], *d2 = d2_p, l3x_p[32], *l3x = l3x_p, l3y_p[32], *l3y = l3y_p, l3z_p[32], *l3z = l3z_p, d3_p[32], *d3 = d3_p;
  int l1x_len, l1y_len, l1z_len, d1_len, l2x_len, l2y_len, l2z_len, d2_len, l3x_len, l3y_len, l3z_len, d3_len;
  p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, l1z, l1z_len, d1, d1_len);
@@ -1575,20 +1892,21 @@ int incircle_indirect_LLLE_exact(const implicitPoint3D_LPI& p1, const implicitPo
 
  if (return_value > 0) return IP_Sign::POSITIVE;
  if (return_value < 0) return IP_Sign::NEGATIVE;
- return IP_Sign::ZERO;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
 }
 
-int incircle_indirect_LLLE(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, const implicitPoint3D_LPI& p3, double pdx, double pdy)
+int incirclexy_indirect_LLLE(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, const implicitPoint3D_LPI& p3, double pdx, double pdy)
 {
    int ret;
-//   ret = incircle_indirect_LLLE_filtered(p1, p2, p3, pdx, pdy);
+//   ret = incirclexy_indirect_LLLE_filtered(p1, p2, p3, pdx, pdy);
 //   if (ret != Filtered_Sign::UNCERTAIN) return ret;
-   ret = incircle_indirect_LLLE_interval(p1, p2, p3, pdx, pdy);
+   ret = incirclexy_indirect_LLLE_interval(p1, p2, p3, pdx, pdy);
    if (ret != Filtered_Sign::UNCERTAIN) return ret;
-   return incircle_indirect_LLLE_exact(p1, p2, p3, pdx, pdy);
+   return incirclexy_indirect_LLLE_exact(p1, p2, p3, pdx, pdy);
 }
 
-int incircle_indirect_LLLL_filtered(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, const implicitPoint3D_LPI& p3, const implicitPoint3D_LPI& p4)
+int incirclexy_indirect_LLLL_filtered(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, const implicitPoint3D_LPI& p3, const implicitPoint3D_LPI& p4)
 {
    double l1x, l1y, l1z, d1, l2x, l2y, l2z, d2, l3x, l3y, l3z, d3, l4x, l4y, l4z, d4, max_var = 0;
     if (
@@ -1658,7 +1976,7 @@ int incircle_indirect_LLLL_filtered(const implicitPoint3D_LPI& p1, const implici
    return Filtered_Sign::UNCERTAIN;
 }
 
-int incircle_indirect_LLLL_interval(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, const implicitPoint3D_LPI& p3, const implicitPoint3D_LPI& p4)
+int incirclexy_indirect_LLLL_interval(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, const implicitPoint3D_LPI& p3, const implicitPoint3D_LPI& p4)
 {
    interval_number l1x, l1y, l1z, d1, l2x, l2y, l2z, d2, l3x, l3y, l3z, d3, l4x, l4y, l4z, d4;
    if (
@@ -1721,9 +2039,9 @@ int incircle_indirect_LLLL_interval(const implicitPoint3D_LPI& p1, const implici
    return L.sign();
 }
 
-int incircle_indirect_LLLL_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, const implicitPoint3D_LPI& p3, const implicitPoint3D_LPI& p4)
+int incirclexy_indirect_LLLL_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, const implicitPoint3D_LPI& p3, const implicitPoint3D_LPI& p4)
 {
- double return_value = 0.0;
+ double return_value = NAN;
  double l1x_p[16], *l1x = l1x_p, l1y_p[16], *l1y = l1y_p, l1z_p[16], *l1z = l1z_p, d1_p[16], *d1 = d1_p, l2x_p[16], *l2x = l2x_p, l2y_p[16], *l2y = l2y_p, l2z_p[16], *l2z = l2z_p, d2_p[16], *d2 = d2_p, l3x_p[16], *l3x = l3x_p, l3y_p[16], *l3y = l3y_p, l3z_p[16], *l3z = l3z_p, d3_p[16], *d3 = d3_p, l4x_p[16], *l4x = l4x_p, l4y_p[16], *l4y = l4y_p, l4z_p[16], *l4z = l4z_p, d4_p[16], *d4 = d4_p;
  int l1x_len, l1y_len, l1z_len, d1_len, l2x_len, l2y_len, l2z_len, d2_len, l3x_len, l3y_len, l3z_len, d3_len, l4x_len, l4y_len, l4z_len, d4_len;
  p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, l1z, l1z_len, d1, d1_len);
@@ -1894,17 +2212,18 @@ int incircle_indirect_LLLL_exact(const implicitPoint3D_LPI& p1, const implicitPo
 
  if (return_value > 0) return IP_Sign::POSITIVE;
  if (return_value < 0) return IP_Sign::NEGATIVE;
- return IP_Sign::ZERO;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
 }
 
-int incircle_indirect_LLLL(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, const implicitPoint3D_LPI& p3, const implicitPoint3D_LPI& p4)
+int incirclexy_indirect_LLLL(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, const implicitPoint3D_LPI& p3, const implicitPoint3D_LPI& p4)
 {
    int ret;
-//   ret = incircle_indirect_LLLL_filtered(p1, p2, p3, p4);
+//   ret = incirclexy_indirect_LLLL_filtered(p1, p2, p3, p4);
 //   if (ret != Filtered_Sign::UNCERTAIN) return ret;
-   ret = incircle_indirect_LLLL_interval(p1, p2, p3, p4);
+   ret = incirclexy_indirect_LLLL_interval(p1, p2, p3, p4);
    if (ret != Filtered_Sign::UNCERTAIN) return ret;
-   return incircle_indirect_LLLL_exact(p1, p2, p3, p4);
+   return incirclexy_indirect_LLLL_exact(p1, p2, p3, p4);
 }
 
 int incircle_indirect_SEEE_filtered(const implicitPoint2D_SSI& p1, double pbx, double pby, double pcx, double pcy, double pdx, double pdy)
@@ -2014,7 +2333,7 @@ int incircle_indirect_SEEE_interval(const implicitPoint2D_SSI& p1, interval_numb
 
 int incircle_indirect_SEEE_exact(const implicitPoint2D_SSI& p1, double pbx, double pby, double pcx, double pcy, double pdx, double pdy)
 {
- double return_value = 0.0;
+ double return_value = NAN;
  double l1x[32], l1y[32], d1[16];
  int l1x_len, l1y_len, d1_len;
  p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, d1, d1_len);
@@ -2110,7 +2429,8 @@ int incircle_indirect_SEEE_exact(const implicitPoint2D_SSI& p1, double pbx, doub
 
  if (return_value > 0) return IP_Sign::POSITIVE;
  if (return_value < 0) return IP_Sign::NEGATIVE;
- return IP_Sign::ZERO;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
 }
 
 int incircle_indirect_SEEE(const implicitPoint2D_SSI& p1, double pbx, double pby, double pcx, double pcy, double pdx, double pdy)
@@ -2240,7 +2560,7 @@ int incircle_indirect_SSEE_interval(const implicitPoint2D_SSI& p1, const implici
 
 int incircle_indirect_SSEE_exact(const implicitPoint2D_SSI& p1, const implicitPoint2D_SSI& p2, double pcx, double pcy, double pdx, double pdy)
 {
- double return_value = 0.0;
+ double return_value = NAN;
  double l1x[32], l1y[32], d1[16], l2x[32], l2y[32], d2[16];
  int l1x_len, l1y_len, d1_len, l2x_len, l2y_len, d2_len;
  p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, d1, d1_len);
@@ -2354,7 +2674,8 @@ int incircle_indirect_SSEE_exact(const implicitPoint2D_SSI& p1, const implicitPo
 
  if (return_value > 0) return IP_Sign::POSITIVE;
  if (return_value < 0) return IP_Sign::NEGATIVE;
- return IP_Sign::ZERO;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
 }
 
 int incircle_indirect_SSEE(const implicitPoint2D_SSI& p1, const implicitPoint2D_SSI& p2, double pcx, double pcy, double pdx, double pdy)
@@ -2489,7 +2810,7 @@ int incircle_indirect_SSSE_interval(const implicitPoint2D_SSI& p1, const implici
 
 int incircle_indirect_SSSE_exact(const implicitPoint2D_SSI& p1, const implicitPoint2D_SSI& p2, const implicitPoint2D_SSI& p3, double pdx, double pdy)
 {
- double return_value = 0.0;
+ double return_value = NAN;
  double l1x[32], l1y[32], d1[16], l2x[32], l2y[32], d2[16], l3x[32], l3y[32], d3[16];
  int l1x_len, l1y_len, d1_len, l2x_len, l2y_len, d2_len, l3x_len, l3y_len, d3_len;
  p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, d1, d1_len);
@@ -2619,7 +2940,8 @@ int incircle_indirect_SSSE_exact(const implicitPoint2D_SSI& p1, const implicitPo
 
  if (return_value > 0) return IP_Sign::POSITIVE;
  if (return_value < 0) return IP_Sign::NEGATIVE;
- return IP_Sign::ZERO;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
 }
 
 int incircle_indirect_SSSE(const implicitPoint2D_SSI& p1, const implicitPoint2D_SSI& p2, const implicitPoint2D_SSI& p3, double pdx, double pdy)
@@ -2772,7 +3094,7 @@ int incircle_indirect_SSSS_interval(const implicitPoint2D_SSI& p1, const implici
 
 int incircle_indirect_SSSS_exact(const implicitPoint2D_SSI& p1, const implicitPoint2D_SSI& p2, const implicitPoint2D_SSI& p3, const implicitPoint2D_SSI& p4)
 {
- double return_value = 0.0;
+ double return_value = NAN;
  double l1x[32], l1y[32], d1[16], l2x[32], l2y[32], d2[16], l3x[32], l3y[32], d3[16], l4x[32], l4y[32], d4[16];
  int l1x_len, l1y_len, d1_len, l2x_len, l2y_len, d2_len, l3x_len, l3y_len, d3_len, l4x_len, l4y_len, d4_len;
  p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, d1, d1_len);
@@ -2927,7 +3249,8 @@ int incircle_indirect_SSSS_exact(const implicitPoint2D_SSI& p1, const implicitPo
 
  if (return_value > 0) return IP_Sign::POSITIVE;
  if (return_value < 0) return IP_Sign::NEGATIVE;
- return IP_Sign::ZERO;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
 }
 
 int incircle_indirect_SSSS(const implicitPoint2D_SSI& p1, const implicitPoint2D_SSI& p2, const implicitPoint2D_SSI& p3, const implicitPoint2D_SSI& p4)
@@ -3816,7 +4139,6 @@ int lessThanOnX_LE_filtered(const implicitPoint3D_LPI& p1, double bx)
    epsilon *= epsilon;
    epsilon *= epsilon;
    epsilon *= 1.932297637868842e-14;
-   if (((d1 < 0))) kx = -kx;
    if (kx > epsilon) return IP_Sign::POSITIVE;
    if (-kx > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -3835,13 +4157,12 @@ int lessThanOnX_LE_interval(const implicitPoint3D_LPI& p1, interval_number bx)
    setFPUModeToRoundNEAR();
 
    if (!kx.signIsReliable()) return Filtered_Sign::UNCERTAIN;
-   if (((d1 < 0))) return -kx.sign();
-   else   return kx.sign();
+   return kx.sign();
 }
 
 int lessThanOnX_LE_exact(const implicitPoint3D_LPI& p1, double bx)
 {
- double return_value = 0.0;
+ double return_value = NAN;
  double l1x_p[128], *l1x = l1x_p, l1y_p[128], *l1y = l1y_p, l1z_p[128], *l1z = l1z_p, d1_p[128], *d1 = d1_p;
  int l1x_len, l1y_len, l1z_len, d1_len;
  p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, l1z, l1z_len, d1, d1_len);
@@ -3856,7 +4177,6 @@ int lessThanOnX_LE_exact(const implicitPoint3D_LPI& p1, double bx)
    return_value = kx[kx_len - 1];
    if (kx_p != kx) free(kx);
    if (dbx_p != dbx) free(dbx);
-   if (( (d1[d1_len -1] < 0))) return_value = -return_value;
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -3866,7 +4186,8 @@ int lessThanOnX_LE_exact(const implicitPoint3D_LPI& p1, double bx)
 
  if (return_value > 0) return IP_Sign::POSITIVE;
  if (return_value < 0) return IP_Sign::NEGATIVE;
- return IP_Sign::ZERO;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
 }
 
 int lessThanOnX_LE(const implicitPoint3D_LPI& p1, double bx)
@@ -3897,7 +4218,6 @@ int lessThanOnX_LL_filtered(const implicitPoint3D_LPI& p1, const implicitPoint3D
    epsilon *= max_var;
    epsilon *= max_var;
    epsilon *= 2.922887626377606e-13;
-   if (((d1 < 0) + (d2 < 0)) & 1) kx = -kx;
    if (kx > epsilon) return IP_Sign::POSITIVE;
    if (-kx > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -3918,13 +4238,12 @@ int lessThanOnX_LL_interval(const implicitPoint3D_LPI& p1, const implicitPoint3D
    setFPUModeToRoundNEAR();
 
    if (!kx.signIsReliable()) return Filtered_Sign::UNCERTAIN;
-   if (((d1 < 0) + (d2 < 0)) & 1) return -kx.sign();
-   else   return kx.sign();
+   return kx.sign();
 }
 
 int lessThanOnX_LL_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2)
 {
- double return_value = 0.0;
+ double return_value = NAN;
  double l1x_p[128], *l1x = l1x_p, l1y_p[128], *l1y = l1y_p, l1z_p[128], *l1z = l1z_p, d1_p[128], *d1 = d1_p, l2x_p[128], *l2x = l2x_p, l2y_p[128], *l2y = l2y_p, l2z_p[128], *l2z = l2z_p, d2_p[128], *d2 = d2_p;
  int l1x_len, l1y_len, l1z_len, d1_len, l2x_len, l2y_len, l2z_len, d2_len;
  p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, l1z, l1z_len, d1, d1_len);
@@ -3943,7 +4262,6 @@ int lessThanOnX_LL_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_LP
    if (kx_p != kx) free(kx);
    if (k2_p != k2) free(k2);
    if (k1_p != k1) free(k1);
-   if (( (d1[d1_len -1] < 0) + (d2[d2_len -1] < 0)) & 1) return_value = -return_value;
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -3957,7 +4275,8 @@ int lessThanOnX_LL_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_LP
 
  if (return_value > 0) return IP_Sign::POSITIVE;
  if (return_value < 0) return IP_Sign::NEGATIVE;
- return IP_Sign::ZERO;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
 }
 
 int lessThanOnX_LL(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2)
@@ -3988,7 +4307,6 @@ int lessThanOnX_LT_filtered(const implicitPoint3D_LPI& p1, const implicitPoint3D
    epsilon *= max_var;
    epsilon *= max_var;
    epsilon *= 4.321380059346694e-12;
-   if (((d1 < 0) + (d2 < 0)) & 1) kx = -kx;
    if (kx > epsilon) return IP_Sign::POSITIVE;
    if (-kx > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -4009,13 +4327,12 @@ int lessThanOnX_LT_interval(const implicitPoint3D_LPI& p1, const implicitPoint3D
    setFPUModeToRoundNEAR();
 
    if (!kx.signIsReliable()) return Filtered_Sign::UNCERTAIN;
-   if (((d1 < 0) + (d2 < 0)) & 1) return -kx.sign();
-   else   return kx.sign();
+   return kx.sign();
 }
 
 int lessThanOnX_LT_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_TPI& p2)
 {
- double return_value = 0.0;
+ double return_value = NAN;
  double l1x_p[128], *l1x = l1x_p, l1y_p[128], *l1y = l1y_p, l1z_p[128], *l1z = l1z_p, d1_p[128], *d1 = d1_p, l2x_p[128], *l2x = l2x_p, l2y_p[128], *l2y = l2y_p, l2z_p[128], *l2z = l2z_p, d2_p[128], *d2 = d2_p;
  int l1x_len, l1y_len, l1z_len, d1_len, l2x_len, l2y_len, l2z_len, d2_len;
  p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, l1z, l1z_len, d1, d1_len);
@@ -4034,7 +4351,6 @@ int lessThanOnX_LT_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_TP
    if (kx_p != kx) free(kx);
    if (k2_p != k2) free(k2);
    if (k1_p != k1) free(k1);
-   if (( (d1[d1_len -1] < 0) + (d2[d2_len -1] < 0)) & 1) return_value = -return_value;
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -4048,7 +4364,8 @@ int lessThanOnX_LT_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_TP
 
  if (return_value > 0) return IP_Sign::POSITIVE;
  if (return_value < 0) return IP_Sign::NEGATIVE;
- return IP_Sign::ZERO;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
 }
 
 int lessThanOnX_LT(const implicitPoint3D_LPI& p1, const implicitPoint3D_TPI& p2)
@@ -4080,7 +4397,6 @@ int lessThanOnX_TE_filtered(const implicitPoint3D_TPI& p1, double bx)
    epsilon *= max_var;
    epsilon *= max_var;
    epsilon *= 3.980270973924514e-13;
-   if (((d1 < 0))) kx = -kx;
    if (kx > epsilon) return IP_Sign::POSITIVE;
    if (-kx > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -4099,13 +4415,12 @@ int lessThanOnX_TE_interval(const implicitPoint3D_TPI& p1, interval_number bx)
    setFPUModeToRoundNEAR();
 
    if (!kx.signIsReliable()) return Filtered_Sign::UNCERTAIN;
-   if (((d1 < 0))) return -kx.sign();
-   else   return kx.sign();
+   return kx.sign();
 }
 
 int lessThanOnX_TE_exact(const implicitPoint3D_TPI& p1, double bx)
 {
- double return_value = 0.0;
+ double return_value = NAN;
  double l1x_p[128], *l1x = l1x_p, l1y_p[128], *l1y = l1y_p, l1z_p[128], *l1z = l1z_p, d1_p[128], *d1 = d1_p;
  int l1x_len, l1y_len, l1z_len, d1_len;
  p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, l1z, l1z_len, d1, d1_len);
@@ -4120,7 +4435,6 @@ int lessThanOnX_TE_exact(const implicitPoint3D_TPI& p1, double bx)
    return_value = kx[kx_len - 1];
    if (kx_p != kx) free(kx);
    if (dbx_p != dbx) free(dbx);
-   if (( (d1[d1_len -1] < 0))) return_value = -return_value;
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -4130,7 +4444,8 @@ int lessThanOnX_TE_exact(const implicitPoint3D_TPI& p1, double bx)
 
  if (return_value > 0) return IP_Sign::POSITIVE;
  if (return_value < 0) return IP_Sign::NEGATIVE;
- return IP_Sign::ZERO;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
 }
 
 int lessThanOnX_TE(const implicitPoint3D_TPI& p1, double bx)
@@ -4164,7 +4479,6 @@ int lessThanOnX_TT_filtered(const implicitPoint3D_TPI& p1, const implicitPoint3D
    epsilon *= max_var;
    epsilon *= max_var;
    epsilon *= 5.504141586953918e-11;
-   if (((d1 < 0) + (d2 < 0)) & 1) kx = -kx;
    if (kx > epsilon) return IP_Sign::POSITIVE;
    if (-kx > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -4185,13 +4499,12 @@ int lessThanOnX_TT_interval(const implicitPoint3D_TPI& p1, const implicitPoint3D
    setFPUModeToRoundNEAR();
 
    if (!kx.signIsReliable()) return Filtered_Sign::UNCERTAIN;
-   if (((d1 < 0) + (d2 < 0)) & 1) return -kx.sign();
-   else   return kx.sign();
+   return kx.sign();
 }
 
 int lessThanOnX_TT_exact(const implicitPoint3D_TPI& p1, const implicitPoint3D_TPI& p2)
 {
- double return_value = 0.0;
+ double return_value = NAN;
  double l1x_p[128], *l1x = l1x_p, l1y_p[128], *l1y = l1y_p, l1z_p[128], *l1z = l1z_p, d1_p[128], *d1 = d1_p, l2x_p[128], *l2x = l2x_p, l2y_p[128], *l2y = l2y_p, l2z_p[128], *l2z = l2z_p, d2_p[128], *d2 = d2_p;
  int l1x_len, l1y_len, l1z_len, d1_len, l2x_len, l2y_len, l2z_len, d2_len;
  p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, l1z, l1z_len, d1, d1_len);
@@ -4210,7 +4523,6 @@ int lessThanOnX_TT_exact(const implicitPoint3D_TPI& p1, const implicitPoint3D_TP
    if (kx_p != kx) free(kx);
    if (k2_p != k2) free(k2);
    if (k1_p != k1) free(k1);
-   if (( (d1[d1_len -1] < 0) + (d2[d2_len -1] < 0)) & 1) return_value = -return_value;
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -4224,7 +4536,8 @@ int lessThanOnX_TT_exact(const implicitPoint3D_TPI& p1, const implicitPoint3D_TP
 
  if (return_value > 0) return IP_Sign::POSITIVE;
  if (return_value < 0) return IP_Sign::NEGATIVE;
- return IP_Sign::ZERO;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
 }
 
 int lessThanOnX_TT(const implicitPoint3D_TPI& p1, const implicitPoint3D_TPI& p2)
@@ -4253,7 +4566,6 @@ int lessThanOnY_LE_filtered(const implicitPoint3D_LPI& p1, double by)
    epsilon *= epsilon;
    epsilon *= epsilon;
    epsilon *= 1.932297637868842e-14;
-   if (((d1 < 0))) ky = -ky;
    if (ky > epsilon) return IP_Sign::POSITIVE;
    if (-ky > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -4272,13 +4584,12 @@ int lessThanOnY_LE_interval(const implicitPoint3D_LPI& p1, interval_number by)
    setFPUModeToRoundNEAR();
 
    if (!ky.signIsReliable()) return Filtered_Sign::UNCERTAIN;
-   if (((d1 < 0))) return -ky.sign();
-   else   return ky.sign();
+   return ky.sign();
 }
 
 int lessThanOnY_LE_exact(const implicitPoint3D_LPI& p1, double by)
 {
- double return_value = 0.0;
+ double return_value = NAN;
  double l1x_p[128], *l1x = l1x_p, l1y_p[128], *l1y = l1y_p, l1z_p[128], *l1z = l1z_p, d1_p[128], *d1 = d1_p;
  int l1x_len, l1y_len, l1z_len, d1_len;
  p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, l1z, l1z_len, d1, d1_len);
@@ -4293,7 +4604,6 @@ int lessThanOnY_LE_exact(const implicitPoint3D_LPI& p1, double by)
    return_value = ky[ky_len - 1];
    if (ky_p != ky) free(ky);
    if (dby_p != dby) free(dby);
-   if (( (d1[d1_len -1] < 0))) return_value = -return_value;
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -4303,7 +4613,8 @@ int lessThanOnY_LE_exact(const implicitPoint3D_LPI& p1, double by)
 
  if (return_value > 0) return IP_Sign::POSITIVE;
  if (return_value < 0) return IP_Sign::NEGATIVE;
- return IP_Sign::ZERO;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
 }
 
 int lessThanOnY_LE(const implicitPoint3D_LPI& p1, double by)
@@ -4334,7 +4645,6 @@ int lessThanOnY_LL_filtered(const implicitPoint3D_LPI& p1, const implicitPoint3D
    epsilon *= max_var;
    epsilon *= max_var;
    epsilon *= 2.922887626377606e-13;
-   if (((d1 < 0) + (d2 < 0)) & 1) ky = -ky;
    if (ky > epsilon) return IP_Sign::POSITIVE;
    if (-ky > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -4355,13 +4665,12 @@ int lessThanOnY_LL_interval(const implicitPoint3D_LPI& p1, const implicitPoint3D
    setFPUModeToRoundNEAR();
 
    if (!ky.signIsReliable()) return Filtered_Sign::UNCERTAIN;
-   if (((d1 < 0) + (d2 < 0)) & 1) return -ky.sign();
-   else   return ky.sign();
+   return ky.sign();
 }
 
 int lessThanOnY_LL_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2)
 {
- double return_value = 0.0;
+ double return_value = NAN;
  double l1x_p[128], *l1x = l1x_p, l1y_p[128], *l1y = l1y_p, l1z_p[128], *l1z = l1z_p, d1_p[128], *d1 = d1_p, l2x_p[128], *l2x = l2x_p, l2y_p[128], *l2y = l2y_p, l2z_p[128], *l2z = l2z_p, d2_p[128], *d2 = d2_p;
  int l1x_len, l1y_len, l1z_len, d1_len, l2x_len, l2y_len, l2z_len, d2_len;
  p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, l1z, l1z_len, d1, d1_len);
@@ -4380,7 +4689,6 @@ int lessThanOnY_LL_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_LP
    if (ky_p != ky) free(ky);
    if (k2_p != k2) free(k2);
    if (k1_p != k1) free(k1);
-   if (( (d1[d1_len -1] < 0) + (d2[d2_len -1] < 0)) & 1) return_value = -return_value;
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -4394,7 +4702,8 @@ int lessThanOnY_LL_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_LP
 
  if (return_value > 0) return IP_Sign::POSITIVE;
  if (return_value < 0) return IP_Sign::NEGATIVE;
- return IP_Sign::ZERO;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
 }
 
 int lessThanOnY_LL(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2)
@@ -4425,7 +4734,6 @@ int lessThanOnY_LT_filtered(const implicitPoint3D_LPI& p1, const implicitPoint3D
    epsilon *= max_var;
    epsilon *= max_var;
    epsilon *= 4.321380059346694e-12;
-   if (((d1 < 0) + (d2 < 0)) & 1) ky = -ky;
    if (ky > epsilon) return IP_Sign::POSITIVE;
    if (-ky > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -4446,13 +4754,12 @@ int lessThanOnY_LT_interval(const implicitPoint3D_LPI& p1, const implicitPoint3D
    setFPUModeToRoundNEAR();
 
    if (!ky.signIsReliable()) return Filtered_Sign::UNCERTAIN;
-   if (((d1 < 0) + (d2 < 0)) & 1) return -ky.sign();
-   else   return ky.sign();
+   return ky.sign();
 }
 
 int lessThanOnY_LT_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_TPI& p2)
 {
- double return_value = 0.0;
+ double return_value = NAN;
  double l1x_p[128], *l1x = l1x_p, l1y_p[128], *l1y = l1y_p, l1z_p[128], *l1z = l1z_p, d1_p[128], *d1 = d1_p, l2x_p[128], *l2x = l2x_p, l2y_p[128], *l2y = l2y_p, l2z_p[128], *l2z = l2z_p, d2_p[128], *d2 = d2_p;
  int l1x_len, l1y_len, l1z_len, d1_len, l2x_len, l2y_len, l2z_len, d2_len;
  p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, l1z, l1z_len, d1, d1_len);
@@ -4471,7 +4778,6 @@ int lessThanOnY_LT_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_TP
    if (ky_p != ky) free(ky);
    if (k2_p != k2) free(k2);
    if (k1_p != k1) free(k1);
-   if (( (d1[d1_len -1] < 0) + (d2[d2_len -1] < 0)) & 1) return_value = -return_value;
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -4485,7 +4791,8 @@ int lessThanOnY_LT_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_TP
 
  if (return_value > 0) return IP_Sign::POSITIVE;
  if (return_value < 0) return IP_Sign::NEGATIVE;
- return IP_Sign::ZERO;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
 }
 
 int lessThanOnY_LT(const implicitPoint3D_LPI& p1, const implicitPoint3D_TPI& p2)
@@ -4517,7 +4824,6 @@ int lessThanOnY_TE_filtered(const implicitPoint3D_TPI& p1, double by)
    epsilon *= max_var;
    epsilon *= max_var;
    epsilon *= 3.980270973924514e-13;
-   if (((d1 < 0))) ky = -ky;
    if (ky > epsilon) return IP_Sign::POSITIVE;
    if (-ky > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -4536,13 +4842,12 @@ int lessThanOnY_TE_interval(const implicitPoint3D_TPI& p1, interval_number by)
    setFPUModeToRoundNEAR();
 
    if (!ky.signIsReliable()) return Filtered_Sign::UNCERTAIN;
-   if (((d1 < 0))) return -ky.sign();
-   else   return ky.sign();
+   return ky.sign();
 }
 
 int lessThanOnY_TE_exact(const implicitPoint3D_TPI& p1, double by)
 {
- double return_value = 0.0;
+ double return_value = NAN;
  double l1x_p[128], *l1x = l1x_p, l1y_p[128], *l1y = l1y_p, l1z_p[128], *l1z = l1z_p, d1_p[128], *d1 = d1_p;
  int l1x_len, l1y_len, l1z_len, d1_len;
  p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, l1z, l1z_len, d1, d1_len);
@@ -4557,7 +4862,6 @@ int lessThanOnY_TE_exact(const implicitPoint3D_TPI& p1, double by)
    return_value = ky[ky_len - 1];
    if (ky_p != ky) free(ky);
    if (dby_p != dby) free(dby);
-   if (( (d1[d1_len -1] < 0))) return_value = -return_value;
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -4567,7 +4871,8 @@ int lessThanOnY_TE_exact(const implicitPoint3D_TPI& p1, double by)
 
  if (return_value > 0) return IP_Sign::POSITIVE;
  if (return_value < 0) return IP_Sign::NEGATIVE;
- return IP_Sign::ZERO;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
 }
 
 int lessThanOnY_TE(const implicitPoint3D_TPI& p1, double by)
@@ -4601,7 +4906,6 @@ int lessThanOnY_TT_filtered(const implicitPoint3D_TPI& p1, const implicitPoint3D
    epsilon *= max_var;
    epsilon *= max_var;
    epsilon *= 5.504141586953918e-11;
-   if (((d1 < 0) + (d2 < 0)) & 1) ky = -ky;
    if (ky > epsilon) return IP_Sign::POSITIVE;
    if (-ky > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -4622,13 +4926,12 @@ int lessThanOnY_TT_interval(const implicitPoint3D_TPI& p1, const implicitPoint3D
    setFPUModeToRoundNEAR();
 
    if (!ky.signIsReliable()) return Filtered_Sign::UNCERTAIN;
-   if (((d1 < 0) + (d2 < 0)) & 1) return -ky.sign();
-   else   return ky.sign();
+   return ky.sign();
 }
 
 int lessThanOnY_TT_exact(const implicitPoint3D_TPI& p1, const implicitPoint3D_TPI& p2)
 {
- double return_value = 0.0;
+ double return_value = NAN;
  double l1x_p[128], *l1x = l1x_p, l1y_p[128], *l1y = l1y_p, l1z_p[128], *l1z = l1z_p, d1_p[128], *d1 = d1_p, l2x_p[128], *l2x = l2x_p, l2y_p[128], *l2y = l2y_p, l2z_p[128], *l2z = l2z_p, d2_p[128], *d2 = d2_p;
  int l1x_len, l1y_len, l1z_len, d1_len, l2x_len, l2y_len, l2z_len, d2_len;
  p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, l1z, l1z_len, d1, d1_len);
@@ -4647,7 +4950,6 @@ int lessThanOnY_TT_exact(const implicitPoint3D_TPI& p1, const implicitPoint3D_TP
    if (ky_p != ky) free(ky);
    if (k2_p != k2) free(k2);
    if (k1_p != k1) free(k1);
-   if (( (d1[d1_len -1] < 0) + (d2[d2_len -1] < 0)) & 1) return_value = -return_value;
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -4661,7 +4963,8 @@ int lessThanOnY_TT_exact(const implicitPoint3D_TPI& p1, const implicitPoint3D_TP
 
  if (return_value > 0) return IP_Sign::POSITIVE;
  if (return_value < 0) return IP_Sign::NEGATIVE;
- return IP_Sign::ZERO;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
 }
 
 int lessThanOnY_TT(const implicitPoint3D_TPI& p1, const implicitPoint3D_TPI& p2)
@@ -4690,7 +4993,6 @@ int lessThanOnZ_LE_filtered(const implicitPoint3D_LPI& p1, double bz)
    epsilon *= epsilon;
    epsilon *= epsilon;
    epsilon *= 1.932297637868842e-14;
-   if (((d1 < 0))) kz = -kz;
    if (kz > epsilon) return IP_Sign::POSITIVE;
    if (-kz > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -4709,13 +5011,12 @@ int lessThanOnZ_LE_interval(const implicitPoint3D_LPI& p1, interval_number bz)
    setFPUModeToRoundNEAR();
 
    if (!kz.signIsReliable()) return Filtered_Sign::UNCERTAIN;
-   if (((d1 < 0))) return -kz.sign();
-   else   return kz.sign();
+   return kz.sign();
 }
 
 int lessThanOnZ_LE_exact(const implicitPoint3D_LPI& p1, double bz)
 {
- double return_value = 0.0;
+ double return_value = NAN;
  double l1x_p[128], *l1x = l1x_p, l1y_p[128], *l1y = l1y_p, l1z_p[128], *l1z = l1z_p, d1_p[128], *d1 = d1_p;
  int l1x_len, l1y_len, l1z_len, d1_len;
  p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, l1z, l1z_len, d1, d1_len);
@@ -4730,7 +5031,6 @@ int lessThanOnZ_LE_exact(const implicitPoint3D_LPI& p1, double bz)
    return_value = kz[kz_len - 1];
    if (kz_p != kz) free(kz);
    if (dbz_p != dbz) free(dbz);
-   if (( (d1[d1_len -1] < 0))) return_value = -return_value;
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -4740,7 +5040,8 @@ int lessThanOnZ_LE_exact(const implicitPoint3D_LPI& p1, double bz)
 
  if (return_value > 0) return IP_Sign::POSITIVE;
  if (return_value < 0) return IP_Sign::NEGATIVE;
- return IP_Sign::ZERO;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
 }
 
 int lessThanOnZ_LE(const implicitPoint3D_LPI& p1, double bz)
@@ -4771,7 +5072,6 @@ int lessThanOnZ_LL_filtered(const implicitPoint3D_LPI& p1, const implicitPoint3D
    epsilon *= max_var;
    epsilon *= max_var;
    epsilon *= 2.922887626377606e-13;
-   if (((d1 < 0) + (d2 < 0)) & 1) kz = -kz;
    if (kz > epsilon) return IP_Sign::POSITIVE;
    if (-kz > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -4792,13 +5092,12 @@ int lessThanOnZ_LL_interval(const implicitPoint3D_LPI& p1, const implicitPoint3D
    setFPUModeToRoundNEAR();
 
    if (!kz.signIsReliable()) return Filtered_Sign::UNCERTAIN;
-   if (((d1 < 0) + (d2 < 0)) & 1) return -kz.sign();
-   else   return kz.sign();
+   return kz.sign();
 }
 
 int lessThanOnZ_LL_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2)
 {
- double return_value = 0.0;
+ double return_value = NAN;
  double l1x_p[128], *l1x = l1x_p, l1y_p[128], *l1y = l1y_p, l1z_p[128], *l1z = l1z_p, d1_p[128], *d1 = d1_p, l2x_p[128], *l2x = l2x_p, l2y_p[128], *l2y = l2y_p, l2z_p[128], *l2z = l2z_p, d2_p[128], *d2 = d2_p;
  int l1x_len, l1y_len, l1z_len, d1_len, l2x_len, l2y_len, l2z_len, d2_len;
  p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, l1z, l1z_len, d1, d1_len);
@@ -4817,7 +5116,6 @@ int lessThanOnZ_LL_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_LP
    if (kz_p != kz) free(kz);
    if (k2_p != k2) free(k2);
    if (k1_p != k1) free(k1);
-   if (( (d1[d1_len -1] < 0) + (d2[d2_len -1] < 0)) & 1) return_value = -return_value;
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -4831,7 +5129,8 @@ int lessThanOnZ_LL_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_LP
 
  if (return_value > 0) return IP_Sign::POSITIVE;
  if (return_value < 0) return IP_Sign::NEGATIVE;
- return IP_Sign::ZERO;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
 }
 
 int lessThanOnZ_LL(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2)
@@ -4862,7 +5161,6 @@ int lessThanOnZ_LT_filtered(const implicitPoint3D_LPI& p1, const implicitPoint3D
    epsilon *= max_var;
    epsilon *= max_var;
    epsilon *= 4.321380059346694e-12;
-   if (((d1 < 0) + (d2 < 0)) & 1) kz = -kz;
    if (kz > epsilon) return IP_Sign::POSITIVE;
    if (-kz > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -4883,13 +5181,12 @@ int lessThanOnZ_LT_interval(const implicitPoint3D_LPI& p1, const implicitPoint3D
    setFPUModeToRoundNEAR();
 
    if (!kz.signIsReliable()) return Filtered_Sign::UNCERTAIN;
-   if (((d1 < 0) + (d2 < 0)) & 1) return -kz.sign();
-   else   return kz.sign();
+   return kz.sign();
 }
 
 int lessThanOnZ_LT_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_TPI& p2)
 {
- double return_value = 0.0;
+ double return_value = NAN;
  double l1x_p[128], *l1x = l1x_p, l1y_p[128], *l1y = l1y_p, l1z_p[128], *l1z = l1z_p, d1_p[128], *d1 = d1_p, l2x_p[128], *l2x = l2x_p, l2y_p[128], *l2y = l2y_p, l2z_p[128], *l2z = l2z_p, d2_p[128], *d2 = d2_p;
  int l1x_len, l1y_len, l1z_len, d1_len, l2x_len, l2y_len, l2z_len, d2_len;
  p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, l1z, l1z_len, d1, d1_len);
@@ -4908,7 +5205,6 @@ int lessThanOnZ_LT_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_TP
    if (kz_p != kz) free(kz);
    if (k2_p != k2) free(k2);
    if (k1_p != k1) free(k1);
-   if (( (d1[d1_len -1] < 0) + (d2[d2_len -1] < 0)) & 1) return_value = -return_value;
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -4922,7 +5218,8 @@ int lessThanOnZ_LT_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_TP
 
  if (return_value > 0) return IP_Sign::POSITIVE;
  if (return_value < 0) return IP_Sign::NEGATIVE;
- return IP_Sign::ZERO;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
 }
 
 int lessThanOnZ_LT(const implicitPoint3D_LPI& p1, const implicitPoint3D_TPI& p2)
@@ -4954,7 +5251,6 @@ int lessThanOnZ_TE_filtered(const implicitPoint3D_TPI& p1, double bz)
    epsilon *= max_var;
    epsilon *= max_var;
    epsilon *= 3.980270973924514e-13;
-   if (((d1 < 0))) kz = -kz;
    if (kz > epsilon) return IP_Sign::POSITIVE;
    if (-kz > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -4973,13 +5269,12 @@ int lessThanOnZ_TE_interval(const implicitPoint3D_TPI& p1, interval_number bz)
    setFPUModeToRoundNEAR();
 
    if (!kz.signIsReliable()) return Filtered_Sign::UNCERTAIN;
-   if (((d1 < 0))) return -kz.sign();
-   else   return kz.sign();
+   return kz.sign();
 }
 
 int lessThanOnZ_TE_exact(const implicitPoint3D_TPI& p1, double bz)
 {
- double return_value = 0.0;
+ double return_value = NAN;
  double l1x_p[128], *l1x = l1x_p, l1y_p[128], *l1y = l1y_p, l1z_p[128], *l1z = l1z_p, d1_p[128], *d1 = d1_p;
  int l1x_len, l1y_len, l1z_len, d1_len;
  p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, l1z, l1z_len, d1, d1_len);
@@ -4994,7 +5289,6 @@ int lessThanOnZ_TE_exact(const implicitPoint3D_TPI& p1, double bz)
    return_value = kz[kz_len - 1];
    if (kz_p != kz) free(kz);
    if (dbz_p != dbz) free(dbz);
-   if (( (d1[d1_len -1] < 0))) return_value = -return_value;
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -5004,7 +5298,8 @@ int lessThanOnZ_TE_exact(const implicitPoint3D_TPI& p1, double bz)
 
  if (return_value > 0) return IP_Sign::POSITIVE;
  if (return_value < 0) return IP_Sign::NEGATIVE;
- return IP_Sign::ZERO;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
 }
 
 int lessThanOnZ_TE(const implicitPoint3D_TPI& p1, double bz)
@@ -5038,7 +5333,6 @@ int lessThanOnZ_TT_filtered(const implicitPoint3D_TPI& p1, const implicitPoint3D
    epsilon *= max_var;
    epsilon *= max_var;
    epsilon *= 5.504141586953918e-11;
-   if (((d1 < 0) + (d2 < 0)) & 1) kz = -kz;
    if (kz > epsilon) return IP_Sign::POSITIVE;
    if (-kz > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -5059,13 +5353,12 @@ int lessThanOnZ_TT_interval(const implicitPoint3D_TPI& p1, const implicitPoint3D
    setFPUModeToRoundNEAR();
 
    if (!kz.signIsReliable()) return Filtered_Sign::UNCERTAIN;
-   if (((d1 < 0) + (d2 < 0)) & 1) return -kz.sign();
-   else   return kz.sign();
+   return kz.sign();
 }
 
 int lessThanOnZ_TT_exact(const implicitPoint3D_TPI& p1, const implicitPoint3D_TPI& p2)
 {
- double return_value = 0.0;
+ double return_value = NAN;
  double l1x_p[128], *l1x = l1x_p, l1y_p[128], *l1y = l1y_p, l1z_p[128], *l1z = l1z_p, d1_p[128], *d1 = d1_p, l2x_p[128], *l2x = l2x_p, l2y_p[128], *l2y = l2y_p, l2z_p[128], *l2z = l2z_p, d2_p[128], *d2 = d2_p;
  int l1x_len, l1y_len, l1z_len, d1_len, l2x_len, l2y_len, l2z_len, d2_len;
  p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, l1z, l1z_len, d1, d1_len);
@@ -5084,7 +5377,6 @@ int lessThanOnZ_TT_exact(const implicitPoint3D_TPI& p1, const implicitPoint3D_TP
    if (kz_p != kz) free(kz);
    if (k2_p != k2) free(k2);
    if (k1_p != k1) free(k1);
-   if (( (d1[d1_len -1] < 0) + (d2[d2_len -1] < 0)) & 1) return_value = -return_value;
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -5098,7 +5390,8 @@ int lessThanOnZ_TT_exact(const implicitPoint3D_TPI& p1, const implicitPoint3D_TP
 
  if (return_value > 0) return IP_Sign::POSITIVE;
  if (return_value < 0) return IP_Sign::NEGATIVE;
- return IP_Sign::ZERO;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
 }
 
 int lessThanOnZ_TT(const implicitPoint3D_TPI& p1, const implicitPoint3D_TPI& p2)
@@ -5111,7 +5404,150 @@ int lessThanOnZ_TT(const implicitPoint3D_TPI& p1, const implicitPoint3D_TPI& p2)
    return lessThanOnZ_TT_exact(p1, p2);
 }
 
-int orient2d3d_indirect_LEE_filtered(const implicitPoint3D_LPI& p1, double p2x, double p2y, double p3x, double p3y)
+bool misaligned3d_indirect_LEE_filtered(const implicitPoint3D_LPI& p1, double bx, double by, double bz, double cx, double cy, double cz)
+{
+   double l1x, l1y, l1z, d1, max_var = 0;
+    if (
+       !p1.getFilteredLambda(l1x, l1y, l1z, d1, max_var)
+   ) return Filtered_Sign::UNCERTAIN;
+
+   double dx = cx - bx;
+   double dy = cy - by;
+   double dz = cz - bz;
+   double d1bx = d1 * bx;
+   double d1by = d1 * by;
+   double d1bz = d1 * bz;
+   double ex = d1bx - l1x;
+   double ey = d1by - l1y;
+   double ez = d1bz - l1z;
+   double px1 = dy * ez;
+   double px2 = dz * ey;
+   double px = px1 - px2;
+   double py1 = dz * ex;
+   double py2 = dx * ez;
+   double py = py1 - py2;
+   double pz1 = dx * ey;
+   double pz2 = dy * ex;
+   double pz = pz1 - pz2;
+
+   double _tmp_fabs;
+   if ((_tmp_fabs = fabs(bx)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(by)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(bz)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(dx)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(dy)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(dz)) > max_var) max_var = _tmp_fabs;
+   double epsilon = max_var;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= max_var;
+   epsilon *= 4.974818300362841e-14;
+
+   return ( (px > epsilon || -px < epsilon) || (py > epsilon || -py < epsilon) || (pz > epsilon || -pz < epsilon) );
+}
+
+bool misaligned3d_indirect_LEE_interval(const implicitPoint3D_LPI& p1, interval_number bx, interval_number by, interval_number bz, interval_number cx, interval_number cy, interval_number cz)
+{
+   interval_number l1x, l1y, l1z, d1;
+   if (
+   !p1.getIntervalLambda(l1x, l1y, l1z, d1)
+   ) return Filtered_Sign::UNCERTAIN;
+
+   setFPUModeToRoundUP();
+   interval_number dx(cx - bx);
+   interval_number dy(cy - by);
+   interval_number dz(cz - bz);
+   interval_number d1bx(d1 * bx);
+   interval_number d1by(d1 * by);
+   interval_number d1bz(d1 * bz);
+   interval_number ex(d1bx - l1x);
+   interval_number ey(d1by - l1y);
+   interval_number ez(d1bz - l1z);
+   interval_number px1(dy * ez);
+   interval_number px2(dz * ey);
+   interval_number px(px1 - px2);
+   interval_number py1(dz * ex);
+   interval_number py2(dx * ez);
+   interval_number py(py1 - py2);
+   interval_number pz1(dx * ey);
+   interval_number pz2(dy * ex);
+   interval_number pz(pz1 - pz2);
+   setFPUModeToRoundNEAR();
+
+   return (
+      px.signIsReliable()
+      || py.signIsReliable()
+      || pz.signIsReliable()
+   );
+}
+
+int misaligned3d_indirect_LEE_exact(const implicitPoint3D_LPI& p1, double bx, double by, double bz, double cx, double cy, double cz)
+{
+ int return_value = IP_Sign::UNDEFINED;
+ double l1x_p[64], *l1x = l1x_p, l1y_p[64], *l1y = l1y_p, l1z_p[64], *l1z = l1z_p, d1_p[64], *d1 = d1_p;
+ int l1x_len, l1y_len, l1z_len, d1_len;
+ p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, l1z, l1z_len, d1, d1_len);
+ if ((d1[d1_len - 1] != 0))
+ {
+   expansionObject o;
+   double dx[2];
+   o.two_Diff(cx, bx, dx);
+   double dy[2];
+   o.two_Diff(cy, by, dy);
+   double dz[2];
+   o.two_Diff(cz, bz, dz);
+   double d1bx_p[64], *d1bx = d1bx_p;
+   int d1bx_len = o.Gen_Scale_With_PreAlloc(d1_len, d1, bx, &d1bx, 64);
+   double d1by_p[64], *d1by = d1by_p;
+   int d1by_len = o.Gen_Scale_With_PreAlloc(d1_len, d1, by, &d1by, 64);
+   double d1bz_p[64], *d1bz = d1bz_p;
+   int d1bz_len = o.Gen_Scale_With_PreAlloc(d1_len, d1, bz, &d1bz, 64);
+   double ex_p[64], *ex = ex_p;
+   int ex_len = o.Gen_Diff_With_PreAlloc(d1bx_len, d1bx, l1x_len, l1x, &ex, 64);
+   double ey_p[64], *ey = ey_p;
+   int ey_len = o.Gen_Diff_With_PreAlloc(d1by_len, d1by, l1y_len, l1y, &ey, 64);
+   double ez_p[64], *ez = ez_p;
+   int ez_len = o.Gen_Diff_With_PreAlloc(d1bz_len, d1bz, l1z_len, l1z, &ez, 64);
+   double px1_p[64], *px1 = px1_p;
+   int px1_len = o.Gen_Product_With_PreAlloc(2, dy, ez_len, ez, &px1, 64);
+   double px2_p[64], *px2 = px2_p;
+   int px2_len = o.Gen_Product_With_PreAlloc(2, dz, ey_len, ey, &px2, 64);
+   double px_p[64], *px = px_p;
+   int px_len = o.Gen_Diff_With_PreAlloc(px1_len, px1, px2_len, px2, &px, 64);
+   double py1_p[64], *py1 = py1_p;
+   int py1_len = o.Gen_Product_With_PreAlloc(2, dz, ex_len, ex, &py1, 64);
+   double py2_p[64], *py2 = py2_p;
+   int py2_len = o.Gen_Product_With_PreAlloc(2, dx, ez_len, ez, &py2, 64);
+   double py_p[64], *py = py_p;
+   int py_len = o.Gen_Diff_With_PreAlloc(py1_len, py1, py2_len, py2, &py, 64);
+   double pz1_p[64], *pz1 = pz1_p;
+   int pz1_len = o.Gen_Product_With_PreAlloc(2, dx, ey_len, ey, &pz1, 64);
+   double pz2_p[64], *pz2 = pz2_p;
+   int pz2_len = o.Gen_Product_With_PreAlloc(2, dy, ex_len, ex, &pz2, 64);
+   double pz_p[64], *pz = pz_p;
+   int pz_len = o.Gen_Diff_With_PreAlloc(pz1_len, pz1, pz2_len, pz2, &pz, 64);
+
+   return_value = ( (px[px_len - 1] != 0) || (py[py_len - 1] != 0) || (pz[pz_len - 1] != 0) );
+ }
+
+ if (l1x_p != l1x) free(l1x);
+ if (l1y_p != l1y) free(l1y);
+ if (l1z_p != l1z) free(l1z);
+ if (d1_p != d1) free(d1);
+ return return_value;
+}
+
+int misaligned3d_indirect_LEE(const implicitPoint3D_LPI& p1, double bx, double by, double bz, double cx, double cy, double cz)
+{
+   int ret;
+   ret = misaligned3d_indirect_LEE_filtered(p1, bx, by, bz, cx, cy, cz);
+   if (ret != Filtered_Sign::UNCERTAIN) return ret;
+   ret = misaligned3d_indirect_LEE_interval(p1, bx, by, bz, cx, cy, cz);
+   if (ret != Filtered_Sign::UNCERTAIN) return ret;
+   return misaligned3d_indirect_LEE_exact(p1, bx, by, bz, cx, cy, cz);
+}
+
+int orient2dxy_indirect_LEE_filtered(const implicitPoint3D_LPI& p1, double p2x, double p2y, double p3x, double p3y)
 {
    double l1x, l1y, l1z, d1, max_var = 0;
     if (
@@ -5141,13 +5577,12 @@ int orient2d3d_indirect_LEE_filtered(const implicitPoint3D_LPI& p1, double p2x, 
    epsilon *= epsilon;
    epsilon *= max_var;
    epsilon *= 4.75277369543781e-14;
-   if (((d1 < 0))) det = -det;
    if (det > epsilon) return IP_Sign::POSITIVE;
    if (-det > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
 }
 
-int orient2d3d_indirect_LEE_interval(const implicitPoint3D_LPI& p1, interval_number p2x, interval_number p2y, interval_number p3x, interval_number p3y)
+int orient2dxy_indirect_LEE_interval(const implicitPoint3D_LPI& p1, interval_number p2x, interval_number p2y, interval_number p3x, interval_number p3y)
 {
    interval_number l1x, l1y, l1z, d1;
    if (
@@ -5168,13 +5603,12 @@ int orient2d3d_indirect_LEE_interval(const implicitPoint3D_LPI& p1, interval_num
    setFPUModeToRoundNEAR();
 
    if (!det.signIsReliable()) return Filtered_Sign::UNCERTAIN;
-   if (((d1 < 0))) return -det.sign();
-   else   return det.sign();
+   return det.sign();
 }
 
-int orient2d3d_indirect_LEE_exact(const implicitPoint3D_LPI& p1, double p2x, double p2y, double p3x, double p3y)
+int orient2dxy_indirect_LEE_exact(const implicitPoint3D_LPI& p1, double p2x, double p2y, double p3x, double p3y)
 {
- double return_value = 0.0;
+ double return_value = NAN;
  double l1x_p[128], *l1x = l1x_p, l1y_p[128], *l1y = l1y_p, l1z_p[128], *l1z = l1z_p, d1_p[128], *d1 = d1_p;
  int l1x_len, l1y_len, l1z_len, d1_len;
  p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, l1z, l1z_len, d1, d1_len);
@@ -5208,7 +5642,6 @@ int orient2d3d_indirect_LEE_exact(const implicitPoint3D_LPI& p1, double p2x, dou
    if (e_p != e) free(e);
    if (e3_p != e3) free(e3);
    if (e2_p != e2) free(e2);
-   if (( (d1[d1_len -1] < 0))) return_value = -return_value;
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -5218,20 +5651,21 @@ int orient2d3d_indirect_LEE_exact(const implicitPoint3D_LPI& p1, double p2x, dou
 
  if (return_value > 0) return IP_Sign::POSITIVE;
  if (return_value < 0) return IP_Sign::NEGATIVE;
- return IP_Sign::ZERO;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
 }
 
-int orient2d3d_indirect_LEE(const implicitPoint3D_LPI& p1, double p2x, double p2y, double p3x, double p3y)
+int orient2dxy_indirect_LEE(const implicitPoint3D_LPI& p1, double p2x, double p2y, double p3x, double p3y)
 {
    int ret;
-   ret = orient2d3d_indirect_LEE_filtered(p1, p2x, p2y, p3x, p3y);
+   ret = orient2dxy_indirect_LEE_filtered(p1, p2x, p2y, p3x, p3y);
    if (ret != Filtered_Sign::UNCERTAIN) return ret;
-   ret = orient2d3d_indirect_LEE_interval(p1, p2x, p2y, p3x, p3y);
+   ret = orient2dxy_indirect_LEE_interval(p1, p2x, p2y, p3x, p3y);
    if (ret != Filtered_Sign::UNCERTAIN) return ret;
-   return orient2d3d_indirect_LEE_exact(p1, p2x, p2y, p3x, p3y);
+   return orient2dxy_indirect_LEE_exact(p1, p2x, p2y, p3x, p3y);
 }
 
-int orient2d3d_indirect_LLE_filtered(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, double op3x, double op3y)
+int orient2dxy_indirect_LLE_filtered(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, double op3x, double op3y)
 {
    double l1x, l1y, l1z, d1, l2x, l2y, l2z, d2, max_var = 0;
     if (
@@ -5264,13 +5698,12 @@ int orient2d3d_indirect_LLE_filtered(const implicitPoint3D_LPI& p1, const implic
    epsilon *= max_var;
    epsilon *= max_var;
    epsilon *= 1.699690735379461e-11;
-   if (((d2 < 0))) L = -L;
    if (L > epsilon) return IP_Sign::POSITIVE;
    if (-L > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
 }
 
-int orient2d3d_indirect_LLE_interval(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, interval_number op3x, interval_number op3y)
+int orient2dxy_indirect_LLE_interval(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, interval_number op3x, interval_number op3y)
 {
    interval_number l1x, l1y, l1z, d1, l2x, l2y, l2z, d2;
    if (
@@ -5295,13 +5728,12 @@ int orient2d3d_indirect_LLE_interval(const implicitPoint3D_LPI& p1, const implic
    setFPUModeToRoundNEAR();
 
    if (!L.signIsReliable()) return Filtered_Sign::UNCERTAIN;
-   if (((d2 < 0))) return -L.sign();
-   else   return L.sign();
+   return L.sign();
 }
 
-int orient2d3d_indirect_LLE_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, double op3x, double op3y)
+int orient2dxy_indirect_LLE_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, double op3x, double op3y)
 {
- double return_value = 0.0;
+ double return_value = NAN;
  double l1x_p[64], *l1x = l1x_p, l1y_p[64], *l1y = l1y_p, l1z_p[64], *l1z = l1z_p, d1_p[64], *d1 = d1_p, l2x_p[64], *l2x = l2x_p, l2y_p[64], *l2y = l2y_p, l2z_p[64], *l2z = l2z_p, d2_p[64], *d2 = d2_p;
  int l1x_len, l1y_len, l1z_len, d1_len, l2x_len, l2y_len, l2z_len, d2_len;
  p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, l1z, l1z_len, d1, d1_len);
@@ -5350,7 +5782,6 @@ int orient2d3d_indirect_LLE_exact(const implicitPoint3D_LPI& p1, const implicitP
    if (c_p != c) free(c);
    if (b_p != b) free(b);
    if (a_p != a) free(a);
-   if (( (d2[d2_len -1] < 0))) return_value = -return_value;
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -5364,20 +5795,21 @@ int orient2d3d_indirect_LLE_exact(const implicitPoint3D_LPI& p1, const implicitP
 
  if (return_value > 0) return IP_Sign::POSITIVE;
  if (return_value < 0) return IP_Sign::NEGATIVE;
- return IP_Sign::ZERO;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
 }
 
-int orient2d3d_indirect_LLE(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, double op3x, double op3y)
+int orient2dxy_indirect_LLE(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, double op3x, double op3y)
 {
    int ret;
-   ret = orient2d3d_indirect_LLE_filtered(p1, p2, op3x, op3y);
+   ret = orient2dxy_indirect_LLE_filtered(p1, p2, op3x, op3y);
    if (ret != Filtered_Sign::UNCERTAIN) return ret;
-   ret = orient2d3d_indirect_LLE_interval(p1, p2, op3x, op3y);
+   ret = orient2dxy_indirect_LLE_interval(p1, p2, op3x, op3y);
    if (ret != Filtered_Sign::UNCERTAIN) return ret;
-   return orient2d3d_indirect_LLE_exact(p1, p2, op3x, op3y);
+   return orient2dxy_indirect_LLE_exact(p1, p2, op3x, op3y);
 }
 
-int orient2d3d_indirect_LLL_filtered(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, const implicitPoint3D_LPI& p3)
+int orient2dxy_indirect_LLL_filtered(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, const implicitPoint3D_LPI& p3)
 {
    double l1x, l1y, l1z, d1, l2x, l2y, l2z, d2, l3x, l3y, l3z, d3, max_var = 0;
     if (
@@ -5412,13 +5844,12 @@ int orient2d3d_indirect_LLL_filtered(const implicitPoint3D_LPI& p1, const implic
    epsilon *= max_var;
    epsilon *= max_var;
    epsilon *= 1.75634284893534e-10;
-   if (((d2 < 0) + (d3 < 0)) & 1) L = -L;
    if (L > epsilon) return IP_Sign::POSITIVE;
    if (-L > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
 }
 
-int orient2d3d_indirect_LLL_interval(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, const implicitPoint3D_LPI& p3)
+int orient2dxy_indirect_LLL_interval(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, const implicitPoint3D_LPI& p3)
 {
    interval_number l1x, l1y, l1z, d1, l2x, l2y, l2z, d2, l3x, l3y, l3z, d3;
    if (
@@ -5446,13 +5877,12 @@ int orient2d3d_indirect_LLL_interval(const implicitPoint3D_LPI& p1, const implic
    setFPUModeToRoundNEAR();
 
    if (!L.signIsReliable()) return Filtered_Sign::UNCERTAIN;
-   if (((d2 < 0) + (d3 < 0)) & 1) return -L.sign();
-   else   return L.sign();
+   return L.sign();
 }
 
-int orient2d3d_indirect_LLL_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, const implicitPoint3D_LPI& p3)
+int orient2dxy_indirect_LLL_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, const implicitPoint3D_LPI& p3)
 {
- double return_value = 0.0;
+ double return_value = NAN;
  double l1x_p[64], *l1x = l1x_p, l1y_p[64], *l1y = l1y_p, l1z_p[64], *l1z = l1z_p, d1_p[64], *d1 = d1_p, l2x_p[64], *l2x = l2x_p, l2y_p[64], *l2y = l2y_p, l2z_p[64], *l2z = l2z_p, d2_p[64], *d2 = d2_p, l3x_p[64], *l3x = l3x_p, l3y_p[64], *l3y = l3y_p, l3z_p[64], *l3z = l3z_p, d3_p[64], *d3 = d3_p;
  int l1x_len, l1y_len, l1z_len, d1_len, l2x_len, l2y_len, l2z_len, d2_len, l3x_len, l3y_len, l3z_len, d3_len;
  p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, l1z, l1z_len, d1, d1_len);
@@ -5508,7 +5938,6 @@ int orient2d3d_indirect_LLL_exact(const implicitPoint3D_LPI& p1, const implicitP
    if (c_p != c) free(c);
    if (b_p != b) free(b);
    if (a_p != a) free(a);
-   if (( (d2[d2_len -1] < 0) + (d3[d3_len -1] < 0)) & 1) return_value = -return_value;
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -5526,20 +5955,21 @@ int orient2d3d_indirect_LLL_exact(const implicitPoint3D_LPI& p1, const implicitP
 
  if (return_value > 0) return IP_Sign::POSITIVE;
  if (return_value < 0) return IP_Sign::NEGATIVE;
- return IP_Sign::ZERO;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
 }
 
-int orient2d3d_indirect_LLL(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, const implicitPoint3D_LPI& p3)
+int orient2dxy_indirect_LLL(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, const implicitPoint3D_LPI& p3)
 {
    int ret;
-   ret = orient2d3d_indirect_LLL_filtered(p1, p2, p3);
+   ret = orient2dxy_indirect_LLL_filtered(p1, p2, p3);
    if (ret != Filtered_Sign::UNCERTAIN) return ret;
-   ret = orient2d3d_indirect_LLL_interval(p1, p2, p3);
+   ret = orient2dxy_indirect_LLL_interval(p1, p2, p3);
    if (ret != Filtered_Sign::UNCERTAIN) return ret;
-   return orient2d3d_indirect_LLL_exact(p1, p2, p3);
+   return orient2dxy_indirect_LLL_exact(p1, p2, p3);
 }
 
-int orient2d3d_indirect_LLT_filtered(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, const implicitPoint3D_TPI& p3)
+int orient2dxy_indirect_LLT_filtered(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, const implicitPoint3D_TPI& p3)
 {
    double l1x, l1y, l1z, d1, l2x, l2y, l2z, d2, l3x, l3y, l3z, d3, max_var = 0;
     if (
@@ -5570,13 +6000,12 @@ int orient2d3d_indirect_LLT_filtered(const implicitPoint3D_LPI& p1, const implic
    epsilon *= epsilon;
    epsilon *= max_var;
    epsilon *= 2.144556754402072e-09;
-   if (((d2 < 0) + (d3 < 0)) & 1) L = -L;
    if (L > epsilon) return IP_Sign::POSITIVE;
    if (-L > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
 }
 
-int orient2d3d_indirect_LLT_interval(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, const implicitPoint3D_TPI& p3)
+int orient2dxy_indirect_LLT_interval(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, const implicitPoint3D_TPI& p3)
 {
    interval_number l1x, l1y, l1z, d1, l2x, l2y, l2z, d2, l3x, l3y, l3z, d3;
    if (
@@ -5604,13 +6033,12 @@ int orient2d3d_indirect_LLT_interval(const implicitPoint3D_LPI& p1, const implic
    setFPUModeToRoundNEAR();
 
    if (!L.signIsReliable()) return Filtered_Sign::UNCERTAIN;
-   if (((d2 < 0) + (d3 < 0)) & 1) return -L.sign();
-   else   return L.sign();
+   return L.sign();
 }
 
-int orient2d3d_indirect_LLT_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, const implicitPoint3D_TPI& p3)
+int orient2dxy_indirect_LLT_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, const implicitPoint3D_TPI& p3)
 {
- double return_value = 0.0;
+ double return_value = NAN;
  double l1x_p[64], *l1x = l1x_p, l1y_p[64], *l1y = l1y_p, l1z_p[64], *l1z = l1z_p, d1_p[64], *d1 = d1_p, l2x_p[64], *l2x = l2x_p, l2y_p[64], *l2y = l2y_p, l2z_p[64], *l2z = l2z_p, d2_p[64], *d2 = d2_p, l3x_p[64], *l3x = l3x_p, l3y_p[64], *l3y = l3y_p, l3z_p[64], *l3z = l3z_p, d3_p[64], *d3 = d3_p;
  int l1x_len, l1y_len, l1z_len, d1_len, l2x_len, l2y_len, l2z_len, d2_len, l3x_len, l3y_len, l3z_len, d3_len;
  p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, l1z, l1z_len, d1, d1_len);
@@ -5666,7 +6094,6 @@ int orient2d3d_indirect_LLT_exact(const implicitPoint3D_LPI& p1, const implicitP
    if (c_p != c) free(c);
    if (b_p != b) free(b);
    if (a_p != a) free(a);
-   if (( (d2[d2_len -1] < 0) + (d3[d3_len -1] < 0)) & 1) return_value = -return_value;
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -5684,20 +6111,21 @@ int orient2d3d_indirect_LLT_exact(const implicitPoint3D_LPI& p1, const implicitP
 
  if (return_value > 0) return IP_Sign::POSITIVE;
  if (return_value < 0) return IP_Sign::NEGATIVE;
- return IP_Sign::ZERO;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
 }
 
-int orient2d3d_indirect_LLT(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, const implicitPoint3D_TPI& p3)
+int orient2dxy_indirect_LLT(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, const implicitPoint3D_TPI& p3)
 {
    int ret;
-   ret = orient2d3d_indirect_LLT_filtered(p1, p2, p3);
+   ret = orient2dxy_indirect_LLT_filtered(p1, p2, p3);
    if (ret != Filtered_Sign::UNCERTAIN) return ret;
-   ret = orient2d3d_indirect_LLT_interval(p1, p2, p3);
+   ret = orient2dxy_indirect_LLT_interval(p1, p2, p3);
    if (ret != Filtered_Sign::UNCERTAIN) return ret;
-   return orient2d3d_indirect_LLT_exact(p1, p2, p3);
+   return orient2dxy_indirect_LLT_exact(p1, p2, p3);
 }
 
-int orient2d3d_indirect_LTE_filtered(const implicitPoint3D_LPI& p1, const implicitPoint3D_TPI& p2, double p3x, double p3y)
+int orient2dxy_indirect_LTE_filtered(const implicitPoint3D_LPI& p1, const implicitPoint3D_TPI& p2, double p3x, double p3y)
 {
    double l1x, l1y, l1z, d1, l2x, l2y, l2z, d2, max_var = 0;
     if (
@@ -5733,13 +6161,12 @@ int orient2d3d_indirect_LTE_filtered(const implicitPoint3D_LPI& p1, const implic
    epsilon *= max_var;
    epsilon *= max_var;
    epsilon *= 2.184958117212875e-10;
-   if (((d2 < 0))) L = -L;
    if (L > epsilon) return IP_Sign::POSITIVE;
    if (-L > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
 }
 
-int orient2d3d_indirect_LTE_interval(const implicitPoint3D_LPI& p1, const implicitPoint3D_TPI& p2, interval_number p3x, interval_number p3y)
+int orient2dxy_indirect_LTE_interval(const implicitPoint3D_LPI& p1, const implicitPoint3D_TPI& p2, interval_number p3x, interval_number p3y)
 {
    interval_number l1x, l1y, l1z, d1, l2x, l2y, l2z, d2;
    if (
@@ -5764,13 +6191,12 @@ int orient2d3d_indirect_LTE_interval(const implicitPoint3D_LPI& p1, const implic
    setFPUModeToRoundNEAR();
 
    if (!L.signIsReliable()) return Filtered_Sign::UNCERTAIN;
-   if (((d2 < 0))) return -L.sign();
-   else   return L.sign();
+   return L.sign();
 }
 
-int orient2d3d_indirect_LTE_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_TPI& p2, double p3x, double p3y)
+int orient2dxy_indirect_LTE_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_TPI& p2, double p3x, double p3y)
 {
- double return_value = 0.0;
+ double return_value = NAN;
  double l1x_p[64], *l1x = l1x_p, l1y_p[64], *l1y = l1y_p, l1z_p[64], *l1z = l1z_p, d1_p[64], *d1 = d1_p, l2x_p[64], *l2x = l2x_p, l2y_p[64], *l2y = l2y_p, l2z_p[64], *l2z = l2z_p, d2_p[64], *d2 = d2_p;
  int l1x_len, l1y_len, l1z_len, d1_len, l2x_len, l2y_len, l2z_len, d2_len;
  p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, l1z, l1z_len, d1, d1_len);
@@ -5819,7 +6245,6 @@ int orient2d3d_indirect_LTE_exact(const implicitPoint3D_LPI& p1, const implicitP
    if (c_p != c) free(c);
    if (b_p != b) free(b);
    if (a_p != a) free(a);
-   if (( (d2[d2_len -1] < 0))) return_value = -return_value;
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -5833,20 +6258,21 @@ int orient2d3d_indirect_LTE_exact(const implicitPoint3D_LPI& p1, const implicitP
 
  if (return_value > 0) return IP_Sign::POSITIVE;
  if (return_value < 0) return IP_Sign::NEGATIVE;
- return IP_Sign::ZERO;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
 }
 
-int orient2d3d_indirect_LTE(const implicitPoint3D_LPI& p1, const implicitPoint3D_TPI& p2, double p3x, double p3y)
+int orient2dxy_indirect_LTE(const implicitPoint3D_LPI& p1, const implicitPoint3D_TPI& p2, double p3x, double p3y)
 {
    int ret;
-   ret = orient2d3d_indirect_LTE_filtered(p1, p2, p3x, p3y);
+   ret = orient2dxy_indirect_LTE_filtered(p1, p2, p3x, p3y);
    if (ret != Filtered_Sign::UNCERTAIN) return ret;
-   ret = orient2d3d_indirect_LTE_interval(p1, p2, p3x, p3y);
+   ret = orient2dxy_indirect_LTE_interval(p1, p2, p3x, p3y);
    if (ret != Filtered_Sign::UNCERTAIN) return ret;
-   return orient2d3d_indirect_LTE_exact(p1, p2, p3x, p3y);
+   return orient2dxy_indirect_LTE_exact(p1, p2, p3x, p3y);
 }
 
-int orient2d3d_indirect_LTT_filtered(const implicitPoint3D_LPI& p1, const implicitPoint3D_TPI& p2, const implicitPoint3D_TPI& p3)
+int orient2dxy_indirect_LTT_filtered(const implicitPoint3D_LPI& p1, const implicitPoint3D_TPI& p2, const implicitPoint3D_TPI& p3)
 {
    double l1x, l1y, l1z, d1, l2x, l2y, l2z, d2, l3x, l3y, l3z, d3, max_var = 0;
     if (
@@ -5880,13 +6306,12 @@ int orient2d3d_indirect_LTT_filtered(const implicitPoint3D_LPI& p1, const implic
    epsilon *= max_var;
    epsilon *= max_var;
    epsilon *= 2.535681042914479e-08;
-   if (((d2 < 0) + (d3 < 0)) & 1) L = -L;
    if (L > epsilon) return IP_Sign::POSITIVE;
    if (-L > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
 }
 
-int orient2d3d_indirect_LTT_interval(const implicitPoint3D_LPI& p1, const implicitPoint3D_TPI& p2, const implicitPoint3D_TPI& p3)
+int orient2dxy_indirect_LTT_interval(const implicitPoint3D_LPI& p1, const implicitPoint3D_TPI& p2, const implicitPoint3D_TPI& p3)
 {
    interval_number l1x, l1y, l1z, d1, l2x, l2y, l2z, d2, l3x, l3y, l3z, d3;
    if (
@@ -5914,13 +6339,12 @@ int orient2d3d_indirect_LTT_interval(const implicitPoint3D_LPI& p1, const implic
    setFPUModeToRoundNEAR();
 
    if (!L.signIsReliable()) return Filtered_Sign::UNCERTAIN;
-   if (((d2 < 0) + (d3 < 0)) & 1) return -L.sign();
-   else   return L.sign();
+   return L.sign();
 }
 
-int orient2d3d_indirect_LTT_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_TPI& p2, const implicitPoint3D_TPI& p3)
+int orient2dxy_indirect_LTT_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_TPI& p2, const implicitPoint3D_TPI& p3)
 {
- double return_value = 0.0;
+ double return_value = NAN;
  double l1x_p[64], *l1x = l1x_p, l1y_p[64], *l1y = l1y_p, l1z_p[64], *l1z = l1z_p, d1_p[64], *d1 = d1_p, l2x_p[64], *l2x = l2x_p, l2y_p[64], *l2y = l2y_p, l2z_p[64], *l2z = l2z_p, d2_p[64], *d2 = d2_p, l3x_p[64], *l3x = l3x_p, l3y_p[64], *l3y = l3y_p, l3z_p[64], *l3z = l3z_p, d3_p[64], *d3 = d3_p;
  int l1x_len, l1y_len, l1z_len, d1_len, l2x_len, l2y_len, l2z_len, d2_len, l3x_len, l3y_len, l3z_len, d3_len;
  p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, l1z, l1z_len, d1, d1_len);
@@ -5976,7 +6400,6 @@ int orient2d3d_indirect_LTT_exact(const implicitPoint3D_LPI& p1, const implicitP
    if (c_p != c) free(c);
    if (b_p != b) free(b);
    if (a_p != a) free(a);
-   if (( (d2[d2_len -1] < 0) + (d3[d3_len -1] < 0)) & 1) return_value = -return_value;
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -5994,20 +6417,21 @@ int orient2d3d_indirect_LTT_exact(const implicitPoint3D_LPI& p1, const implicitP
 
  if (return_value > 0) return IP_Sign::POSITIVE;
  if (return_value < 0) return IP_Sign::NEGATIVE;
- return IP_Sign::ZERO;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
 }
 
-int orient2d3d_indirect_LTT(const implicitPoint3D_LPI& p1, const implicitPoint3D_TPI& p2, const implicitPoint3D_TPI& p3)
+int orient2dxy_indirect_LTT(const implicitPoint3D_LPI& p1, const implicitPoint3D_TPI& p2, const implicitPoint3D_TPI& p3)
 {
    int ret;
-   ret = orient2d3d_indirect_LTT_filtered(p1, p2, p3);
+   ret = orient2dxy_indirect_LTT_filtered(p1, p2, p3);
    if (ret != Filtered_Sign::UNCERTAIN) return ret;
-   ret = orient2d3d_indirect_LTT_interval(p1, p2, p3);
+   ret = orient2dxy_indirect_LTT_interval(p1, p2, p3);
    if (ret != Filtered_Sign::UNCERTAIN) return ret;
-   return orient2d3d_indirect_LTT_exact(p1, p2, p3);
+   return orient2dxy_indirect_LTT_exact(p1, p2, p3);
 }
 
-int orient2d3d_indirect_TEE_filtered(const implicitPoint3D_TPI& p1, double p2x, double p2y, double p3x, double p3y)
+int orient2dxy_indirect_TEE_filtered(const implicitPoint3D_TPI& p1, double p2x, double p2y, double p3x, double p3y)
 {
    double l1x, l1y, l1z, d1, max_var = 0;
     if (
@@ -6037,13 +6461,12 @@ int orient2d3d_indirect_TEE_filtered(const implicitPoint3D_TPI& p1, double p2x, 
    epsilon *= epsilon;
    epsilon *= epsilon;
    epsilon *= 9.061883188277186e-13;
-   if (((d1 < 0))) det = -det;
    if (det > epsilon) return IP_Sign::POSITIVE;
    if (-det > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
 }
 
-int orient2d3d_indirect_TEE_interval(const implicitPoint3D_TPI& p1, interval_number p2x, interval_number p2y, interval_number p3x, interval_number p3y)
+int orient2dxy_indirect_TEE_interval(const implicitPoint3D_TPI& p1, interval_number p2x, interval_number p2y, interval_number p3x, interval_number p3y)
 {
    interval_number l1x, l1y, l1z, d1;
    if (
@@ -6064,13 +6487,12 @@ int orient2d3d_indirect_TEE_interval(const implicitPoint3D_TPI& p1, interval_num
    setFPUModeToRoundNEAR();
 
    if (!det.signIsReliable()) return Filtered_Sign::UNCERTAIN;
-   if (((d1 < 0))) return -det.sign();
-   else   return det.sign();
+   return det.sign();
 }
 
-int orient2d3d_indirect_TEE_exact(const implicitPoint3D_TPI& p1, double p2x, double p2y, double p3x, double p3y)
+int orient2dxy_indirect_TEE_exact(const implicitPoint3D_TPI& p1, double p2x, double p2y, double p3x, double p3y)
 {
- double return_value = 0.0;
+ double return_value = NAN;
  double l1x_p[128], *l1x = l1x_p, l1y_p[128], *l1y = l1y_p, l1z_p[128], *l1z = l1z_p, d1_p[128], *d1 = d1_p;
  int l1x_len, l1y_len, l1z_len, d1_len;
  p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, l1z, l1z_len, d1, d1_len);
@@ -6104,7 +6526,6 @@ int orient2d3d_indirect_TEE_exact(const implicitPoint3D_TPI& p1, double p2x, dou
    if (e_p != e) free(e);
    if (e3_p != e3) free(e3);
    if (e2_p != e2) free(e2);
-   if (( (d1[d1_len -1] < 0))) return_value = -return_value;
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -6114,20 +6535,21 @@ int orient2d3d_indirect_TEE_exact(const implicitPoint3D_TPI& p1, double p2x, dou
 
  if (return_value > 0) return IP_Sign::POSITIVE;
  if (return_value < 0) return IP_Sign::NEGATIVE;
- return IP_Sign::ZERO;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
 }
 
-int orient2d3d_indirect_TEE(const implicitPoint3D_TPI& p1, double p2x, double p2y, double p3x, double p3y)
+int orient2dxy_indirect_TEE(const implicitPoint3D_TPI& p1, double p2x, double p2y, double p3x, double p3y)
 {
    int ret;
-   ret = orient2d3d_indirect_TEE_filtered(p1, p2x, p2y, p3x, p3y);
+   ret = orient2dxy_indirect_TEE_filtered(p1, p2x, p2y, p3x, p3y);
    if (ret != Filtered_Sign::UNCERTAIN) return ret;
-   ret = orient2d3d_indirect_TEE_interval(p1, p2x, p2y, p3x, p3y);
+   ret = orient2dxy_indirect_TEE_interval(p1, p2x, p2y, p3x, p3y);
    if (ret != Filtered_Sign::UNCERTAIN) return ret;
-   return orient2d3d_indirect_TEE_exact(p1, p2x, p2y, p3x, p3y);
+   return orient2dxy_indirect_TEE_exact(p1, p2x, p2y, p3x, p3y);
 }
 
-int orient2d3d_indirect_TTE_filtered(const implicitPoint3D_TPI& p1, const implicitPoint3D_TPI& p2, double p3x, double p3y)
+int orient2dxy_indirect_TTE_filtered(const implicitPoint3D_TPI& p1, const implicitPoint3D_TPI& p2, double p3x, double p3y)
 {
    double l1x, l1y, l1z, d1, l2x, l2y, l2z, d2, max_var = 0;
     if (
@@ -6162,13 +6584,12 @@ int orient2d3d_indirect_TTE_filtered(const implicitPoint3D_TPI& p1, const implic
    epsilon *= max_var;
    epsilon *= max_var;
    epsilon *= 3.307187945722513e-08;
-   if (((d2 < 0))) L = -L;
    if (L > epsilon) return IP_Sign::POSITIVE;
    if (-L > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
 }
 
-int orient2d3d_indirect_TTE_interval(const implicitPoint3D_TPI& p1, const implicitPoint3D_TPI& p2, interval_number p3x, interval_number p3y)
+int orient2dxy_indirect_TTE_interval(const implicitPoint3D_TPI& p1, const implicitPoint3D_TPI& p2, interval_number p3x, interval_number p3y)
 {
    interval_number l1x, l1y, l1z, d1, l2x, l2y, l2z, d2;
    if (
@@ -6193,13 +6614,12 @@ int orient2d3d_indirect_TTE_interval(const implicitPoint3D_TPI& p1, const implic
    setFPUModeToRoundNEAR();
 
    if (!L.signIsReliable()) return Filtered_Sign::UNCERTAIN;
-   if (((d2 < 0))) return -L.sign();
-   else   return L.sign();
+   return L.sign();
 }
 
-int orient2d3d_indirect_TTE_exact(const implicitPoint3D_TPI& p1, const implicitPoint3D_TPI& p2, double p3x, double p3y)
+int orient2dxy_indirect_TTE_exact(const implicitPoint3D_TPI& p1, const implicitPoint3D_TPI& p2, double p3x, double p3y)
 {
- double return_value = 0.0;
+ double return_value = NAN;
  double l1x_p[64], *l1x = l1x_p, l1y_p[64], *l1y = l1y_p, l1z_p[64], *l1z = l1z_p, d1_p[64], *d1 = d1_p, l2x_p[64], *l2x = l2x_p, l2y_p[64], *l2y = l2y_p, l2z_p[64], *l2z = l2z_p, d2_p[64], *d2 = d2_p;
  int l1x_len, l1y_len, l1z_len, d1_len, l2x_len, l2y_len, l2z_len, d2_len;
  p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, l1z, l1z_len, d1, d1_len);
@@ -6248,7 +6668,6 @@ int orient2d3d_indirect_TTE_exact(const implicitPoint3D_TPI& p1, const implicitP
    if (c_p != c) free(c);
    if (b_p != b) free(b);
    if (a_p != a) free(a);
-   if (( (d2[d2_len -1] < 0))) return_value = -return_value;
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -6262,20 +6681,21 @@ int orient2d3d_indirect_TTE_exact(const implicitPoint3D_TPI& p1, const implicitP
 
  if (return_value > 0) return IP_Sign::POSITIVE;
  if (return_value < 0) return IP_Sign::NEGATIVE;
- return IP_Sign::ZERO;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
 }
 
-int orient2d3d_indirect_TTE(const implicitPoint3D_TPI& p1, const implicitPoint3D_TPI& p2, double p3x, double p3y)
+int orient2dxy_indirect_TTE(const implicitPoint3D_TPI& p1, const implicitPoint3D_TPI& p2, double p3x, double p3y)
 {
    int ret;
-   ret = orient2d3d_indirect_TTE_filtered(p1, p2, p3x, p3y);
+   ret = orient2dxy_indirect_TTE_filtered(p1, p2, p3x, p3y);
    if (ret != Filtered_Sign::UNCERTAIN) return ret;
-   ret = orient2d3d_indirect_TTE_interval(p1, p2, p3x, p3y);
+   ret = orient2dxy_indirect_TTE_interval(p1, p2, p3x, p3y);
    if (ret != Filtered_Sign::UNCERTAIN) return ret;
-   return orient2d3d_indirect_TTE_exact(p1, p2, p3x, p3y);
+   return orient2dxy_indirect_TTE_exact(p1, p2, p3x, p3y);
 }
 
-int orient2d3d_indirect_TTT_filtered(const implicitPoint3D_TPI& p1, const implicitPoint3D_TPI& p2, const implicitPoint3D_TPI& p3)
+int orient2dxy_indirect_TTT_filtered(const implicitPoint3D_TPI& p1, const implicitPoint3D_TPI& p2, const implicitPoint3D_TPI& p3)
 {
    double l1x, l1y, l1z, d1, l2x, l2y, l2z, d2, l3x, l3y, l3z, d3, max_var = 0;
     if (
@@ -6315,13 +6735,12 @@ int orient2d3d_indirect_TTT_filtered(const implicitPoint3D_TPI& p1, const implic
    epsilon *= max_var;
    epsilon *= max_var;
    epsilon *= 3.103174776697444e-06;
-   if (((d2 < 0) + (d3 < 0)) & 1) L = -L;
    if (L > epsilon) return IP_Sign::POSITIVE;
    if (-L > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
 }
 
-int orient2d3d_indirect_TTT_interval(const implicitPoint3D_TPI& p1, const implicitPoint3D_TPI& p2, const implicitPoint3D_TPI& p3)
+int orient2dxy_indirect_TTT_interval(const implicitPoint3D_TPI& p1, const implicitPoint3D_TPI& p2, const implicitPoint3D_TPI& p3)
 {
    interval_number l1x, l1y, l1z, d1, l2x, l2y, l2z, d2, l3x, l3y, l3z, d3;
    if (
@@ -6349,13 +6768,12 @@ int orient2d3d_indirect_TTT_interval(const implicitPoint3D_TPI& p1, const implic
    setFPUModeToRoundNEAR();
 
    if (!L.signIsReliable()) return Filtered_Sign::UNCERTAIN;
-   if (((d2 < 0) + (d3 < 0)) & 1) return -L.sign();
-   else   return L.sign();
+   return L.sign();
 }
 
-int orient2d3d_indirect_TTT_exact(const implicitPoint3D_TPI& p1, const implicitPoint3D_TPI& p2, const implicitPoint3D_TPI& p3)
+int orient2dxy_indirect_TTT_exact(const implicitPoint3D_TPI& p1, const implicitPoint3D_TPI& p2, const implicitPoint3D_TPI& p3)
 {
- double return_value = 0.0;
+ double return_value = NAN;
  double l1x_p[64], *l1x = l1x_p, l1y_p[64], *l1y = l1y_p, l1z_p[64], *l1z = l1z_p, d1_p[64], *d1 = d1_p, l2x_p[64], *l2x = l2x_p, l2y_p[64], *l2y = l2y_p, l2z_p[64], *l2z = l2z_p, d2_p[64], *d2 = d2_p, l3x_p[64], *l3x = l3x_p, l3y_p[64], *l3y = l3y_p, l3z_p[64], *l3z = l3z_p, d3_p[64], *d3 = d3_p;
  int l1x_len, l1y_len, l1z_len, d1_len, l2x_len, l2y_len, l2z_len, d2_len, l3x_len, l3y_len, l3z_len, d3_len;
  p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, l1z, l1z_len, d1, d1_len);
@@ -6411,7 +6829,6 @@ int orient2d3d_indirect_TTT_exact(const implicitPoint3D_TPI& p1, const implicitP
    if (c_p != c) free(c);
    if (b_p != b) free(b);
    if (a_p != a) free(a);
-   if (( (d2[d2_len -1] < 0) + (d3[d3_len -1] < 0)) & 1) return_value = -return_value;
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -6429,17 +6846,2644 @@ int orient2d3d_indirect_TTT_exact(const implicitPoint3D_TPI& p1, const implicitP
 
  if (return_value > 0) return IP_Sign::POSITIVE;
  if (return_value < 0) return IP_Sign::NEGATIVE;
- return IP_Sign::ZERO;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
 }
 
-int orient2d3d_indirect_TTT(const implicitPoint3D_TPI& p1, const implicitPoint3D_TPI& p2, const implicitPoint3D_TPI& p3)
+int orient2dxy_indirect_TTT(const implicitPoint3D_TPI& p1, const implicitPoint3D_TPI& p2, const implicitPoint3D_TPI& p3)
 {
    int ret;
-//   ret = orient2d3d_indirect_TTT_filtered(p1, p2, p3);
+//   ret = orient2dxy_indirect_TTT_filtered(p1, p2, p3);
 //   if (ret != Filtered_Sign::UNCERTAIN) return ret;
-   ret = orient2d3d_indirect_TTT_interval(p1, p2, p3);
+   ret = orient2dxy_indirect_TTT_interval(p1, p2, p3);
    if (ret != Filtered_Sign::UNCERTAIN) return ret;
-   return orient2d3d_indirect_TTT_exact(p1, p2, p3);
+   return orient2dxy_indirect_TTT_exact(p1, p2, p3);
+}
+
+int orient2dyz_indirect_LEE_filtered(const implicitPoint3D_LPI& p1, double p2x, double p2y, double p3x, double p3y)
+{
+   double l1z, l1x, l1y, d1, max_var = 0;
+    if (
+       !p1.getFilteredLambda(l1z, l1x, l1y, d1, max_var)
+   ) return Filtered_Sign::UNCERTAIN;
+
+   double t1x = p2y - p3y;
+   double t1y = p3x - p2x;
+   double e2 = l1x * t1x;
+   double e3 = l1y * t1y;
+   double e = e2 + e3;
+   double pr1 = p2x * p3y;
+   double pr2 = p2y * p3x;
+   double pr = pr1 - pr2;
+   double dpr = d1 * pr;
+   double det = dpr + e;
+
+   double _tmp_fabs;
+   if ((_tmp_fabs = fabs(p2x)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(p2y)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(p3x)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(p3y)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(t1x)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(t1y)) > max_var) max_var = _tmp_fabs;
+   double epsilon = max_var;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= max_var;
+   epsilon *= 4.75277369543781e-14;
+   if (det > epsilon) return IP_Sign::POSITIVE;
+   if (-det > epsilon) return IP_Sign::NEGATIVE;
+   return Filtered_Sign::UNCERTAIN;
+}
+
+int orient2dyz_indirect_LEE_interval(const implicitPoint3D_LPI& p1, interval_number p2x, interval_number p2y, interval_number p3x, interval_number p3y)
+{
+   interval_number l1z, l1x, l1y, d1;
+   if (
+   !p1.getIntervalLambda(l1z, l1x, l1y, d1)
+   ) return Filtered_Sign::UNCERTAIN;
+
+   setFPUModeToRoundUP();
+   interval_number t1x(p2y - p3y);
+   interval_number t1y(p3x - p2x);
+   interval_number e2(l1x * t1x);
+   interval_number e3(l1y * t1y);
+   interval_number e(e2 + e3);
+   interval_number pr1(p2x * p3y);
+   interval_number pr2(p2y * p3x);
+   interval_number pr(pr1 - pr2);
+   interval_number dpr(d1 * pr);
+   interval_number det(dpr + e);
+   setFPUModeToRoundNEAR();
+
+   if (!det.signIsReliable()) return Filtered_Sign::UNCERTAIN;
+   return det.sign();
+}
+
+int orient2dyz_indirect_LEE_exact(const implicitPoint3D_LPI& p1, double p2x, double p2y, double p3x, double p3y)
+{
+ double return_value = NAN;
+ double l1z_p[128], *l1z = l1z_p, l1x_p[128], *l1x = l1x_p, l1y_p[128], *l1y = l1y_p, d1_p[128], *d1 = d1_p;
+ int l1z_len, l1x_len, l1y_len, d1_len;
+ p1.getExactLambda(l1z, l1z_len, l1x, l1x_len, l1y, l1y_len, d1, d1_len);
+ if ((d1[d1_len - 1] != 0))
+ {
+   expansionObject o;
+   double t1x[2];
+   o.two_Diff(p2y, p3y, t1x);
+   double t1y[2];
+   o.two_Diff(p3x, p2x, t1y);
+   double e2_p[128], *e2 = e2_p;
+   int e2_len = o.Gen_Product_With_PreAlloc(l1x_len, l1x, 2, t1x, &e2, 128);
+   double e3_p[128], *e3 = e3_p;
+   int e3_len = o.Gen_Product_With_PreAlloc(l1y_len, l1y, 2, t1y, &e3, 128);
+   double e_p[128], *e = e_p;
+   int e_len = o.Gen_Sum_With_PreAlloc(e2_len, e2, e3_len, e3, &e, 128);
+   double pr1[2];
+   o.Two_Prod(p2x, p3y, pr1);
+   double pr2[2];
+   o.Two_Prod(p2y, p3x, pr2);
+   double pr[4];
+   o.Two_Two_Diff(pr1, pr2, pr);
+   double dpr_p[128], *dpr = dpr_p;
+   int dpr_len = o.Gen_Product_With_PreAlloc(d1_len, d1, 4, pr, &dpr, 128);
+   double det_p[128], *det = det_p;
+   int det_len = o.Gen_Sum_With_PreAlloc(dpr_len, dpr, e_len, e, &det, 128);
+
+   return_value = det[det_len - 1];
+   if (det_p != det) free(det);
+   if (dpr_p != dpr) free(dpr);
+   if (e_p != e) free(e);
+   if (e3_p != e3) free(e3);
+   if (e2_p != e2) free(e2);
+ }
+
+ if (l1z_p != l1z) free(l1z);
+ if (l1x_p != l1x) free(l1x);
+ if (l1y_p != l1y) free(l1y);
+ if (d1_p != d1) free(d1);
+
+ if (return_value > 0) return IP_Sign::POSITIVE;
+ if (return_value < 0) return IP_Sign::NEGATIVE;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
+}
+
+int orient2dyz_indirect_LEE(const implicitPoint3D_LPI& p1, double p2x, double p2y, double p3x, double p3y)
+{
+   int ret;
+   ret = orient2dyz_indirect_LEE_filtered(p1, p2x, p2y, p3x, p3y);
+   if (ret != Filtered_Sign::UNCERTAIN) return ret;
+   ret = orient2dyz_indirect_LEE_interval(p1, p2x, p2y, p3x, p3y);
+   if (ret != Filtered_Sign::UNCERTAIN) return ret;
+   return orient2dyz_indirect_LEE_exact(p1, p2x, p2y, p3x, p3y);
+}
+
+int orient2dyz_indirect_LLE_filtered(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, double op3x, double op3y)
+{
+   double l1z, l1x, l1y, d1, l2z, l2x, l2y, d2, max_var = 0;
+    if (
+       !p1.getFilteredLambda(l1z, l1x, l1y, d1, max_var)
+       || !p2.getFilteredLambda(l2z, l2x, l2y, d2, max_var)
+   ) return Filtered_Sign::UNCERTAIN;
+
+   double a = d1 * l2x;
+   double b = d2 * l1x;
+   double c = d1 * op3y;
+   double e = d1 * l2y;
+   double f = d2 * l1y;
+   double g = d1 * op3x;
+   double ab = a - b;
+   double cd = c - l1y;
+   double ef = e - f;
+   double gh = g - l1x;
+   double abcd = ab * cd;
+   double efgh = ef * gh;
+   double L = abcd - efgh;
+
+   double _tmp_fabs;
+   if ((_tmp_fabs = fabs(op3x)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(op3y)) > max_var) max_var = _tmp_fabs;
+   double epsilon = max_var;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= 1.699690735379461e-11;
+   if (L > epsilon) return IP_Sign::POSITIVE;
+   if (-L > epsilon) return IP_Sign::NEGATIVE;
+   return Filtered_Sign::UNCERTAIN;
+}
+
+int orient2dyz_indirect_LLE_interval(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, interval_number op3x, interval_number op3y)
+{
+   interval_number l1z, l1x, l1y, d1, l2z, l2x, l2y, d2;
+   if (
+   !p1.getIntervalLambda(l1z, l1x, l1y, d1)
+   || !p2.getIntervalLambda(l2z, l2x, l2y, d2)
+   ) return Filtered_Sign::UNCERTAIN;
+
+   setFPUModeToRoundUP();
+   interval_number a(d1 * l2x);
+   interval_number b(d2 * l1x);
+   interval_number c(d1 * op3y);
+   interval_number e(d1 * l2y);
+   interval_number f(d2 * l1y);
+   interval_number g(d1 * op3x);
+   interval_number ab(a - b);
+   interval_number cd(c - l1y);
+   interval_number ef(e - f);
+   interval_number gh(g - l1x);
+   interval_number abcd(ab * cd);
+   interval_number efgh(ef * gh);
+   interval_number L(abcd - efgh);
+   setFPUModeToRoundNEAR();
+
+   if (!L.signIsReliable()) return Filtered_Sign::UNCERTAIN;
+   return L.sign();
+}
+
+int orient2dyz_indirect_LLE_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, double op3x, double op3y)
+{
+ double return_value = NAN;
+ double l1z_p[64], *l1z = l1z_p, l1x_p[64], *l1x = l1x_p, l1y_p[64], *l1y = l1y_p, d1_p[64], *d1 = d1_p, l2z_p[64], *l2z = l2z_p, l2x_p[64], *l2x = l2x_p, l2y_p[64], *l2y = l2y_p, d2_p[64], *d2 = d2_p;
+ int l1z_len, l1x_len, l1y_len, d1_len, l2z_len, l2x_len, l2y_len, d2_len;
+ p1.getExactLambda(l1z, l1z_len, l1x, l1x_len, l1y, l1y_len, d1, d1_len);
+ p2.getExactLambda(l2z, l2z_len, l2x, l2x_len, l2y, l2y_len, d2, d2_len);
+ if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0))
+ {
+   expansionObject o;
+   double a_p[64], *a = a_p;
+   int a_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l2x_len, l2x, &a, 64);
+   double b_p[64], *b = b_p;
+   int b_len = o.Gen_Product_With_PreAlloc(d2_len, d2, l1x_len, l1x, &b, 64);
+   double c_p[64], *c = c_p;
+   int c_len = o.Gen_Scale_With_PreAlloc(d1_len, d1, op3y, &c, 64);
+   double e_p[64], *e = e_p;
+   int e_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l2y_len, l2y, &e, 64);
+   double f_p[64], *f = f_p;
+   int f_len = o.Gen_Product_With_PreAlloc(d2_len, d2, l1y_len, l1y, &f, 64);
+   double g_p[64], *g = g_p;
+   int g_len = o.Gen_Scale_With_PreAlloc(d1_len, d1, op3x, &g, 64);
+   double ab_p[64], *ab = ab_p;
+   int ab_len = o.Gen_Diff_With_PreAlloc(a_len, a, b_len, b, &ab, 64);
+   double cd_p[64], *cd = cd_p;
+   int cd_len = o.Gen_Diff_With_PreAlloc(c_len, c, l1y_len, l1y, &cd, 64);
+   double ef_p[64], *ef = ef_p;
+   int ef_len = o.Gen_Diff_With_PreAlloc(e_len, e, f_len, f, &ef, 64);
+   double gh_p[64], *gh = gh_p;
+   int gh_len = o.Gen_Diff_With_PreAlloc(g_len, g, l1x_len, l1x, &gh, 64);
+   double abcd_p[64], *abcd = abcd_p;
+   int abcd_len = o.Gen_Product_With_PreAlloc(ab_len, ab, cd_len, cd, &abcd, 64);
+   double efgh_p[64], *efgh = efgh_p;
+   int efgh_len = o.Gen_Product_With_PreAlloc(ef_len, ef, gh_len, gh, &efgh, 64);
+   double L_p[64], *L = L_p;
+   int L_len = o.Gen_Diff_With_PreAlloc(abcd_len, abcd, efgh_len, efgh, &L, 64);
+
+   return_value = L[L_len - 1];
+   if (L_p != L) free(L);
+   if (efgh_p != efgh) free(efgh);
+   if (abcd_p != abcd) free(abcd);
+   if (gh_p != gh) free(gh);
+   if (ef_p != ef) free(ef);
+   if (cd_p != cd) free(cd);
+   if (ab_p != ab) free(ab);
+   if (g_p != g) free(g);
+   if (f_p != f) free(f);
+   if (e_p != e) free(e);
+   if (c_p != c) free(c);
+   if (b_p != b) free(b);
+   if (a_p != a) free(a);
+ }
+
+ if (l1z_p != l1z) free(l1z);
+ if (l1x_p != l1x) free(l1x);
+ if (l1y_p != l1y) free(l1y);
+ if (d1_p != d1) free(d1);
+ if (l2z_p != l2z) free(l2z);
+ if (l2x_p != l2x) free(l2x);
+ if (l2y_p != l2y) free(l2y);
+ if (d2_p != d2) free(d2);
+
+ if (return_value > 0) return IP_Sign::POSITIVE;
+ if (return_value < 0) return IP_Sign::NEGATIVE;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
+}
+
+int orient2dyz_indirect_LLE(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, double op3x, double op3y)
+{
+   int ret;
+   ret = orient2dyz_indirect_LLE_filtered(p1, p2, op3x, op3y);
+   if (ret != Filtered_Sign::UNCERTAIN) return ret;
+   ret = orient2dyz_indirect_LLE_interval(p1, p2, op3x, op3y);
+   if (ret != Filtered_Sign::UNCERTAIN) return ret;
+   return orient2dyz_indirect_LLE_exact(p1, p2, op3x, op3y);
+}
+
+int orient2dyz_indirect_LLL_filtered(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, const implicitPoint3D_LPI& p3)
+{
+   double l1z, l1x, l1y, d1, l2z, l2x, l2y, d2, l3z, l3x, l3y, d3, max_var = 0;
+    if (
+       !p1.getFilteredLambda(l1z, l1x, l1y, d1, max_var)
+       || !p2.getFilteredLambda(l2z, l2x, l2y, d2, max_var)
+       || !p3.getFilteredLambda(l3z, l3x, l3y, d3, max_var)
+   ) return Filtered_Sign::UNCERTAIN;
+
+   double a = d1 * l2x;
+   double b = d2 * l1x;
+   double c = d1 * l3y;
+   double d = d3 * l1y;
+   double e = d1 * l2y;
+   double f = d2 * l1y;
+   double g = d1 * l3x;
+   double h = d3 * l1x;
+   double ab = a - b;
+   double cd = c - d;
+   double ef = e - f;
+   double gh = g - h;
+   double abcd = ab * cd;
+   double efgh = ef * gh;
+   double L = abcd - efgh;
+   double epsilon = max_var;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= 1.75634284893534e-10;
+   if (L > epsilon) return IP_Sign::POSITIVE;
+   if (-L > epsilon) return IP_Sign::NEGATIVE;
+   return Filtered_Sign::UNCERTAIN;
+}
+
+int orient2dyz_indirect_LLL_interval(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, const implicitPoint3D_LPI& p3)
+{
+   interval_number l1z, l1x, l1y, d1, l2z, l2x, l2y, d2, l3z, l3x, l3y, d3;
+   if (
+   !p1.getIntervalLambda(l1z, l1x, l1y, d1)
+   || !p2.getIntervalLambda(l2z, l2x, l2y, d2)
+   || !p3.getIntervalLambda(l3z, l3x, l3y, d3)
+   ) return Filtered_Sign::UNCERTAIN;
+
+   setFPUModeToRoundUP();
+   interval_number a(d1 * l2x);
+   interval_number b(d2 * l1x);
+   interval_number c(d1 * l3y);
+   interval_number d(d3 * l1y);
+   interval_number e(d1 * l2y);
+   interval_number f(d2 * l1y);
+   interval_number g(d1 * l3x);
+   interval_number h(d3 * l1x);
+   interval_number ab(a - b);
+   interval_number cd(c - d);
+   interval_number ef(e - f);
+   interval_number gh(g - h);
+   interval_number abcd(ab * cd);
+   interval_number efgh(ef * gh);
+   interval_number L(abcd - efgh);
+   setFPUModeToRoundNEAR();
+
+   if (!L.signIsReliable()) return Filtered_Sign::UNCERTAIN;
+   return L.sign();
+}
+
+int orient2dyz_indirect_LLL_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, const implicitPoint3D_LPI& p3)
+{
+ double return_value = NAN;
+ double l1z_p[64], *l1z = l1z_p, l1x_p[64], *l1x = l1x_p, l1y_p[64], *l1y = l1y_p, d1_p[64], *d1 = d1_p, l2z_p[64], *l2z = l2z_p, l2x_p[64], *l2x = l2x_p, l2y_p[64], *l2y = l2y_p, d2_p[64], *d2 = d2_p, l3z_p[64], *l3z = l3z_p, l3x_p[64], *l3x = l3x_p, l3y_p[64], *l3y = l3y_p, d3_p[64], *d3 = d3_p;
+ int l1z_len, l1x_len, l1y_len, d1_len, l2z_len, l2x_len, l2y_len, d2_len, l3z_len, l3x_len, l3y_len, d3_len;
+ p1.getExactLambda(l1z, l1z_len, l1x, l1x_len, l1y, l1y_len, d1, d1_len);
+ p2.getExactLambda(l2z, l2z_len, l2x, l2x_len, l2y, l2y_len, d2, d2_len);
+ p3.getExactLambda(l3z, l3z_len, l3x, l3x_len, l3y, l3y_len, d3, d3_len);
+ if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0) && (d3[d3_len - 1] != 0))
+ {
+   expansionObject o;
+   double a_p[64], *a = a_p;
+   int a_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l2x_len, l2x, &a, 64);
+   double b_p[64], *b = b_p;
+   int b_len = o.Gen_Product_With_PreAlloc(d2_len, d2, l1x_len, l1x, &b, 64);
+   double c_p[64], *c = c_p;
+   int c_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l3y_len, l3y, &c, 64);
+   double d_p[64], *d = d_p;
+   int d_len = o.Gen_Product_With_PreAlloc(d3_len, d3, l1y_len, l1y, &d, 64);
+   double e_p[64], *e = e_p;
+   int e_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l2y_len, l2y, &e, 64);
+   double f_p[64], *f = f_p;
+   int f_len = o.Gen_Product_With_PreAlloc(d2_len, d2, l1y_len, l1y, &f, 64);
+   double g_p[64], *g = g_p;
+   int g_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l3x_len, l3x, &g, 64);
+   double h_p[64], *h = h_p;
+   int h_len = o.Gen_Product_With_PreAlloc(d3_len, d3, l1x_len, l1x, &h, 64);
+   double ab_p[64], *ab = ab_p;
+   int ab_len = o.Gen_Diff_With_PreAlloc(a_len, a, b_len, b, &ab, 64);
+   double cd_p[64], *cd = cd_p;
+   int cd_len = o.Gen_Diff_With_PreAlloc(c_len, c, d_len, d, &cd, 64);
+   double ef_p[64], *ef = ef_p;
+   int ef_len = o.Gen_Diff_With_PreAlloc(e_len, e, f_len, f, &ef, 64);
+   double gh_p[64], *gh = gh_p;
+   int gh_len = o.Gen_Diff_With_PreAlloc(g_len, g, h_len, h, &gh, 64);
+   double abcd_p[64], *abcd = abcd_p;
+   int abcd_len = o.Gen_Product_With_PreAlloc(ab_len, ab, cd_len, cd, &abcd, 64);
+   double efgh_p[64], *efgh = efgh_p;
+   int efgh_len = o.Gen_Product_With_PreAlloc(ef_len, ef, gh_len, gh, &efgh, 64);
+   double L_p[64], *L = L_p;
+   int L_len = o.Gen_Diff_With_PreAlloc(abcd_len, abcd, efgh_len, efgh, &L, 64);
+
+   return_value = L[L_len - 1];
+   if (L_p != L) free(L);
+   if (efgh_p != efgh) free(efgh);
+   if (abcd_p != abcd) free(abcd);
+   if (gh_p != gh) free(gh);
+   if (ef_p != ef) free(ef);
+   if (cd_p != cd) free(cd);
+   if (ab_p != ab) free(ab);
+   if (h_p != h) free(h);
+   if (g_p != g) free(g);
+   if (f_p != f) free(f);
+   if (e_p != e) free(e);
+   if (d_p != d) free(d);
+   if (c_p != c) free(c);
+   if (b_p != b) free(b);
+   if (a_p != a) free(a);
+ }
+
+ if (l1z_p != l1z) free(l1z);
+ if (l1x_p != l1x) free(l1x);
+ if (l1y_p != l1y) free(l1y);
+ if (d1_p != d1) free(d1);
+ if (l2z_p != l2z) free(l2z);
+ if (l2x_p != l2x) free(l2x);
+ if (l2y_p != l2y) free(l2y);
+ if (d2_p != d2) free(d2);
+ if (l3z_p != l3z) free(l3z);
+ if (l3x_p != l3x) free(l3x);
+ if (l3y_p != l3y) free(l3y);
+ if (d3_p != d3) free(d3);
+
+ if (return_value > 0) return IP_Sign::POSITIVE;
+ if (return_value < 0) return IP_Sign::NEGATIVE;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
+}
+
+int orient2dyz_indirect_LLL(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, const implicitPoint3D_LPI& p3)
+{
+   int ret;
+   ret = orient2dyz_indirect_LLL_filtered(p1, p2, p3);
+   if (ret != Filtered_Sign::UNCERTAIN) return ret;
+   ret = orient2dyz_indirect_LLL_interval(p1, p2, p3);
+   if (ret != Filtered_Sign::UNCERTAIN) return ret;
+   return orient2dyz_indirect_LLL_exact(p1, p2, p3);
+}
+
+int orient2dyz_indirect_LLT_filtered(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, const implicitPoint3D_TPI& p3)
+{
+   double l1z, l1x, l1y, d1, l2z, l2x, l2y, d2, l3z, l3x, l3y, d3, max_var = 0;
+    if (
+       !p1.getFilteredLambda(l1z, l1x, l1y, d1, max_var)
+       || !p2.getFilteredLambda(l2z, l2x, l2y, d2, max_var)
+       || !p3.getFilteredLambda(l3z, l3x, l3y, d3, max_var)
+   ) return Filtered_Sign::UNCERTAIN;
+
+   double a = d1 * l2x;
+   double b = d2 * l1x;
+   double c = d1 * l3y;
+   double d = d3 * l1y;
+   double e = d1 * l2y;
+   double f = d2 * l1y;
+   double g = d1 * l3x;
+   double h = d3 * l1x;
+   double ab = a - b;
+   double cd = c - d;
+   double ef = e - f;
+   double gh = g - h;
+   double abcd = ab * cd;
+   double efgh = ef * gh;
+   double L = abcd - efgh;
+   double epsilon = max_var;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= max_var;
+   epsilon *= 2.144556754402072e-09;
+   if (L > epsilon) return IP_Sign::POSITIVE;
+   if (-L > epsilon) return IP_Sign::NEGATIVE;
+   return Filtered_Sign::UNCERTAIN;
+}
+
+int orient2dyz_indirect_LLT_interval(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, const implicitPoint3D_TPI& p3)
+{
+   interval_number l1z, l1x, l1y, d1, l2z, l2x, l2y, d2, l3z, l3x, l3y, d3;
+   if (
+   !p1.getIntervalLambda(l1z, l1x, l1y, d1)
+   || !p2.getIntervalLambda(l2z, l2x, l2y, d2)
+   || !p3.getIntervalLambda(l3z, l3x, l3y, d3)
+   ) return Filtered_Sign::UNCERTAIN;
+
+   setFPUModeToRoundUP();
+   interval_number a(d1 * l2x);
+   interval_number b(d2 * l1x);
+   interval_number c(d1 * l3y);
+   interval_number d(d3 * l1y);
+   interval_number e(d1 * l2y);
+   interval_number f(d2 * l1y);
+   interval_number g(d1 * l3x);
+   interval_number h(d3 * l1x);
+   interval_number ab(a - b);
+   interval_number cd(c - d);
+   interval_number ef(e - f);
+   interval_number gh(g - h);
+   interval_number abcd(ab * cd);
+   interval_number efgh(ef * gh);
+   interval_number L(abcd - efgh);
+   setFPUModeToRoundNEAR();
+
+   if (!L.signIsReliable()) return Filtered_Sign::UNCERTAIN;
+   return L.sign();
+}
+
+int orient2dyz_indirect_LLT_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, const implicitPoint3D_TPI& p3)
+{
+ double return_value = NAN;
+ double l1z_p[64], *l1z = l1z_p, l1x_p[64], *l1x = l1x_p, l1y_p[64], *l1y = l1y_p, d1_p[64], *d1 = d1_p, l2z_p[64], *l2z = l2z_p, l2x_p[64], *l2x = l2x_p, l2y_p[64], *l2y = l2y_p, d2_p[64], *d2 = d2_p, l3z_p[64], *l3z = l3z_p, l3x_p[64], *l3x = l3x_p, l3y_p[64], *l3y = l3y_p, d3_p[64], *d3 = d3_p;
+ int l1z_len, l1x_len, l1y_len, d1_len, l2z_len, l2x_len, l2y_len, d2_len, l3z_len, l3x_len, l3y_len, d3_len;
+ p1.getExactLambda(l1z, l1z_len, l1x, l1x_len, l1y, l1y_len, d1, d1_len);
+ p2.getExactLambda(l2z, l2z_len, l2x, l2x_len, l2y, l2y_len, d2, d2_len);
+ p3.getExactLambda(l3z, l3z_len, l3x, l3x_len, l3y, l3y_len, d3, d3_len);
+ if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0) && (d3[d3_len - 1] != 0))
+ {
+   expansionObject o;
+   double a_p[64], *a = a_p;
+   int a_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l2x_len, l2x, &a, 64);
+   double b_p[64], *b = b_p;
+   int b_len = o.Gen_Product_With_PreAlloc(d2_len, d2, l1x_len, l1x, &b, 64);
+   double c_p[64], *c = c_p;
+   int c_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l3y_len, l3y, &c, 64);
+   double d_p[64], *d = d_p;
+   int d_len = o.Gen_Product_With_PreAlloc(d3_len, d3, l1y_len, l1y, &d, 64);
+   double e_p[64], *e = e_p;
+   int e_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l2y_len, l2y, &e, 64);
+   double f_p[64], *f = f_p;
+   int f_len = o.Gen_Product_With_PreAlloc(d2_len, d2, l1y_len, l1y, &f, 64);
+   double g_p[64], *g = g_p;
+   int g_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l3x_len, l3x, &g, 64);
+   double h_p[64], *h = h_p;
+   int h_len = o.Gen_Product_With_PreAlloc(d3_len, d3, l1x_len, l1x, &h, 64);
+   double ab_p[64], *ab = ab_p;
+   int ab_len = o.Gen_Diff_With_PreAlloc(a_len, a, b_len, b, &ab, 64);
+   double cd_p[64], *cd = cd_p;
+   int cd_len = o.Gen_Diff_With_PreAlloc(c_len, c, d_len, d, &cd, 64);
+   double ef_p[64], *ef = ef_p;
+   int ef_len = o.Gen_Diff_With_PreAlloc(e_len, e, f_len, f, &ef, 64);
+   double gh_p[64], *gh = gh_p;
+   int gh_len = o.Gen_Diff_With_PreAlloc(g_len, g, h_len, h, &gh, 64);
+   double abcd_p[64], *abcd = abcd_p;
+   int abcd_len = o.Gen_Product_With_PreAlloc(ab_len, ab, cd_len, cd, &abcd, 64);
+   double efgh_p[64], *efgh = efgh_p;
+   int efgh_len = o.Gen_Product_With_PreAlloc(ef_len, ef, gh_len, gh, &efgh, 64);
+   double L_p[64], *L = L_p;
+   int L_len = o.Gen_Diff_With_PreAlloc(abcd_len, abcd, efgh_len, efgh, &L, 64);
+
+   return_value = L[L_len - 1];
+   if (L_p != L) free(L);
+   if (efgh_p != efgh) free(efgh);
+   if (abcd_p != abcd) free(abcd);
+   if (gh_p != gh) free(gh);
+   if (ef_p != ef) free(ef);
+   if (cd_p != cd) free(cd);
+   if (ab_p != ab) free(ab);
+   if (h_p != h) free(h);
+   if (g_p != g) free(g);
+   if (f_p != f) free(f);
+   if (e_p != e) free(e);
+   if (d_p != d) free(d);
+   if (c_p != c) free(c);
+   if (b_p != b) free(b);
+   if (a_p != a) free(a);
+ }
+
+ if (l1z_p != l1z) free(l1z);
+ if (l1x_p != l1x) free(l1x);
+ if (l1y_p != l1y) free(l1y);
+ if (d1_p != d1) free(d1);
+ if (l2z_p != l2z) free(l2z);
+ if (l2x_p != l2x) free(l2x);
+ if (l2y_p != l2y) free(l2y);
+ if (d2_p != d2) free(d2);
+ if (l3z_p != l3z) free(l3z);
+ if (l3x_p != l3x) free(l3x);
+ if (l3y_p != l3y) free(l3y);
+ if (d3_p != d3) free(d3);
+
+ if (return_value > 0) return IP_Sign::POSITIVE;
+ if (return_value < 0) return IP_Sign::NEGATIVE;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
+}
+
+int orient2dyz_indirect_LLT(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, const implicitPoint3D_TPI& p3)
+{
+   int ret;
+   ret = orient2dyz_indirect_LLT_filtered(p1, p2, p3);
+   if (ret != Filtered_Sign::UNCERTAIN) return ret;
+   ret = orient2dyz_indirect_LLT_interval(p1, p2, p3);
+   if (ret != Filtered_Sign::UNCERTAIN) return ret;
+   return orient2dyz_indirect_LLT_exact(p1, p2, p3);
+}
+
+int orient2dyz_indirect_LTE_filtered(const implicitPoint3D_LPI& p1, const implicitPoint3D_TPI& p2, double p3x, double p3y)
+{
+   double l1z, l1x, l1y, d1, l2z, l2x, l2y, d2, max_var = 0;
+    if (
+       !p1.getFilteredLambda(l1z, l1x, l1y, d1, max_var)
+       || !p2.getFilteredLambda(l2z, l2x, l2y, d2, max_var)
+   ) return Filtered_Sign::UNCERTAIN;
+
+   double a = d1 * l2x;
+   double b = d2 * l1x;
+   double c = d1 * p3y;
+   double e = d1 * l2y;
+   double f = d2 * l1y;
+   double g = d1 * p3x;
+   double ab = a - b;
+   double cd = c - l1y;
+   double ef = e - f;
+   double gh = g - l1x;
+   double abcd = ab * cd;
+   double efgh = ef * gh;
+   double L = abcd - efgh;
+
+   double _tmp_fabs;
+   if ((_tmp_fabs = fabs(p3x)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(p3y)) > max_var) max_var = _tmp_fabs;
+   double epsilon = max_var;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= 2.184958117212875e-10;
+   if (L > epsilon) return IP_Sign::POSITIVE;
+   if (-L > epsilon) return IP_Sign::NEGATIVE;
+   return Filtered_Sign::UNCERTAIN;
+}
+
+int orient2dyz_indirect_LTE_interval(const implicitPoint3D_LPI& p1, const implicitPoint3D_TPI& p2, interval_number p3x, interval_number p3y)
+{
+   interval_number l1z, l1x, l1y, d1, l2z, l2x, l2y, d2;
+   if (
+   !p1.getIntervalLambda(l1z, l1x, l1y, d1)
+   || !p2.getIntervalLambda(l2z, l2x, l2y, d2)
+   ) return Filtered_Sign::UNCERTAIN;
+
+   setFPUModeToRoundUP();
+   interval_number a(d1 * l2x);
+   interval_number b(d2 * l1x);
+   interval_number c(d1 * p3y);
+   interval_number e(d1 * l2y);
+   interval_number f(d2 * l1y);
+   interval_number g(d1 * p3x);
+   interval_number ab(a - b);
+   interval_number cd(c - l1y);
+   interval_number ef(e - f);
+   interval_number gh(g - l1x);
+   interval_number abcd(ab * cd);
+   interval_number efgh(ef * gh);
+   interval_number L(abcd - efgh);
+   setFPUModeToRoundNEAR();
+
+   if (!L.signIsReliable()) return Filtered_Sign::UNCERTAIN;
+   return L.sign();
+}
+
+int orient2dyz_indirect_LTE_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_TPI& p2, double p3x, double p3y)
+{
+ double return_value = NAN;
+ double l1z_p[64], *l1z = l1z_p, l1x_p[64], *l1x = l1x_p, l1y_p[64], *l1y = l1y_p, d1_p[64], *d1 = d1_p, l2z_p[64], *l2z = l2z_p, l2x_p[64], *l2x = l2x_p, l2y_p[64], *l2y = l2y_p, d2_p[64], *d2 = d2_p;
+ int l1z_len, l1x_len, l1y_len, d1_len, l2z_len, l2x_len, l2y_len, d2_len;
+ p1.getExactLambda(l1z, l1z_len, l1x, l1x_len, l1y, l1y_len, d1, d1_len);
+ p2.getExactLambda(l2z, l2z_len, l2x, l2x_len, l2y, l2y_len, d2, d2_len);
+ if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0))
+ {
+   expansionObject o;
+   double a_p[64], *a = a_p;
+   int a_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l2x_len, l2x, &a, 64);
+   double b_p[64], *b = b_p;
+   int b_len = o.Gen_Product_With_PreAlloc(d2_len, d2, l1x_len, l1x, &b, 64);
+   double c_p[64], *c = c_p;
+   int c_len = o.Gen_Scale_With_PreAlloc(d1_len, d1, p3y, &c, 64);
+   double e_p[64], *e = e_p;
+   int e_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l2y_len, l2y, &e, 64);
+   double f_p[64], *f = f_p;
+   int f_len = o.Gen_Product_With_PreAlloc(d2_len, d2, l1y_len, l1y, &f, 64);
+   double g_p[64], *g = g_p;
+   int g_len = o.Gen_Scale_With_PreAlloc(d1_len, d1, p3x, &g, 64);
+   double ab_p[64], *ab = ab_p;
+   int ab_len = o.Gen_Diff_With_PreAlloc(a_len, a, b_len, b, &ab, 64);
+   double cd_p[64], *cd = cd_p;
+   int cd_len = o.Gen_Diff_With_PreAlloc(c_len, c, l1y_len, l1y, &cd, 64);
+   double ef_p[64], *ef = ef_p;
+   int ef_len = o.Gen_Diff_With_PreAlloc(e_len, e, f_len, f, &ef, 64);
+   double gh_p[64], *gh = gh_p;
+   int gh_len = o.Gen_Diff_With_PreAlloc(g_len, g, l1x_len, l1x, &gh, 64);
+   double abcd_p[64], *abcd = abcd_p;
+   int abcd_len = o.Gen_Product_With_PreAlloc(ab_len, ab, cd_len, cd, &abcd, 64);
+   double efgh_p[64], *efgh = efgh_p;
+   int efgh_len = o.Gen_Product_With_PreAlloc(ef_len, ef, gh_len, gh, &efgh, 64);
+   double L_p[64], *L = L_p;
+   int L_len = o.Gen_Diff_With_PreAlloc(abcd_len, abcd, efgh_len, efgh, &L, 64);
+
+   return_value = L[L_len - 1];
+   if (L_p != L) free(L);
+   if (efgh_p != efgh) free(efgh);
+   if (abcd_p != abcd) free(abcd);
+   if (gh_p != gh) free(gh);
+   if (ef_p != ef) free(ef);
+   if (cd_p != cd) free(cd);
+   if (ab_p != ab) free(ab);
+   if (g_p != g) free(g);
+   if (f_p != f) free(f);
+   if (e_p != e) free(e);
+   if (c_p != c) free(c);
+   if (b_p != b) free(b);
+   if (a_p != a) free(a);
+ }
+
+ if (l1z_p != l1z) free(l1z);
+ if (l1x_p != l1x) free(l1x);
+ if (l1y_p != l1y) free(l1y);
+ if (d1_p != d1) free(d1);
+ if (l2z_p != l2z) free(l2z);
+ if (l2x_p != l2x) free(l2x);
+ if (l2y_p != l2y) free(l2y);
+ if (d2_p != d2) free(d2);
+
+ if (return_value > 0) return IP_Sign::POSITIVE;
+ if (return_value < 0) return IP_Sign::NEGATIVE;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
+}
+
+int orient2dyz_indirect_LTE(const implicitPoint3D_LPI& p1, const implicitPoint3D_TPI& p2, double p3x, double p3y)
+{
+   int ret;
+   ret = orient2dyz_indirect_LTE_filtered(p1, p2, p3x, p3y);
+   if (ret != Filtered_Sign::UNCERTAIN) return ret;
+   ret = orient2dyz_indirect_LTE_interval(p1, p2, p3x, p3y);
+   if (ret != Filtered_Sign::UNCERTAIN) return ret;
+   return orient2dyz_indirect_LTE_exact(p1, p2, p3x, p3y);
+}
+
+int orient2dyz_indirect_LTT_filtered(const implicitPoint3D_LPI& p1, const implicitPoint3D_TPI& p2, const implicitPoint3D_TPI& p3)
+{
+   double l1z, l1x, l1y, d1, l2z, l2x, l2y, d2, l3z, l3x, l3y, d3, max_var = 0;
+    if (
+       !p1.getFilteredLambda(l1z, l1x, l1y, d1, max_var)
+       || !p2.getFilteredLambda(l2z, l2x, l2y, d2, max_var)
+       || !p3.getFilteredLambda(l3z, l3x, l3y, d3, max_var)
+   ) return Filtered_Sign::UNCERTAIN;
+
+   double a = d1 * l2x;
+   double b = d2 * l1x;
+   double c = d1 * l3y;
+   double d = d3 * l1y;
+   double e = d1 * l2y;
+   double f = d2 * l1y;
+   double g = d1 * l3x;
+   double h = d3 * l1x;
+   double ab = a - b;
+   double cd = c - d;
+   double ef = e - f;
+   double gh = g - h;
+   double abcd = ab * cd;
+   double efgh = ef * gh;
+   double L = abcd - efgh;
+   double epsilon = max_var;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= 2.535681042914479e-08;
+   if (L > epsilon) return IP_Sign::POSITIVE;
+   if (-L > epsilon) return IP_Sign::NEGATIVE;
+   return Filtered_Sign::UNCERTAIN;
+}
+
+int orient2dyz_indirect_LTT_interval(const implicitPoint3D_LPI& p1, const implicitPoint3D_TPI& p2, const implicitPoint3D_TPI& p3)
+{
+   interval_number l1z, l1x, l1y, d1, l2z, l2x, l2y, d2, l3z, l3x, l3y, d3;
+   if (
+   !p1.getIntervalLambda(l1z, l1x, l1y, d1)
+   || !p2.getIntervalLambda(l2z, l2x, l2y, d2)
+   || !p3.getIntervalLambda(l3z, l3x, l3y, d3)
+   ) return Filtered_Sign::UNCERTAIN;
+
+   setFPUModeToRoundUP();
+   interval_number a(d1 * l2x);
+   interval_number b(d2 * l1x);
+   interval_number c(d1 * l3y);
+   interval_number d(d3 * l1y);
+   interval_number e(d1 * l2y);
+   interval_number f(d2 * l1y);
+   interval_number g(d1 * l3x);
+   interval_number h(d3 * l1x);
+   interval_number ab(a - b);
+   interval_number cd(c - d);
+   interval_number ef(e - f);
+   interval_number gh(g - h);
+   interval_number abcd(ab * cd);
+   interval_number efgh(ef * gh);
+   interval_number L(abcd - efgh);
+   setFPUModeToRoundNEAR();
+
+   if (!L.signIsReliable()) return Filtered_Sign::UNCERTAIN;
+   return L.sign();
+}
+
+int orient2dyz_indirect_LTT_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_TPI& p2, const implicitPoint3D_TPI& p3)
+{
+ double return_value = NAN;
+ double l1z_p[64], *l1z = l1z_p, l1x_p[64], *l1x = l1x_p, l1y_p[64], *l1y = l1y_p, d1_p[64], *d1 = d1_p, l2z_p[64], *l2z = l2z_p, l2x_p[64], *l2x = l2x_p, l2y_p[64], *l2y = l2y_p, d2_p[64], *d2 = d2_p, l3z_p[64], *l3z = l3z_p, l3x_p[64], *l3x = l3x_p, l3y_p[64], *l3y = l3y_p, d3_p[64], *d3 = d3_p;
+ int l1z_len, l1x_len, l1y_len, d1_len, l2z_len, l2x_len, l2y_len, d2_len, l3z_len, l3x_len, l3y_len, d3_len;
+ p1.getExactLambda(l1z, l1z_len, l1x, l1x_len, l1y, l1y_len, d1, d1_len);
+ p2.getExactLambda(l2z, l2z_len, l2x, l2x_len, l2y, l2y_len, d2, d2_len);
+ p3.getExactLambda(l3z, l3z_len, l3x, l3x_len, l3y, l3y_len, d3, d3_len);
+ if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0) && (d3[d3_len - 1] != 0))
+ {
+   expansionObject o;
+   double a_p[64], *a = a_p;
+   int a_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l2x_len, l2x, &a, 64);
+   double b_p[64], *b = b_p;
+   int b_len = o.Gen_Product_With_PreAlloc(d2_len, d2, l1x_len, l1x, &b, 64);
+   double c_p[64], *c = c_p;
+   int c_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l3y_len, l3y, &c, 64);
+   double d_p[64], *d = d_p;
+   int d_len = o.Gen_Product_With_PreAlloc(d3_len, d3, l1y_len, l1y, &d, 64);
+   double e_p[64], *e = e_p;
+   int e_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l2y_len, l2y, &e, 64);
+   double f_p[64], *f = f_p;
+   int f_len = o.Gen_Product_With_PreAlloc(d2_len, d2, l1y_len, l1y, &f, 64);
+   double g_p[64], *g = g_p;
+   int g_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l3x_len, l3x, &g, 64);
+   double h_p[64], *h = h_p;
+   int h_len = o.Gen_Product_With_PreAlloc(d3_len, d3, l1x_len, l1x, &h, 64);
+   double ab_p[64], *ab = ab_p;
+   int ab_len = o.Gen_Diff_With_PreAlloc(a_len, a, b_len, b, &ab, 64);
+   double cd_p[64], *cd = cd_p;
+   int cd_len = o.Gen_Diff_With_PreAlloc(c_len, c, d_len, d, &cd, 64);
+   double ef_p[64], *ef = ef_p;
+   int ef_len = o.Gen_Diff_With_PreAlloc(e_len, e, f_len, f, &ef, 64);
+   double gh_p[64], *gh = gh_p;
+   int gh_len = o.Gen_Diff_With_PreAlloc(g_len, g, h_len, h, &gh, 64);
+   double abcd_p[64], *abcd = abcd_p;
+   int abcd_len = o.Gen_Product_With_PreAlloc(ab_len, ab, cd_len, cd, &abcd, 64);
+   double efgh_p[64], *efgh = efgh_p;
+   int efgh_len = o.Gen_Product_With_PreAlloc(ef_len, ef, gh_len, gh, &efgh, 64);
+   double L_p[64], *L = L_p;
+   int L_len = o.Gen_Diff_With_PreAlloc(abcd_len, abcd, efgh_len, efgh, &L, 64);
+
+   return_value = L[L_len - 1];
+   if (L_p != L) free(L);
+   if (efgh_p != efgh) free(efgh);
+   if (abcd_p != abcd) free(abcd);
+   if (gh_p != gh) free(gh);
+   if (ef_p != ef) free(ef);
+   if (cd_p != cd) free(cd);
+   if (ab_p != ab) free(ab);
+   if (h_p != h) free(h);
+   if (g_p != g) free(g);
+   if (f_p != f) free(f);
+   if (e_p != e) free(e);
+   if (d_p != d) free(d);
+   if (c_p != c) free(c);
+   if (b_p != b) free(b);
+   if (a_p != a) free(a);
+ }
+
+ if (l1z_p != l1z) free(l1z);
+ if (l1x_p != l1x) free(l1x);
+ if (l1y_p != l1y) free(l1y);
+ if (d1_p != d1) free(d1);
+ if (l2z_p != l2z) free(l2z);
+ if (l2x_p != l2x) free(l2x);
+ if (l2y_p != l2y) free(l2y);
+ if (d2_p != d2) free(d2);
+ if (l3z_p != l3z) free(l3z);
+ if (l3x_p != l3x) free(l3x);
+ if (l3y_p != l3y) free(l3y);
+ if (d3_p != d3) free(d3);
+
+ if (return_value > 0) return IP_Sign::POSITIVE;
+ if (return_value < 0) return IP_Sign::NEGATIVE;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
+}
+
+int orient2dyz_indirect_LTT(const implicitPoint3D_LPI& p1, const implicitPoint3D_TPI& p2, const implicitPoint3D_TPI& p3)
+{
+   int ret;
+   ret = orient2dyz_indirect_LTT_filtered(p1, p2, p3);
+   if (ret != Filtered_Sign::UNCERTAIN) return ret;
+   ret = orient2dyz_indirect_LTT_interval(p1, p2, p3);
+   if (ret != Filtered_Sign::UNCERTAIN) return ret;
+   return orient2dyz_indirect_LTT_exact(p1, p2, p3);
+}
+
+int orient2dyz_indirect_TEE_filtered(const implicitPoint3D_TPI& p1, double p2x, double p2y, double p3x, double p3y)
+{
+   double l1z, l1x, l1y, d1, max_var = 0;
+    if (
+       !p1.getFilteredLambda(l1z, l1x, l1y, d1, max_var)
+   ) return Filtered_Sign::UNCERTAIN;
+
+   double t1x = p2y - p3y;
+   double t1y = p3x - p2x;
+   double e2 = l1x * t1x;
+   double e3 = l1y * t1y;
+   double e = e2 + e3;
+   double pr1 = p2x * p3y;
+   double pr2 = p2y * p3x;
+   double pr = pr1 - pr2;
+   double dpr = d1 * pr;
+   double det = dpr + e;
+
+   double _tmp_fabs;
+   if ((_tmp_fabs = fabs(p2x)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(p2y)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(p3x)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(p3y)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(t1x)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(t1y)) > max_var) max_var = _tmp_fabs;
+   double epsilon = max_var;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= 9.061883188277186e-13;
+   if (det > epsilon) return IP_Sign::POSITIVE;
+   if (-det > epsilon) return IP_Sign::NEGATIVE;
+   return Filtered_Sign::UNCERTAIN;
+}
+
+int orient2dyz_indirect_TEE_interval(const implicitPoint3D_TPI& p1, interval_number p2x, interval_number p2y, interval_number p3x, interval_number p3y)
+{
+   interval_number l1z, l1x, l1y, d1;
+   if (
+   !p1.getIntervalLambda(l1z, l1x, l1y, d1)
+   ) return Filtered_Sign::UNCERTAIN;
+
+   setFPUModeToRoundUP();
+   interval_number t1x(p2y - p3y);
+   interval_number t1y(p3x - p2x);
+   interval_number e2(l1x * t1x);
+   interval_number e3(l1y * t1y);
+   interval_number e(e2 + e3);
+   interval_number pr1(p2x * p3y);
+   interval_number pr2(p2y * p3x);
+   interval_number pr(pr1 - pr2);
+   interval_number dpr(d1 * pr);
+   interval_number det(dpr + e);
+   setFPUModeToRoundNEAR();
+
+   if (!det.signIsReliable()) return Filtered_Sign::UNCERTAIN;
+   return det.sign();
+}
+
+int orient2dyz_indirect_TEE_exact(const implicitPoint3D_TPI& p1, double p2x, double p2y, double p3x, double p3y)
+{
+ double return_value = NAN;
+ double l1z_p[128], *l1z = l1z_p, l1x_p[128], *l1x = l1x_p, l1y_p[128], *l1y = l1y_p, d1_p[128], *d1 = d1_p;
+ int l1z_len, l1x_len, l1y_len, d1_len;
+ p1.getExactLambda(l1z, l1z_len, l1x, l1x_len, l1y, l1y_len, d1, d1_len);
+ if ((d1[d1_len - 1] != 0))
+ {
+   expansionObject o;
+   double t1x[2];
+   o.two_Diff(p2y, p3y, t1x);
+   double t1y[2];
+   o.two_Diff(p3x, p2x, t1y);
+   double e2_p[128], *e2 = e2_p;
+   int e2_len = o.Gen_Product_With_PreAlloc(l1x_len, l1x, 2, t1x, &e2, 128);
+   double e3_p[128], *e3 = e3_p;
+   int e3_len = o.Gen_Product_With_PreAlloc(l1y_len, l1y, 2, t1y, &e3, 128);
+   double e_p[128], *e = e_p;
+   int e_len = o.Gen_Sum_With_PreAlloc(e2_len, e2, e3_len, e3, &e, 128);
+   double pr1[2];
+   o.Two_Prod(p2x, p3y, pr1);
+   double pr2[2];
+   o.Two_Prod(p2y, p3x, pr2);
+   double pr[4];
+   o.Two_Two_Diff(pr1, pr2, pr);
+   double dpr_p[128], *dpr = dpr_p;
+   int dpr_len = o.Gen_Product_With_PreAlloc(d1_len, d1, 4, pr, &dpr, 128);
+   double det_p[128], *det = det_p;
+   int det_len = o.Gen_Sum_With_PreAlloc(dpr_len, dpr, e_len, e, &det, 128);
+
+   return_value = det[det_len - 1];
+   if (det_p != det) free(det);
+   if (dpr_p != dpr) free(dpr);
+   if (e_p != e) free(e);
+   if (e3_p != e3) free(e3);
+   if (e2_p != e2) free(e2);
+ }
+
+ if (l1z_p != l1z) free(l1z);
+ if (l1x_p != l1x) free(l1x);
+ if (l1y_p != l1y) free(l1y);
+ if (d1_p != d1) free(d1);
+
+ if (return_value > 0) return IP_Sign::POSITIVE;
+ if (return_value < 0) return IP_Sign::NEGATIVE;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
+}
+
+int orient2dyz_indirect_TEE(const implicitPoint3D_TPI& p1, double p2x, double p2y, double p3x, double p3y)
+{
+   int ret;
+   ret = orient2dyz_indirect_TEE_filtered(p1, p2x, p2y, p3x, p3y);
+   if (ret != Filtered_Sign::UNCERTAIN) return ret;
+   ret = orient2dyz_indirect_TEE_interval(p1, p2x, p2y, p3x, p3y);
+   if (ret != Filtered_Sign::UNCERTAIN) return ret;
+   return orient2dyz_indirect_TEE_exact(p1, p2x, p2y, p3x, p3y);
+}
+
+int orient2dyz_indirect_TTE_filtered(const implicitPoint3D_TPI& p1, const implicitPoint3D_TPI& p2, double p3x, double p3y)
+{
+   double l1z, l1x, l1y, d1, l2z, l2x, l2y, d2, max_var = 0;
+    if (
+       !p1.getFilteredLambda(l1z, l1x, l1y, d1, max_var)
+       || !p2.getFilteredLambda(l2z, l2x, l2y, d2, max_var)
+   ) return Filtered_Sign::UNCERTAIN;
+
+   double a = d1 * l2x;
+   double b = d2 * l1x;
+   double c = d1 * p3y;
+   double e = d1 * l2y;
+   double f = d2 * l1y;
+   double g = d1 * p3x;
+   double ab = a - b;
+   double cd = c - l1y;
+   double ef = e - f;
+   double gh = g - l1x;
+   double abcd = ab * cd;
+   double efgh = ef * gh;
+   double L = abcd - efgh;
+
+   double _tmp_fabs;
+   if ((_tmp_fabs = fabs(p3x)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(p3y)) > max_var) max_var = _tmp_fabs;
+   double epsilon = max_var;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= 3.307187945722513e-08;
+   if (L > epsilon) return IP_Sign::POSITIVE;
+   if (-L > epsilon) return IP_Sign::NEGATIVE;
+   return Filtered_Sign::UNCERTAIN;
+}
+
+int orient2dyz_indirect_TTE_interval(const implicitPoint3D_TPI& p1, const implicitPoint3D_TPI& p2, interval_number p3x, interval_number p3y)
+{
+   interval_number l1z, l1x, l1y, d1, l2z, l2x, l2y, d2;
+   if (
+   !p1.getIntervalLambda(l1z, l1x, l1y, d1)
+   || !p2.getIntervalLambda(l2z, l2x, l2y, d2)
+   ) return Filtered_Sign::UNCERTAIN;
+
+   setFPUModeToRoundUP();
+   interval_number a(d1 * l2x);
+   interval_number b(d2 * l1x);
+   interval_number c(d1 * p3y);
+   interval_number e(d1 * l2y);
+   interval_number f(d2 * l1y);
+   interval_number g(d1 * p3x);
+   interval_number ab(a - b);
+   interval_number cd(c - l1y);
+   interval_number ef(e - f);
+   interval_number gh(g - l1x);
+   interval_number abcd(ab * cd);
+   interval_number efgh(ef * gh);
+   interval_number L(abcd - efgh);
+   setFPUModeToRoundNEAR();
+
+   if (!L.signIsReliable()) return Filtered_Sign::UNCERTAIN;
+   return L.sign();
+}
+
+int orient2dyz_indirect_TTE_exact(const implicitPoint3D_TPI& p1, const implicitPoint3D_TPI& p2, double p3x, double p3y)
+{
+ double return_value = NAN;
+ double l1z_p[64], *l1z = l1z_p, l1x_p[64], *l1x = l1x_p, l1y_p[64], *l1y = l1y_p, d1_p[64], *d1 = d1_p, l2z_p[64], *l2z = l2z_p, l2x_p[64], *l2x = l2x_p, l2y_p[64], *l2y = l2y_p, d2_p[64], *d2 = d2_p;
+ int l1z_len, l1x_len, l1y_len, d1_len, l2z_len, l2x_len, l2y_len, d2_len;
+ p1.getExactLambda(l1z, l1z_len, l1x, l1x_len, l1y, l1y_len, d1, d1_len);
+ p2.getExactLambda(l2z, l2z_len, l2x, l2x_len, l2y, l2y_len, d2, d2_len);
+ if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0))
+ {
+   expansionObject o;
+   double a_p[64], *a = a_p;
+   int a_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l2x_len, l2x, &a, 64);
+   double b_p[64], *b = b_p;
+   int b_len = o.Gen_Product_With_PreAlloc(d2_len, d2, l1x_len, l1x, &b, 64);
+   double c_p[64], *c = c_p;
+   int c_len = o.Gen_Scale_With_PreAlloc(d1_len, d1, p3y, &c, 64);
+   double e_p[64], *e = e_p;
+   int e_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l2y_len, l2y, &e, 64);
+   double f_p[64], *f = f_p;
+   int f_len = o.Gen_Product_With_PreAlloc(d2_len, d2, l1y_len, l1y, &f, 64);
+   double g_p[64], *g = g_p;
+   int g_len = o.Gen_Scale_With_PreAlloc(d1_len, d1, p3x, &g, 64);
+   double ab_p[64], *ab = ab_p;
+   int ab_len = o.Gen_Diff_With_PreAlloc(a_len, a, b_len, b, &ab, 64);
+   double cd_p[64], *cd = cd_p;
+   int cd_len = o.Gen_Diff_With_PreAlloc(c_len, c, l1y_len, l1y, &cd, 64);
+   double ef_p[64], *ef = ef_p;
+   int ef_len = o.Gen_Diff_With_PreAlloc(e_len, e, f_len, f, &ef, 64);
+   double gh_p[64], *gh = gh_p;
+   int gh_len = o.Gen_Diff_With_PreAlloc(g_len, g, l1x_len, l1x, &gh, 64);
+   double abcd_p[64], *abcd = abcd_p;
+   int abcd_len = o.Gen_Product_With_PreAlloc(ab_len, ab, cd_len, cd, &abcd, 64);
+   double efgh_p[64], *efgh = efgh_p;
+   int efgh_len = o.Gen_Product_With_PreAlloc(ef_len, ef, gh_len, gh, &efgh, 64);
+   double L_p[64], *L = L_p;
+   int L_len = o.Gen_Diff_With_PreAlloc(abcd_len, abcd, efgh_len, efgh, &L, 64);
+
+   return_value = L[L_len - 1];
+   if (L_p != L) free(L);
+   if (efgh_p != efgh) free(efgh);
+   if (abcd_p != abcd) free(abcd);
+   if (gh_p != gh) free(gh);
+   if (ef_p != ef) free(ef);
+   if (cd_p != cd) free(cd);
+   if (ab_p != ab) free(ab);
+   if (g_p != g) free(g);
+   if (f_p != f) free(f);
+   if (e_p != e) free(e);
+   if (c_p != c) free(c);
+   if (b_p != b) free(b);
+   if (a_p != a) free(a);
+ }
+
+ if (l1z_p != l1z) free(l1z);
+ if (l1x_p != l1x) free(l1x);
+ if (l1y_p != l1y) free(l1y);
+ if (d1_p != d1) free(d1);
+ if (l2z_p != l2z) free(l2z);
+ if (l2x_p != l2x) free(l2x);
+ if (l2y_p != l2y) free(l2y);
+ if (d2_p != d2) free(d2);
+
+ if (return_value > 0) return IP_Sign::POSITIVE;
+ if (return_value < 0) return IP_Sign::NEGATIVE;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
+}
+
+int orient2dyz_indirect_TTE(const implicitPoint3D_TPI& p1, const implicitPoint3D_TPI& p2, double p3x, double p3y)
+{
+   int ret;
+   ret = orient2dyz_indirect_TTE_filtered(p1, p2, p3x, p3y);
+   if (ret != Filtered_Sign::UNCERTAIN) return ret;
+   ret = orient2dyz_indirect_TTE_interval(p1, p2, p3x, p3y);
+   if (ret != Filtered_Sign::UNCERTAIN) return ret;
+   return orient2dyz_indirect_TTE_exact(p1, p2, p3x, p3y);
+}
+
+int orient2dyz_indirect_TTT_filtered(const implicitPoint3D_TPI& p1, const implicitPoint3D_TPI& p2, const implicitPoint3D_TPI& p3)
+{
+   double l1z, l1x, l1y, d1, l2z, l2x, l2y, d2, l3z, l3x, l3y, d3, max_var = 0;
+    if (
+       !p1.getFilteredLambda(l1z, l1x, l1y, d1, max_var)
+       || !p2.getFilteredLambda(l2z, l2x, l2y, d2, max_var)
+       || !p3.getFilteredLambda(l3z, l3x, l3y, d3, max_var)
+   ) return Filtered_Sign::UNCERTAIN;
+
+   double a = d1 * l2x;
+   double b = d2 * l1x;
+   double c = d1 * l3y;
+   double d = d3 * l1y;
+   double e = d1 * l2y;
+   double f = d2 * l1y;
+   double g = d1 * l3x;
+   double h = d3 * l1x;
+   double ab = a - b;
+   double cd = c - d;
+   double ef = e - f;
+   double gh = g - h;
+   double abcd = ab * cd;
+   double efgh = ef * gh;
+   double L = abcd - efgh;
+   double epsilon = max_var;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= 3.103174776697444e-06;
+   if (L > epsilon) return IP_Sign::POSITIVE;
+   if (-L > epsilon) return IP_Sign::NEGATIVE;
+   return Filtered_Sign::UNCERTAIN;
+}
+
+int orient2dyz_indirect_TTT_interval(const implicitPoint3D_TPI& p1, const implicitPoint3D_TPI& p2, const implicitPoint3D_TPI& p3)
+{
+   interval_number l1z, l1x, l1y, d1, l2z, l2x, l2y, d2, l3z, l3x, l3y, d3;
+   if (
+   !p1.getIntervalLambda(l1z, l1x, l1y, d1)
+   || !p2.getIntervalLambda(l2z, l2x, l2y, d2)
+   || !p3.getIntervalLambda(l3z, l3x, l3y, d3)
+   ) return Filtered_Sign::UNCERTAIN;
+
+   setFPUModeToRoundUP();
+   interval_number a(d1 * l2x);
+   interval_number b(d2 * l1x);
+   interval_number c(d1 * l3y);
+   interval_number d(d3 * l1y);
+   interval_number e(d1 * l2y);
+   interval_number f(d2 * l1y);
+   interval_number g(d1 * l3x);
+   interval_number h(d3 * l1x);
+   interval_number ab(a - b);
+   interval_number cd(c - d);
+   interval_number ef(e - f);
+   interval_number gh(g - h);
+   interval_number abcd(ab * cd);
+   interval_number efgh(ef * gh);
+   interval_number L(abcd - efgh);
+   setFPUModeToRoundNEAR();
+
+   if (!L.signIsReliable()) return Filtered_Sign::UNCERTAIN;
+   return L.sign();
+}
+
+int orient2dyz_indirect_TTT_exact(const implicitPoint3D_TPI& p1, const implicitPoint3D_TPI& p2, const implicitPoint3D_TPI& p3)
+{
+ double return_value = NAN;
+ double l1z_p[64], *l1z = l1z_p, l1x_p[64], *l1x = l1x_p, l1y_p[64], *l1y = l1y_p, d1_p[64], *d1 = d1_p, l2z_p[64], *l2z = l2z_p, l2x_p[64], *l2x = l2x_p, l2y_p[64], *l2y = l2y_p, d2_p[64], *d2 = d2_p, l3z_p[64], *l3z = l3z_p, l3x_p[64], *l3x = l3x_p, l3y_p[64], *l3y = l3y_p, d3_p[64], *d3 = d3_p;
+ int l1z_len, l1x_len, l1y_len, d1_len, l2z_len, l2x_len, l2y_len, d2_len, l3z_len, l3x_len, l3y_len, d3_len;
+ p1.getExactLambda(l1z, l1z_len, l1x, l1x_len, l1y, l1y_len, d1, d1_len);
+ p2.getExactLambda(l2z, l2z_len, l2x, l2x_len, l2y, l2y_len, d2, d2_len);
+ p3.getExactLambda(l3z, l3z_len, l3x, l3x_len, l3y, l3y_len, d3, d3_len);
+ if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0) && (d3[d3_len - 1] != 0))
+ {
+   expansionObject o;
+   double a_p[64], *a = a_p;
+   int a_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l2x_len, l2x, &a, 64);
+   double b_p[64], *b = b_p;
+   int b_len = o.Gen_Product_With_PreAlloc(d2_len, d2, l1x_len, l1x, &b, 64);
+   double c_p[64], *c = c_p;
+   int c_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l3y_len, l3y, &c, 64);
+   double d_p[64], *d = d_p;
+   int d_len = o.Gen_Product_With_PreAlloc(d3_len, d3, l1y_len, l1y, &d, 64);
+   double e_p[64], *e = e_p;
+   int e_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l2y_len, l2y, &e, 64);
+   double f_p[64], *f = f_p;
+   int f_len = o.Gen_Product_With_PreAlloc(d2_len, d2, l1y_len, l1y, &f, 64);
+   double g_p[64], *g = g_p;
+   int g_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l3x_len, l3x, &g, 64);
+   double h_p[64], *h = h_p;
+   int h_len = o.Gen_Product_With_PreAlloc(d3_len, d3, l1x_len, l1x, &h, 64);
+   double ab_p[64], *ab = ab_p;
+   int ab_len = o.Gen_Diff_With_PreAlloc(a_len, a, b_len, b, &ab, 64);
+   double cd_p[64], *cd = cd_p;
+   int cd_len = o.Gen_Diff_With_PreAlloc(c_len, c, d_len, d, &cd, 64);
+   double ef_p[64], *ef = ef_p;
+   int ef_len = o.Gen_Diff_With_PreAlloc(e_len, e, f_len, f, &ef, 64);
+   double gh_p[64], *gh = gh_p;
+   int gh_len = o.Gen_Diff_With_PreAlloc(g_len, g, h_len, h, &gh, 64);
+   double abcd_p[64], *abcd = abcd_p;
+   int abcd_len = o.Gen_Product_With_PreAlloc(ab_len, ab, cd_len, cd, &abcd, 64);
+   double efgh_p[64], *efgh = efgh_p;
+   int efgh_len = o.Gen_Product_With_PreAlloc(ef_len, ef, gh_len, gh, &efgh, 64);
+   double L_p[64], *L = L_p;
+   int L_len = o.Gen_Diff_With_PreAlloc(abcd_len, abcd, efgh_len, efgh, &L, 64);
+
+   return_value = L[L_len - 1];
+   if (L_p != L) free(L);
+   if (efgh_p != efgh) free(efgh);
+   if (abcd_p != abcd) free(abcd);
+   if (gh_p != gh) free(gh);
+   if (ef_p != ef) free(ef);
+   if (cd_p != cd) free(cd);
+   if (ab_p != ab) free(ab);
+   if (h_p != h) free(h);
+   if (g_p != g) free(g);
+   if (f_p != f) free(f);
+   if (e_p != e) free(e);
+   if (d_p != d) free(d);
+   if (c_p != c) free(c);
+   if (b_p != b) free(b);
+   if (a_p != a) free(a);
+ }
+
+ if (l1z_p != l1z) free(l1z);
+ if (l1x_p != l1x) free(l1x);
+ if (l1y_p != l1y) free(l1y);
+ if (d1_p != d1) free(d1);
+ if (l2z_p != l2z) free(l2z);
+ if (l2x_p != l2x) free(l2x);
+ if (l2y_p != l2y) free(l2y);
+ if (d2_p != d2) free(d2);
+ if (l3z_p != l3z) free(l3z);
+ if (l3x_p != l3x) free(l3x);
+ if (l3y_p != l3y) free(l3y);
+ if (d3_p != d3) free(d3);
+
+ if (return_value > 0) return IP_Sign::POSITIVE;
+ if (return_value < 0) return IP_Sign::NEGATIVE;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
+}
+
+int orient2dyz_indirect_TTT(const implicitPoint3D_TPI& p1, const implicitPoint3D_TPI& p2, const implicitPoint3D_TPI& p3)
+{
+   int ret;
+//   ret = orient2dyz_indirect_TTT_filtered(p1, p2, p3);
+//   if (ret != Filtered_Sign::UNCERTAIN) return ret;
+   ret = orient2dyz_indirect_TTT_interval(p1, p2, p3);
+   if (ret != Filtered_Sign::UNCERTAIN) return ret;
+   return orient2dyz_indirect_TTT_exact(p1, p2, p3);
+}
+
+int orient2dzx_indirect_LEE_filtered(const implicitPoint3D_LPI& p1, double p2x, double p2y, double p3x, double p3y)
+{
+   double l1y, l1z, l1x, d1, max_var = 0;
+    if (
+       !p1.getFilteredLambda(l1y, l1z, l1x, d1, max_var)
+   ) return Filtered_Sign::UNCERTAIN;
+
+   double t1x = p2y - p3y;
+   double t1y = p3x - p2x;
+   double e2 = l1x * t1x;
+   double e3 = l1y * t1y;
+   double e = e2 + e3;
+   double pr1 = p2x * p3y;
+   double pr2 = p2y * p3x;
+   double pr = pr1 - pr2;
+   double dpr = d1 * pr;
+   double det = dpr + e;
+
+   double _tmp_fabs;
+   if ((_tmp_fabs = fabs(p2x)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(p2y)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(p3x)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(p3y)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(t1x)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(t1y)) > max_var) max_var = _tmp_fabs;
+   double epsilon = max_var;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= max_var;
+   epsilon *= 4.75277369543781e-14;
+   if (det > epsilon) return IP_Sign::POSITIVE;
+   if (-det > epsilon) return IP_Sign::NEGATIVE;
+   return Filtered_Sign::UNCERTAIN;
+}
+
+int orient2dzx_indirect_LEE_interval(const implicitPoint3D_LPI& p1, interval_number p2x, interval_number p2y, interval_number p3x, interval_number p3y)
+{
+   interval_number l1y, l1z, l1x, d1;
+   if (
+   !p1.getIntervalLambda(l1y, l1z, l1x, d1)
+   ) return Filtered_Sign::UNCERTAIN;
+
+   setFPUModeToRoundUP();
+   interval_number t1x(p2y - p3y);
+   interval_number t1y(p3x - p2x);
+   interval_number e2(l1x * t1x);
+   interval_number e3(l1y * t1y);
+   interval_number e(e2 + e3);
+   interval_number pr1(p2x * p3y);
+   interval_number pr2(p2y * p3x);
+   interval_number pr(pr1 - pr2);
+   interval_number dpr(d1 * pr);
+   interval_number det(dpr + e);
+   setFPUModeToRoundNEAR();
+
+   if (!det.signIsReliable()) return Filtered_Sign::UNCERTAIN;
+   return det.sign();
+}
+
+int orient2dzx_indirect_LEE_exact(const implicitPoint3D_LPI& p1, double p2x, double p2y, double p3x, double p3y)
+{
+ double return_value = NAN;
+ double l1y_p[128], *l1y = l1y_p, l1z_p[128], *l1z = l1z_p, l1x_p[128], *l1x = l1x_p, d1_p[128], *d1 = d1_p;
+ int l1y_len, l1z_len, l1x_len, d1_len;
+ p1.getExactLambda(l1y, l1y_len, l1z, l1z_len, l1x, l1x_len, d1, d1_len);
+ if ((d1[d1_len - 1] != 0))
+ {
+   expansionObject o;
+   double t1x[2];
+   o.two_Diff(p2y, p3y, t1x);
+   double t1y[2];
+   o.two_Diff(p3x, p2x, t1y);
+   double e2_p[128], *e2 = e2_p;
+   int e2_len = o.Gen_Product_With_PreAlloc(l1x_len, l1x, 2, t1x, &e2, 128);
+   double e3_p[128], *e3 = e3_p;
+   int e3_len = o.Gen_Product_With_PreAlloc(l1y_len, l1y, 2, t1y, &e3, 128);
+   double e_p[128], *e = e_p;
+   int e_len = o.Gen_Sum_With_PreAlloc(e2_len, e2, e3_len, e3, &e, 128);
+   double pr1[2];
+   o.Two_Prod(p2x, p3y, pr1);
+   double pr2[2];
+   o.Two_Prod(p2y, p3x, pr2);
+   double pr[4];
+   o.Two_Two_Diff(pr1, pr2, pr);
+   double dpr_p[128], *dpr = dpr_p;
+   int dpr_len = o.Gen_Product_With_PreAlloc(d1_len, d1, 4, pr, &dpr, 128);
+   double det_p[128], *det = det_p;
+   int det_len = o.Gen_Sum_With_PreAlloc(dpr_len, dpr, e_len, e, &det, 128);
+
+   return_value = det[det_len - 1];
+   if (det_p != det) free(det);
+   if (dpr_p != dpr) free(dpr);
+   if (e_p != e) free(e);
+   if (e3_p != e3) free(e3);
+   if (e2_p != e2) free(e2);
+ }
+
+ if (l1y_p != l1y) free(l1y);
+ if (l1z_p != l1z) free(l1z);
+ if (l1x_p != l1x) free(l1x);
+ if (d1_p != d1) free(d1);
+
+ if (return_value > 0) return IP_Sign::POSITIVE;
+ if (return_value < 0) return IP_Sign::NEGATIVE;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
+}
+
+int orient2dzx_indirect_LEE(const implicitPoint3D_LPI& p1, double p2x, double p2y, double p3x, double p3y)
+{
+   int ret;
+   ret = orient2dzx_indirect_LEE_filtered(p1, p2x, p2y, p3x, p3y);
+   if (ret != Filtered_Sign::UNCERTAIN) return ret;
+   ret = orient2dzx_indirect_LEE_interval(p1, p2x, p2y, p3x, p3y);
+   if (ret != Filtered_Sign::UNCERTAIN) return ret;
+   return orient2dzx_indirect_LEE_exact(p1, p2x, p2y, p3x, p3y);
+}
+
+int orient2dzx_indirect_LLE_filtered(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, double op3x, double op3y)
+{
+   double l1y, l1z, l1x, d1, l2y, l2z, l2x, d2, max_var = 0;
+    if (
+       !p1.getFilteredLambda(l1y, l1z, l1x, d1, max_var)
+       || !p2.getFilteredLambda(l2y, l2z, l2x, d2, max_var)
+   ) return Filtered_Sign::UNCERTAIN;
+
+   double a = d1 * l2x;
+   double b = d2 * l1x;
+   double c = d1 * op3y;
+   double e = d1 * l2y;
+   double f = d2 * l1y;
+   double g = d1 * op3x;
+   double ab = a - b;
+   double cd = c - l1y;
+   double ef = e - f;
+   double gh = g - l1x;
+   double abcd = ab * cd;
+   double efgh = ef * gh;
+   double L = abcd - efgh;
+
+   double _tmp_fabs;
+   if ((_tmp_fabs = fabs(op3x)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(op3y)) > max_var) max_var = _tmp_fabs;
+   double epsilon = max_var;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= 1.699690735379461e-11;
+   if (L > epsilon) return IP_Sign::POSITIVE;
+   if (-L > epsilon) return IP_Sign::NEGATIVE;
+   return Filtered_Sign::UNCERTAIN;
+}
+
+int orient2dzx_indirect_LLE_interval(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, interval_number op3x, interval_number op3y)
+{
+   interval_number l1y, l1z, l1x, d1, l2y, l2z, l2x, d2;
+   if (
+   !p1.getIntervalLambda(l1y, l1z, l1x, d1)
+   || !p2.getIntervalLambda(l2y, l2z, l2x, d2)
+   ) return Filtered_Sign::UNCERTAIN;
+
+   setFPUModeToRoundUP();
+   interval_number a(d1 * l2x);
+   interval_number b(d2 * l1x);
+   interval_number c(d1 * op3y);
+   interval_number e(d1 * l2y);
+   interval_number f(d2 * l1y);
+   interval_number g(d1 * op3x);
+   interval_number ab(a - b);
+   interval_number cd(c - l1y);
+   interval_number ef(e - f);
+   interval_number gh(g - l1x);
+   interval_number abcd(ab * cd);
+   interval_number efgh(ef * gh);
+   interval_number L(abcd - efgh);
+   setFPUModeToRoundNEAR();
+
+   if (!L.signIsReliable()) return Filtered_Sign::UNCERTAIN;
+   return L.sign();
+}
+
+int orient2dzx_indirect_LLE_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, double op3x, double op3y)
+{
+ double return_value = NAN;
+ double l1y_p[64], *l1y = l1y_p, l1z_p[64], *l1z = l1z_p, l1x_p[64], *l1x = l1x_p, d1_p[64], *d1 = d1_p, l2y_p[64], *l2y = l2y_p, l2z_p[64], *l2z = l2z_p, l2x_p[64], *l2x = l2x_p, d2_p[64], *d2 = d2_p;
+ int l1y_len, l1z_len, l1x_len, d1_len, l2y_len, l2z_len, l2x_len, d2_len;
+ p1.getExactLambda(l1y, l1y_len, l1z, l1z_len, l1x, l1x_len, d1, d1_len);
+ p2.getExactLambda(l2y, l2y_len, l2z, l2z_len, l2x, l2x_len, d2, d2_len);
+ if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0))
+ {
+   expansionObject o;
+   double a_p[64], *a = a_p;
+   int a_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l2x_len, l2x, &a, 64);
+   double b_p[64], *b = b_p;
+   int b_len = o.Gen_Product_With_PreAlloc(d2_len, d2, l1x_len, l1x, &b, 64);
+   double c_p[64], *c = c_p;
+   int c_len = o.Gen_Scale_With_PreAlloc(d1_len, d1, op3y, &c, 64);
+   double e_p[64], *e = e_p;
+   int e_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l2y_len, l2y, &e, 64);
+   double f_p[64], *f = f_p;
+   int f_len = o.Gen_Product_With_PreAlloc(d2_len, d2, l1y_len, l1y, &f, 64);
+   double g_p[64], *g = g_p;
+   int g_len = o.Gen_Scale_With_PreAlloc(d1_len, d1, op3x, &g, 64);
+   double ab_p[64], *ab = ab_p;
+   int ab_len = o.Gen_Diff_With_PreAlloc(a_len, a, b_len, b, &ab, 64);
+   double cd_p[64], *cd = cd_p;
+   int cd_len = o.Gen_Diff_With_PreAlloc(c_len, c, l1y_len, l1y, &cd, 64);
+   double ef_p[64], *ef = ef_p;
+   int ef_len = o.Gen_Diff_With_PreAlloc(e_len, e, f_len, f, &ef, 64);
+   double gh_p[64], *gh = gh_p;
+   int gh_len = o.Gen_Diff_With_PreAlloc(g_len, g, l1x_len, l1x, &gh, 64);
+   double abcd_p[64], *abcd = abcd_p;
+   int abcd_len = o.Gen_Product_With_PreAlloc(ab_len, ab, cd_len, cd, &abcd, 64);
+   double efgh_p[64], *efgh = efgh_p;
+   int efgh_len = o.Gen_Product_With_PreAlloc(ef_len, ef, gh_len, gh, &efgh, 64);
+   double L_p[64], *L = L_p;
+   int L_len = o.Gen_Diff_With_PreAlloc(abcd_len, abcd, efgh_len, efgh, &L, 64);
+
+   return_value = L[L_len - 1];
+   if (L_p != L) free(L);
+   if (efgh_p != efgh) free(efgh);
+   if (abcd_p != abcd) free(abcd);
+   if (gh_p != gh) free(gh);
+   if (ef_p != ef) free(ef);
+   if (cd_p != cd) free(cd);
+   if (ab_p != ab) free(ab);
+   if (g_p != g) free(g);
+   if (f_p != f) free(f);
+   if (e_p != e) free(e);
+   if (c_p != c) free(c);
+   if (b_p != b) free(b);
+   if (a_p != a) free(a);
+ }
+
+ if (l1y_p != l1y) free(l1y);
+ if (l1z_p != l1z) free(l1z);
+ if (l1x_p != l1x) free(l1x);
+ if (d1_p != d1) free(d1);
+ if (l2y_p != l2y) free(l2y);
+ if (l2z_p != l2z) free(l2z);
+ if (l2x_p != l2x) free(l2x);
+ if (d2_p != d2) free(d2);
+
+ if (return_value > 0) return IP_Sign::POSITIVE;
+ if (return_value < 0) return IP_Sign::NEGATIVE;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
+}
+
+int orient2dzx_indirect_LLE(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, double op3x, double op3y)
+{
+   int ret;
+   ret = orient2dzx_indirect_LLE_filtered(p1, p2, op3x, op3y);
+   if (ret != Filtered_Sign::UNCERTAIN) return ret;
+   ret = orient2dzx_indirect_LLE_interval(p1, p2, op3x, op3y);
+   if (ret != Filtered_Sign::UNCERTAIN) return ret;
+   return orient2dzx_indirect_LLE_exact(p1, p2, op3x, op3y);
+}
+
+int orient2dzx_indirect_LLL_filtered(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, const implicitPoint3D_LPI& p3)
+{
+   double l1y, l1z, l1x, d1, l2y, l2z, l2x, d2, l3y, l3z, l3x, d3, max_var = 0;
+    if (
+       !p1.getFilteredLambda(l1y, l1z, l1x, d1, max_var)
+       || !p2.getFilteredLambda(l2y, l2z, l2x, d2, max_var)
+       || !p3.getFilteredLambda(l3y, l3z, l3x, d3, max_var)
+   ) return Filtered_Sign::UNCERTAIN;
+
+   double a = d1 * l2x;
+   double b = d2 * l1x;
+   double c = d1 * l3y;
+   double d = d3 * l1y;
+   double e = d1 * l2y;
+   double f = d2 * l1y;
+   double g = d1 * l3x;
+   double h = d3 * l1x;
+   double ab = a - b;
+   double cd = c - d;
+   double ef = e - f;
+   double gh = g - h;
+   double abcd = ab * cd;
+   double efgh = ef * gh;
+   double L = abcd - efgh;
+   double epsilon = max_var;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= 1.75634284893534e-10;
+   if (L > epsilon) return IP_Sign::POSITIVE;
+   if (-L > epsilon) return IP_Sign::NEGATIVE;
+   return Filtered_Sign::UNCERTAIN;
+}
+
+int orient2dzx_indirect_LLL_interval(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, const implicitPoint3D_LPI& p3)
+{
+   interval_number l1y, l1z, l1x, d1, l2y, l2z, l2x, d2, l3y, l3z, l3x, d3;
+   if (
+   !p1.getIntervalLambda(l1y, l1z, l1x, d1)
+   || !p2.getIntervalLambda(l2y, l2z, l2x, d2)
+   || !p3.getIntervalLambda(l3y, l3z, l3x, d3)
+   ) return Filtered_Sign::UNCERTAIN;
+
+   setFPUModeToRoundUP();
+   interval_number a(d1 * l2x);
+   interval_number b(d2 * l1x);
+   interval_number c(d1 * l3y);
+   interval_number d(d3 * l1y);
+   interval_number e(d1 * l2y);
+   interval_number f(d2 * l1y);
+   interval_number g(d1 * l3x);
+   interval_number h(d3 * l1x);
+   interval_number ab(a - b);
+   interval_number cd(c - d);
+   interval_number ef(e - f);
+   interval_number gh(g - h);
+   interval_number abcd(ab * cd);
+   interval_number efgh(ef * gh);
+   interval_number L(abcd - efgh);
+   setFPUModeToRoundNEAR();
+
+   if (!L.signIsReliable()) return Filtered_Sign::UNCERTAIN;
+   return L.sign();
+}
+
+int orient2dzx_indirect_LLL_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, const implicitPoint3D_LPI& p3)
+{
+ double return_value = NAN;
+ double l1y_p[64], *l1y = l1y_p, l1z_p[64], *l1z = l1z_p, l1x_p[64], *l1x = l1x_p, d1_p[64], *d1 = d1_p, l2y_p[64], *l2y = l2y_p, l2z_p[64], *l2z = l2z_p, l2x_p[64], *l2x = l2x_p, d2_p[64], *d2 = d2_p, l3y_p[64], *l3y = l3y_p, l3z_p[64], *l3z = l3z_p, l3x_p[64], *l3x = l3x_p, d3_p[64], *d3 = d3_p;
+ int l1y_len, l1z_len, l1x_len, d1_len, l2y_len, l2z_len, l2x_len, d2_len, l3y_len, l3z_len, l3x_len, d3_len;
+ p1.getExactLambda(l1y, l1y_len, l1z, l1z_len, l1x, l1x_len, d1, d1_len);
+ p2.getExactLambda(l2y, l2y_len, l2z, l2z_len, l2x, l2x_len, d2, d2_len);
+ p3.getExactLambda(l3y, l3y_len, l3z, l3z_len, l3x, l3x_len, d3, d3_len);
+ if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0) && (d3[d3_len - 1] != 0))
+ {
+   expansionObject o;
+   double a_p[64], *a = a_p;
+   int a_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l2x_len, l2x, &a, 64);
+   double b_p[64], *b = b_p;
+   int b_len = o.Gen_Product_With_PreAlloc(d2_len, d2, l1x_len, l1x, &b, 64);
+   double c_p[64], *c = c_p;
+   int c_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l3y_len, l3y, &c, 64);
+   double d_p[64], *d = d_p;
+   int d_len = o.Gen_Product_With_PreAlloc(d3_len, d3, l1y_len, l1y, &d, 64);
+   double e_p[64], *e = e_p;
+   int e_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l2y_len, l2y, &e, 64);
+   double f_p[64], *f = f_p;
+   int f_len = o.Gen_Product_With_PreAlloc(d2_len, d2, l1y_len, l1y, &f, 64);
+   double g_p[64], *g = g_p;
+   int g_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l3x_len, l3x, &g, 64);
+   double h_p[64], *h = h_p;
+   int h_len = o.Gen_Product_With_PreAlloc(d3_len, d3, l1x_len, l1x, &h, 64);
+   double ab_p[64], *ab = ab_p;
+   int ab_len = o.Gen_Diff_With_PreAlloc(a_len, a, b_len, b, &ab, 64);
+   double cd_p[64], *cd = cd_p;
+   int cd_len = o.Gen_Diff_With_PreAlloc(c_len, c, d_len, d, &cd, 64);
+   double ef_p[64], *ef = ef_p;
+   int ef_len = o.Gen_Diff_With_PreAlloc(e_len, e, f_len, f, &ef, 64);
+   double gh_p[64], *gh = gh_p;
+   int gh_len = o.Gen_Diff_With_PreAlloc(g_len, g, h_len, h, &gh, 64);
+   double abcd_p[64], *abcd = abcd_p;
+   int abcd_len = o.Gen_Product_With_PreAlloc(ab_len, ab, cd_len, cd, &abcd, 64);
+   double efgh_p[64], *efgh = efgh_p;
+   int efgh_len = o.Gen_Product_With_PreAlloc(ef_len, ef, gh_len, gh, &efgh, 64);
+   double L_p[64], *L = L_p;
+   int L_len = o.Gen_Diff_With_PreAlloc(abcd_len, abcd, efgh_len, efgh, &L, 64);
+
+   return_value = L[L_len - 1];
+   if (L_p != L) free(L);
+   if (efgh_p != efgh) free(efgh);
+   if (abcd_p != abcd) free(abcd);
+   if (gh_p != gh) free(gh);
+   if (ef_p != ef) free(ef);
+   if (cd_p != cd) free(cd);
+   if (ab_p != ab) free(ab);
+   if (h_p != h) free(h);
+   if (g_p != g) free(g);
+   if (f_p != f) free(f);
+   if (e_p != e) free(e);
+   if (d_p != d) free(d);
+   if (c_p != c) free(c);
+   if (b_p != b) free(b);
+   if (a_p != a) free(a);
+ }
+
+ if (l1y_p != l1y) free(l1y);
+ if (l1z_p != l1z) free(l1z);
+ if (l1x_p != l1x) free(l1x);
+ if (d1_p != d1) free(d1);
+ if (l2y_p != l2y) free(l2y);
+ if (l2z_p != l2z) free(l2z);
+ if (l2x_p != l2x) free(l2x);
+ if (d2_p != d2) free(d2);
+ if (l3y_p != l3y) free(l3y);
+ if (l3z_p != l3z) free(l3z);
+ if (l3x_p != l3x) free(l3x);
+ if (d3_p != d3) free(d3);
+
+ if (return_value > 0) return IP_Sign::POSITIVE;
+ if (return_value < 0) return IP_Sign::NEGATIVE;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
+}
+
+int orient2dzx_indirect_LLL(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, const implicitPoint3D_LPI& p3)
+{
+   int ret;
+   ret = orient2dzx_indirect_LLL_filtered(p1, p2, p3);
+   if (ret != Filtered_Sign::UNCERTAIN) return ret;
+   ret = orient2dzx_indirect_LLL_interval(p1, p2, p3);
+   if (ret != Filtered_Sign::UNCERTAIN) return ret;
+   return orient2dzx_indirect_LLL_exact(p1, p2, p3);
+}
+
+int orient2dzx_indirect_LLT_filtered(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, const implicitPoint3D_TPI& p3)
+{
+   double l1y, l1z, l1x, d1, l2y, l2z, l2x, d2, l3y, l3z, l3x, d3, max_var = 0;
+    if (
+       !p1.getFilteredLambda(l1y, l1z, l1x, d1, max_var)
+       || !p2.getFilteredLambda(l2y, l2z, l2x, d2, max_var)
+       || !p3.getFilteredLambda(l3y, l3z, l3x, d3, max_var)
+   ) return Filtered_Sign::UNCERTAIN;
+
+   double a = d1 * l2x;
+   double b = d2 * l1x;
+   double c = d1 * l3y;
+   double d = d3 * l1y;
+   double e = d1 * l2y;
+   double f = d2 * l1y;
+   double g = d1 * l3x;
+   double h = d3 * l1x;
+   double ab = a - b;
+   double cd = c - d;
+   double ef = e - f;
+   double gh = g - h;
+   double abcd = ab * cd;
+   double efgh = ef * gh;
+   double L = abcd - efgh;
+   double epsilon = max_var;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= max_var;
+   epsilon *= 2.144556754402072e-09;
+   if (L > epsilon) return IP_Sign::POSITIVE;
+   if (-L > epsilon) return IP_Sign::NEGATIVE;
+   return Filtered_Sign::UNCERTAIN;
+}
+
+int orient2dzx_indirect_LLT_interval(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, const implicitPoint3D_TPI& p3)
+{
+   interval_number l1y, l1z, l1x, d1, l2y, l2z, l2x, d2, l3y, l3z, l3x, d3;
+   if (
+   !p1.getIntervalLambda(l1y, l1z, l1x, d1)
+   || !p2.getIntervalLambda(l2y, l2z, l2x, d2)
+   || !p3.getIntervalLambda(l3y, l3z, l3x, d3)
+   ) return Filtered_Sign::UNCERTAIN;
+
+   setFPUModeToRoundUP();
+   interval_number a(d1 * l2x);
+   interval_number b(d2 * l1x);
+   interval_number c(d1 * l3y);
+   interval_number d(d3 * l1y);
+   interval_number e(d1 * l2y);
+   interval_number f(d2 * l1y);
+   interval_number g(d1 * l3x);
+   interval_number h(d3 * l1x);
+   interval_number ab(a - b);
+   interval_number cd(c - d);
+   interval_number ef(e - f);
+   interval_number gh(g - h);
+   interval_number abcd(ab * cd);
+   interval_number efgh(ef * gh);
+   interval_number L(abcd - efgh);
+   setFPUModeToRoundNEAR();
+
+   if (!L.signIsReliable()) return Filtered_Sign::UNCERTAIN;
+   return L.sign();
+}
+
+int orient2dzx_indirect_LLT_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, const implicitPoint3D_TPI& p3)
+{
+ double return_value = NAN;
+ double l1y_p[64], *l1y = l1y_p, l1z_p[64], *l1z = l1z_p, l1x_p[64], *l1x = l1x_p, d1_p[64], *d1 = d1_p, l2y_p[64], *l2y = l2y_p, l2z_p[64], *l2z = l2z_p, l2x_p[64], *l2x = l2x_p, d2_p[64], *d2 = d2_p, l3y_p[64], *l3y = l3y_p, l3z_p[64], *l3z = l3z_p, l3x_p[64], *l3x = l3x_p, d3_p[64], *d3 = d3_p;
+ int l1y_len, l1z_len, l1x_len, d1_len, l2y_len, l2z_len, l2x_len, d2_len, l3y_len, l3z_len, l3x_len, d3_len;
+ p1.getExactLambda(l1y, l1y_len, l1z, l1z_len, l1x, l1x_len, d1, d1_len);
+ p2.getExactLambda(l2y, l2y_len, l2z, l2z_len, l2x, l2x_len, d2, d2_len);
+ p3.getExactLambda(l3y, l3y_len, l3z, l3z_len, l3x, l3x_len, d3, d3_len);
+ if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0) && (d3[d3_len - 1] != 0))
+ {
+   expansionObject o;
+   double a_p[64], *a = a_p;
+   int a_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l2x_len, l2x, &a, 64);
+   double b_p[64], *b = b_p;
+   int b_len = o.Gen_Product_With_PreAlloc(d2_len, d2, l1x_len, l1x, &b, 64);
+   double c_p[64], *c = c_p;
+   int c_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l3y_len, l3y, &c, 64);
+   double d_p[64], *d = d_p;
+   int d_len = o.Gen_Product_With_PreAlloc(d3_len, d3, l1y_len, l1y, &d, 64);
+   double e_p[64], *e = e_p;
+   int e_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l2y_len, l2y, &e, 64);
+   double f_p[64], *f = f_p;
+   int f_len = o.Gen_Product_With_PreAlloc(d2_len, d2, l1y_len, l1y, &f, 64);
+   double g_p[64], *g = g_p;
+   int g_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l3x_len, l3x, &g, 64);
+   double h_p[64], *h = h_p;
+   int h_len = o.Gen_Product_With_PreAlloc(d3_len, d3, l1x_len, l1x, &h, 64);
+   double ab_p[64], *ab = ab_p;
+   int ab_len = o.Gen_Diff_With_PreAlloc(a_len, a, b_len, b, &ab, 64);
+   double cd_p[64], *cd = cd_p;
+   int cd_len = o.Gen_Diff_With_PreAlloc(c_len, c, d_len, d, &cd, 64);
+   double ef_p[64], *ef = ef_p;
+   int ef_len = o.Gen_Diff_With_PreAlloc(e_len, e, f_len, f, &ef, 64);
+   double gh_p[64], *gh = gh_p;
+   int gh_len = o.Gen_Diff_With_PreAlloc(g_len, g, h_len, h, &gh, 64);
+   double abcd_p[64], *abcd = abcd_p;
+   int abcd_len = o.Gen_Product_With_PreAlloc(ab_len, ab, cd_len, cd, &abcd, 64);
+   double efgh_p[64], *efgh = efgh_p;
+   int efgh_len = o.Gen_Product_With_PreAlloc(ef_len, ef, gh_len, gh, &efgh, 64);
+   double L_p[64], *L = L_p;
+   int L_len = o.Gen_Diff_With_PreAlloc(abcd_len, abcd, efgh_len, efgh, &L, 64);
+
+   return_value = L[L_len - 1];
+   if (L_p != L) free(L);
+   if (efgh_p != efgh) free(efgh);
+   if (abcd_p != abcd) free(abcd);
+   if (gh_p != gh) free(gh);
+   if (ef_p != ef) free(ef);
+   if (cd_p != cd) free(cd);
+   if (ab_p != ab) free(ab);
+   if (h_p != h) free(h);
+   if (g_p != g) free(g);
+   if (f_p != f) free(f);
+   if (e_p != e) free(e);
+   if (d_p != d) free(d);
+   if (c_p != c) free(c);
+   if (b_p != b) free(b);
+   if (a_p != a) free(a);
+ }
+
+ if (l1y_p != l1y) free(l1y);
+ if (l1z_p != l1z) free(l1z);
+ if (l1x_p != l1x) free(l1x);
+ if (d1_p != d1) free(d1);
+ if (l2y_p != l2y) free(l2y);
+ if (l2z_p != l2z) free(l2z);
+ if (l2x_p != l2x) free(l2x);
+ if (d2_p != d2) free(d2);
+ if (l3y_p != l3y) free(l3y);
+ if (l3z_p != l3z) free(l3z);
+ if (l3x_p != l3x) free(l3x);
+ if (d3_p != d3) free(d3);
+
+ if (return_value > 0) return IP_Sign::POSITIVE;
+ if (return_value < 0) return IP_Sign::NEGATIVE;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
+}
+
+int orient2dzx_indirect_LLT(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, const implicitPoint3D_TPI& p3)
+{
+   int ret;
+   ret = orient2dzx_indirect_LLT_filtered(p1, p2, p3);
+   if (ret != Filtered_Sign::UNCERTAIN) return ret;
+   ret = orient2dzx_indirect_LLT_interval(p1, p2, p3);
+   if (ret != Filtered_Sign::UNCERTAIN) return ret;
+   return orient2dzx_indirect_LLT_exact(p1, p2, p3);
+}
+
+int orient2dzx_indirect_LTE_filtered(const implicitPoint3D_LPI& p1, const implicitPoint3D_TPI& p2, double p3x, double p3y)
+{
+   double l1y, l1z, l1x, d1, l2y, l2z, l2x, d2, max_var = 0;
+    if (
+       !p1.getFilteredLambda(l1y, l1z, l1x, d1, max_var)
+       || !p2.getFilteredLambda(l2y, l2z, l2x, d2, max_var)
+   ) return Filtered_Sign::UNCERTAIN;
+
+   double a = d1 * l2x;
+   double b = d2 * l1x;
+   double c = d1 * p3y;
+   double e = d1 * l2y;
+   double f = d2 * l1y;
+   double g = d1 * p3x;
+   double ab = a - b;
+   double cd = c - l1y;
+   double ef = e - f;
+   double gh = g - l1x;
+   double abcd = ab * cd;
+   double efgh = ef * gh;
+   double L = abcd - efgh;
+
+   double _tmp_fabs;
+   if ((_tmp_fabs = fabs(p3x)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(p3y)) > max_var) max_var = _tmp_fabs;
+   double epsilon = max_var;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= 2.184958117212875e-10;
+   if (L > epsilon) return IP_Sign::POSITIVE;
+   if (-L > epsilon) return IP_Sign::NEGATIVE;
+   return Filtered_Sign::UNCERTAIN;
+}
+
+int orient2dzx_indirect_LTE_interval(const implicitPoint3D_LPI& p1, const implicitPoint3D_TPI& p2, interval_number p3x, interval_number p3y)
+{
+   interval_number l1y, l1z, l1x, d1, l2y, l2z, l2x, d2;
+   if (
+   !p1.getIntervalLambda(l1y, l1z, l1x, d1)
+   || !p2.getIntervalLambda(l2y, l2z, l2x, d2)
+   ) return Filtered_Sign::UNCERTAIN;
+
+   setFPUModeToRoundUP();
+   interval_number a(d1 * l2x);
+   interval_number b(d2 * l1x);
+   interval_number c(d1 * p3y);
+   interval_number e(d1 * l2y);
+   interval_number f(d2 * l1y);
+   interval_number g(d1 * p3x);
+   interval_number ab(a - b);
+   interval_number cd(c - l1y);
+   interval_number ef(e - f);
+   interval_number gh(g - l1x);
+   interval_number abcd(ab * cd);
+   interval_number efgh(ef * gh);
+   interval_number L(abcd - efgh);
+   setFPUModeToRoundNEAR();
+
+   if (!L.signIsReliable()) return Filtered_Sign::UNCERTAIN;
+   return L.sign();
+}
+
+int orient2dzx_indirect_LTE_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_TPI& p2, double p3x, double p3y)
+{
+ double return_value = NAN;
+ double l1y_p[64], *l1y = l1y_p, l1z_p[64], *l1z = l1z_p, l1x_p[64], *l1x = l1x_p, d1_p[64], *d1 = d1_p, l2y_p[64], *l2y = l2y_p, l2z_p[64], *l2z = l2z_p, l2x_p[64], *l2x = l2x_p, d2_p[64], *d2 = d2_p;
+ int l1y_len, l1z_len, l1x_len, d1_len, l2y_len, l2z_len, l2x_len, d2_len;
+ p1.getExactLambda(l1y, l1y_len, l1z, l1z_len, l1x, l1x_len, d1, d1_len);
+ p2.getExactLambda(l2y, l2y_len, l2z, l2z_len, l2x, l2x_len, d2, d2_len);
+ if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0))
+ {
+   expansionObject o;
+   double a_p[64], *a = a_p;
+   int a_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l2x_len, l2x, &a, 64);
+   double b_p[64], *b = b_p;
+   int b_len = o.Gen_Product_With_PreAlloc(d2_len, d2, l1x_len, l1x, &b, 64);
+   double c_p[64], *c = c_p;
+   int c_len = o.Gen_Scale_With_PreAlloc(d1_len, d1, p3y, &c, 64);
+   double e_p[64], *e = e_p;
+   int e_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l2y_len, l2y, &e, 64);
+   double f_p[64], *f = f_p;
+   int f_len = o.Gen_Product_With_PreAlloc(d2_len, d2, l1y_len, l1y, &f, 64);
+   double g_p[64], *g = g_p;
+   int g_len = o.Gen_Scale_With_PreAlloc(d1_len, d1, p3x, &g, 64);
+   double ab_p[64], *ab = ab_p;
+   int ab_len = o.Gen_Diff_With_PreAlloc(a_len, a, b_len, b, &ab, 64);
+   double cd_p[64], *cd = cd_p;
+   int cd_len = o.Gen_Diff_With_PreAlloc(c_len, c, l1y_len, l1y, &cd, 64);
+   double ef_p[64], *ef = ef_p;
+   int ef_len = o.Gen_Diff_With_PreAlloc(e_len, e, f_len, f, &ef, 64);
+   double gh_p[64], *gh = gh_p;
+   int gh_len = o.Gen_Diff_With_PreAlloc(g_len, g, l1x_len, l1x, &gh, 64);
+   double abcd_p[64], *abcd = abcd_p;
+   int abcd_len = o.Gen_Product_With_PreAlloc(ab_len, ab, cd_len, cd, &abcd, 64);
+   double efgh_p[64], *efgh = efgh_p;
+   int efgh_len = o.Gen_Product_With_PreAlloc(ef_len, ef, gh_len, gh, &efgh, 64);
+   double L_p[64], *L = L_p;
+   int L_len = o.Gen_Diff_With_PreAlloc(abcd_len, abcd, efgh_len, efgh, &L, 64);
+
+   return_value = L[L_len - 1];
+   if (L_p != L) free(L);
+   if (efgh_p != efgh) free(efgh);
+   if (abcd_p != abcd) free(abcd);
+   if (gh_p != gh) free(gh);
+   if (ef_p != ef) free(ef);
+   if (cd_p != cd) free(cd);
+   if (ab_p != ab) free(ab);
+   if (g_p != g) free(g);
+   if (f_p != f) free(f);
+   if (e_p != e) free(e);
+   if (c_p != c) free(c);
+   if (b_p != b) free(b);
+   if (a_p != a) free(a);
+ }
+
+ if (l1y_p != l1y) free(l1y);
+ if (l1z_p != l1z) free(l1z);
+ if (l1x_p != l1x) free(l1x);
+ if (d1_p != d1) free(d1);
+ if (l2y_p != l2y) free(l2y);
+ if (l2z_p != l2z) free(l2z);
+ if (l2x_p != l2x) free(l2x);
+ if (d2_p != d2) free(d2);
+
+ if (return_value > 0) return IP_Sign::POSITIVE;
+ if (return_value < 0) return IP_Sign::NEGATIVE;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
+}
+
+int orient2dzx_indirect_LTE(const implicitPoint3D_LPI& p1, const implicitPoint3D_TPI& p2, double p3x, double p3y)
+{
+   int ret;
+   ret = orient2dzx_indirect_LTE_filtered(p1, p2, p3x, p3y);
+   if (ret != Filtered_Sign::UNCERTAIN) return ret;
+   ret = orient2dzx_indirect_LTE_interval(p1, p2, p3x, p3y);
+   if (ret != Filtered_Sign::UNCERTAIN) return ret;
+   return orient2dzx_indirect_LTE_exact(p1, p2, p3x, p3y);
+}
+
+int orient2dzx_indirect_LTT_filtered(const implicitPoint3D_LPI& p1, const implicitPoint3D_TPI& p2, const implicitPoint3D_TPI& p3)
+{
+   double l1y, l1z, l1x, d1, l2y, l2z, l2x, d2, l3y, l3z, l3x, d3, max_var = 0;
+    if (
+       !p1.getFilteredLambda(l1y, l1z, l1x, d1, max_var)
+       || !p2.getFilteredLambda(l2y, l2z, l2x, d2, max_var)
+       || !p3.getFilteredLambda(l3y, l3z, l3x, d3, max_var)
+   ) return Filtered_Sign::UNCERTAIN;
+
+   double a = d1 * l2x;
+   double b = d2 * l1x;
+   double c = d1 * l3y;
+   double d = d3 * l1y;
+   double e = d1 * l2y;
+   double f = d2 * l1y;
+   double g = d1 * l3x;
+   double h = d3 * l1x;
+   double ab = a - b;
+   double cd = c - d;
+   double ef = e - f;
+   double gh = g - h;
+   double abcd = ab * cd;
+   double efgh = ef * gh;
+   double L = abcd - efgh;
+   double epsilon = max_var;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= 2.535681042914479e-08;
+   if (L > epsilon) return IP_Sign::POSITIVE;
+   if (-L > epsilon) return IP_Sign::NEGATIVE;
+   return Filtered_Sign::UNCERTAIN;
+}
+
+int orient2dzx_indirect_LTT_interval(const implicitPoint3D_LPI& p1, const implicitPoint3D_TPI& p2, const implicitPoint3D_TPI& p3)
+{
+   interval_number l1y, l1z, l1x, d1, l2y, l2z, l2x, d2, l3y, l3z, l3x, d3;
+   if (
+   !p1.getIntervalLambda(l1y, l1z, l1x, d1)
+   || !p2.getIntervalLambda(l2y, l2z, l2x, d2)
+   || !p3.getIntervalLambda(l3y, l3z, l3x, d3)
+   ) return Filtered_Sign::UNCERTAIN;
+
+   setFPUModeToRoundUP();
+   interval_number a(d1 * l2x);
+   interval_number b(d2 * l1x);
+   interval_number c(d1 * l3y);
+   interval_number d(d3 * l1y);
+   interval_number e(d1 * l2y);
+   interval_number f(d2 * l1y);
+   interval_number g(d1 * l3x);
+   interval_number h(d3 * l1x);
+   interval_number ab(a - b);
+   interval_number cd(c - d);
+   interval_number ef(e - f);
+   interval_number gh(g - h);
+   interval_number abcd(ab * cd);
+   interval_number efgh(ef * gh);
+   interval_number L(abcd - efgh);
+   setFPUModeToRoundNEAR();
+
+   if (!L.signIsReliable()) return Filtered_Sign::UNCERTAIN;
+   return L.sign();
+}
+
+int orient2dzx_indirect_LTT_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_TPI& p2, const implicitPoint3D_TPI& p3)
+{
+ double return_value = NAN;
+ double l1y_p[64], *l1y = l1y_p, l1z_p[64], *l1z = l1z_p, l1x_p[64], *l1x = l1x_p, d1_p[64], *d1 = d1_p, l2y_p[64], *l2y = l2y_p, l2z_p[64], *l2z = l2z_p, l2x_p[64], *l2x = l2x_p, d2_p[64], *d2 = d2_p, l3y_p[64], *l3y = l3y_p, l3z_p[64], *l3z = l3z_p, l3x_p[64], *l3x = l3x_p, d3_p[64], *d3 = d3_p;
+ int l1y_len, l1z_len, l1x_len, d1_len, l2y_len, l2z_len, l2x_len, d2_len, l3y_len, l3z_len, l3x_len, d3_len;
+ p1.getExactLambda(l1y, l1y_len, l1z, l1z_len, l1x, l1x_len, d1, d1_len);
+ p2.getExactLambda(l2y, l2y_len, l2z, l2z_len, l2x, l2x_len, d2, d2_len);
+ p3.getExactLambda(l3y, l3y_len, l3z, l3z_len, l3x, l3x_len, d3, d3_len);
+ if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0) && (d3[d3_len - 1] != 0))
+ {
+   expansionObject o;
+   double a_p[64], *a = a_p;
+   int a_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l2x_len, l2x, &a, 64);
+   double b_p[64], *b = b_p;
+   int b_len = o.Gen_Product_With_PreAlloc(d2_len, d2, l1x_len, l1x, &b, 64);
+   double c_p[64], *c = c_p;
+   int c_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l3y_len, l3y, &c, 64);
+   double d_p[64], *d = d_p;
+   int d_len = o.Gen_Product_With_PreAlloc(d3_len, d3, l1y_len, l1y, &d, 64);
+   double e_p[64], *e = e_p;
+   int e_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l2y_len, l2y, &e, 64);
+   double f_p[64], *f = f_p;
+   int f_len = o.Gen_Product_With_PreAlloc(d2_len, d2, l1y_len, l1y, &f, 64);
+   double g_p[64], *g = g_p;
+   int g_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l3x_len, l3x, &g, 64);
+   double h_p[64], *h = h_p;
+   int h_len = o.Gen_Product_With_PreAlloc(d3_len, d3, l1x_len, l1x, &h, 64);
+   double ab_p[64], *ab = ab_p;
+   int ab_len = o.Gen_Diff_With_PreAlloc(a_len, a, b_len, b, &ab, 64);
+   double cd_p[64], *cd = cd_p;
+   int cd_len = o.Gen_Diff_With_PreAlloc(c_len, c, d_len, d, &cd, 64);
+   double ef_p[64], *ef = ef_p;
+   int ef_len = o.Gen_Diff_With_PreAlloc(e_len, e, f_len, f, &ef, 64);
+   double gh_p[64], *gh = gh_p;
+   int gh_len = o.Gen_Diff_With_PreAlloc(g_len, g, h_len, h, &gh, 64);
+   double abcd_p[64], *abcd = abcd_p;
+   int abcd_len = o.Gen_Product_With_PreAlloc(ab_len, ab, cd_len, cd, &abcd, 64);
+   double efgh_p[64], *efgh = efgh_p;
+   int efgh_len = o.Gen_Product_With_PreAlloc(ef_len, ef, gh_len, gh, &efgh, 64);
+   double L_p[64], *L = L_p;
+   int L_len = o.Gen_Diff_With_PreAlloc(abcd_len, abcd, efgh_len, efgh, &L, 64);
+
+   return_value = L[L_len - 1];
+   if (L_p != L) free(L);
+   if (efgh_p != efgh) free(efgh);
+   if (abcd_p != abcd) free(abcd);
+   if (gh_p != gh) free(gh);
+   if (ef_p != ef) free(ef);
+   if (cd_p != cd) free(cd);
+   if (ab_p != ab) free(ab);
+   if (h_p != h) free(h);
+   if (g_p != g) free(g);
+   if (f_p != f) free(f);
+   if (e_p != e) free(e);
+   if (d_p != d) free(d);
+   if (c_p != c) free(c);
+   if (b_p != b) free(b);
+   if (a_p != a) free(a);
+ }
+
+ if (l1y_p != l1y) free(l1y);
+ if (l1z_p != l1z) free(l1z);
+ if (l1x_p != l1x) free(l1x);
+ if (d1_p != d1) free(d1);
+ if (l2y_p != l2y) free(l2y);
+ if (l2z_p != l2z) free(l2z);
+ if (l2x_p != l2x) free(l2x);
+ if (d2_p != d2) free(d2);
+ if (l3y_p != l3y) free(l3y);
+ if (l3z_p != l3z) free(l3z);
+ if (l3x_p != l3x) free(l3x);
+ if (d3_p != d3) free(d3);
+
+ if (return_value > 0) return IP_Sign::POSITIVE;
+ if (return_value < 0) return IP_Sign::NEGATIVE;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
+}
+
+int orient2dzx_indirect_LTT(const implicitPoint3D_LPI& p1, const implicitPoint3D_TPI& p2, const implicitPoint3D_TPI& p3)
+{
+   int ret;
+   ret = orient2dzx_indirect_LTT_filtered(p1, p2, p3);
+   if (ret != Filtered_Sign::UNCERTAIN) return ret;
+   ret = orient2dzx_indirect_LTT_interval(p1, p2, p3);
+   if (ret != Filtered_Sign::UNCERTAIN) return ret;
+   return orient2dzx_indirect_LTT_exact(p1, p2, p3);
+}
+
+int orient2dzx_indirect_TEE_filtered(const implicitPoint3D_TPI& p1, double p2x, double p2y, double p3x, double p3y)
+{
+   double l1y, l1z, l1x, d1, max_var = 0;
+    if (
+       !p1.getFilteredLambda(l1y, l1z, l1x, d1, max_var)
+   ) return Filtered_Sign::UNCERTAIN;
+
+   double t1x = p2y - p3y;
+   double t1y = p3x - p2x;
+   double e2 = l1x * t1x;
+   double e3 = l1y * t1y;
+   double e = e2 + e3;
+   double pr1 = p2x * p3y;
+   double pr2 = p2y * p3x;
+   double pr = pr1 - pr2;
+   double dpr = d1 * pr;
+   double det = dpr + e;
+
+   double _tmp_fabs;
+   if ((_tmp_fabs = fabs(p2x)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(p2y)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(p3x)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(p3y)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(t1x)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(t1y)) > max_var) max_var = _tmp_fabs;
+   double epsilon = max_var;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= 9.061883188277186e-13;
+   if (det > epsilon) return IP_Sign::POSITIVE;
+   if (-det > epsilon) return IP_Sign::NEGATIVE;
+   return Filtered_Sign::UNCERTAIN;
+}
+
+int orient2dzx_indirect_TEE_interval(const implicitPoint3D_TPI& p1, interval_number p2x, interval_number p2y, interval_number p3x, interval_number p3y)
+{
+   interval_number l1y, l1z, l1x, d1;
+   if (
+   !p1.getIntervalLambda(l1y, l1z, l1x, d1)
+   ) return Filtered_Sign::UNCERTAIN;
+
+   setFPUModeToRoundUP();
+   interval_number t1x(p2y - p3y);
+   interval_number t1y(p3x - p2x);
+   interval_number e2(l1x * t1x);
+   interval_number e3(l1y * t1y);
+   interval_number e(e2 + e3);
+   interval_number pr1(p2x * p3y);
+   interval_number pr2(p2y * p3x);
+   interval_number pr(pr1 - pr2);
+   interval_number dpr(d1 * pr);
+   interval_number det(dpr + e);
+   setFPUModeToRoundNEAR();
+
+   if (!det.signIsReliable()) return Filtered_Sign::UNCERTAIN;
+   return det.sign();
+}
+
+int orient2dzx_indirect_TEE_exact(const implicitPoint3D_TPI& p1, double p2x, double p2y, double p3x, double p3y)
+{
+ double return_value = NAN;
+ double l1y_p[128], *l1y = l1y_p, l1z_p[128], *l1z = l1z_p, l1x_p[128], *l1x = l1x_p, d1_p[128], *d1 = d1_p;
+ int l1y_len, l1z_len, l1x_len, d1_len;
+ p1.getExactLambda(l1y, l1y_len, l1z, l1z_len, l1x, l1x_len, d1, d1_len);
+ if ((d1[d1_len - 1] != 0))
+ {
+   expansionObject o;
+   double t1x[2];
+   o.two_Diff(p2y, p3y, t1x);
+   double t1y[2];
+   o.two_Diff(p3x, p2x, t1y);
+   double e2_p[128], *e2 = e2_p;
+   int e2_len = o.Gen_Product_With_PreAlloc(l1x_len, l1x, 2, t1x, &e2, 128);
+   double e3_p[128], *e3 = e3_p;
+   int e3_len = o.Gen_Product_With_PreAlloc(l1y_len, l1y, 2, t1y, &e3, 128);
+   double e_p[128], *e = e_p;
+   int e_len = o.Gen_Sum_With_PreAlloc(e2_len, e2, e3_len, e3, &e, 128);
+   double pr1[2];
+   o.Two_Prod(p2x, p3y, pr1);
+   double pr2[2];
+   o.Two_Prod(p2y, p3x, pr2);
+   double pr[4];
+   o.Two_Two_Diff(pr1, pr2, pr);
+   double dpr_p[128], *dpr = dpr_p;
+   int dpr_len = o.Gen_Product_With_PreAlloc(d1_len, d1, 4, pr, &dpr, 128);
+   double det_p[128], *det = det_p;
+   int det_len = o.Gen_Sum_With_PreAlloc(dpr_len, dpr, e_len, e, &det, 128);
+
+   return_value = det[det_len - 1];
+   if (det_p != det) free(det);
+   if (dpr_p != dpr) free(dpr);
+   if (e_p != e) free(e);
+   if (e3_p != e3) free(e3);
+   if (e2_p != e2) free(e2);
+ }
+
+ if (l1y_p != l1y) free(l1y);
+ if (l1z_p != l1z) free(l1z);
+ if (l1x_p != l1x) free(l1x);
+ if (d1_p != d1) free(d1);
+
+ if (return_value > 0) return IP_Sign::POSITIVE;
+ if (return_value < 0) return IP_Sign::NEGATIVE;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
+}
+
+int orient2dzx_indirect_TEE(const implicitPoint3D_TPI& p1, double p2x, double p2y, double p3x, double p3y)
+{
+   int ret;
+   ret = orient2dzx_indirect_TEE_filtered(p1, p2x, p2y, p3x, p3y);
+   if (ret != Filtered_Sign::UNCERTAIN) return ret;
+   ret = orient2dzx_indirect_TEE_interval(p1, p2x, p2y, p3x, p3y);
+   if (ret != Filtered_Sign::UNCERTAIN) return ret;
+   return orient2dzx_indirect_TEE_exact(p1, p2x, p2y, p3x, p3y);
+}
+
+int orient2dzx_indirect_TTE_filtered(const implicitPoint3D_TPI& p1, const implicitPoint3D_TPI& p2, double p3x, double p3y)
+{
+   double l1y, l1z, l1x, d1, l2y, l2z, l2x, d2, max_var = 0;
+    if (
+       !p1.getFilteredLambda(l1y, l1z, l1x, d1, max_var)
+       || !p2.getFilteredLambda(l2y, l2z, l2x, d2, max_var)
+   ) return Filtered_Sign::UNCERTAIN;
+
+   double a = d1 * l2x;
+   double b = d2 * l1x;
+   double c = d1 * p3y;
+   double e = d1 * l2y;
+   double f = d2 * l1y;
+   double g = d1 * p3x;
+   double ab = a - b;
+   double cd = c - l1y;
+   double ef = e - f;
+   double gh = g - l1x;
+   double abcd = ab * cd;
+   double efgh = ef * gh;
+   double L = abcd - efgh;
+
+   double _tmp_fabs;
+   if ((_tmp_fabs = fabs(p3x)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(p3y)) > max_var) max_var = _tmp_fabs;
+   double epsilon = max_var;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= 3.307187945722513e-08;
+   if (L > epsilon) return IP_Sign::POSITIVE;
+   if (-L > epsilon) return IP_Sign::NEGATIVE;
+   return Filtered_Sign::UNCERTAIN;
+}
+
+int orient2dzx_indirect_TTE_interval(const implicitPoint3D_TPI& p1, const implicitPoint3D_TPI& p2, interval_number p3x, interval_number p3y)
+{
+   interval_number l1y, l1z, l1x, d1, l2y, l2z, l2x, d2;
+   if (
+   !p1.getIntervalLambda(l1y, l1z, l1x, d1)
+   || !p2.getIntervalLambda(l2y, l2z, l2x, d2)
+   ) return Filtered_Sign::UNCERTAIN;
+
+   setFPUModeToRoundUP();
+   interval_number a(d1 * l2x);
+   interval_number b(d2 * l1x);
+   interval_number c(d1 * p3y);
+   interval_number e(d1 * l2y);
+   interval_number f(d2 * l1y);
+   interval_number g(d1 * p3x);
+   interval_number ab(a - b);
+   interval_number cd(c - l1y);
+   interval_number ef(e - f);
+   interval_number gh(g - l1x);
+   interval_number abcd(ab * cd);
+   interval_number efgh(ef * gh);
+   interval_number L(abcd - efgh);
+   setFPUModeToRoundNEAR();
+
+   if (!L.signIsReliable()) return Filtered_Sign::UNCERTAIN;
+   return L.sign();
+}
+
+int orient2dzx_indirect_TTE_exact(const implicitPoint3D_TPI& p1, const implicitPoint3D_TPI& p2, double p3x, double p3y)
+{
+ double return_value = NAN;
+ double l1y_p[64], *l1y = l1y_p, l1z_p[64], *l1z = l1z_p, l1x_p[64], *l1x = l1x_p, d1_p[64], *d1 = d1_p, l2y_p[64], *l2y = l2y_p, l2z_p[64], *l2z = l2z_p, l2x_p[64], *l2x = l2x_p, d2_p[64], *d2 = d2_p;
+ int l1y_len, l1z_len, l1x_len, d1_len, l2y_len, l2z_len, l2x_len, d2_len;
+ p1.getExactLambda(l1y, l1y_len, l1z, l1z_len, l1x, l1x_len, d1, d1_len);
+ p2.getExactLambda(l2y, l2y_len, l2z, l2z_len, l2x, l2x_len, d2, d2_len);
+ if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0))
+ {
+   expansionObject o;
+   double a_p[64], *a = a_p;
+   int a_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l2x_len, l2x, &a, 64);
+   double b_p[64], *b = b_p;
+   int b_len = o.Gen_Product_With_PreAlloc(d2_len, d2, l1x_len, l1x, &b, 64);
+   double c_p[64], *c = c_p;
+   int c_len = o.Gen_Scale_With_PreAlloc(d1_len, d1, p3y, &c, 64);
+   double e_p[64], *e = e_p;
+   int e_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l2y_len, l2y, &e, 64);
+   double f_p[64], *f = f_p;
+   int f_len = o.Gen_Product_With_PreAlloc(d2_len, d2, l1y_len, l1y, &f, 64);
+   double g_p[64], *g = g_p;
+   int g_len = o.Gen_Scale_With_PreAlloc(d1_len, d1, p3x, &g, 64);
+   double ab_p[64], *ab = ab_p;
+   int ab_len = o.Gen_Diff_With_PreAlloc(a_len, a, b_len, b, &ab, 64);
+   double cd_p[64], *cd = cd_p;
+   int cd_len = o.Gen_Diff_With_PreAlloc(c_len, c, l1y_len, l1y, &cd, 64);
+   double ef_p[64], *ef = ef_p;
+   int ef_len = o.Gen_Diff_With_PreAlloc(e_len, e, f_len, f, &ef, 64);
+   double gh_p[64], *gh = gh_p;
+   int gh_len = o.Gen_Diff_With_PreAlloc(g_len, g, l1x_len, l1x, &gh, 64);
+   double abcd_p[64], *abcd = abcd_p;
+   int abcd_len = o.Gen_Product_With_PreAlloc(ab_len, ab, cd_len, cd, &abcd, 64);
+   double efgh_p[64], *efgh = efgh_p;
+   int efgh_len = o.Gen_Product_With_PreAlloc(ef_len, ef, gh_len, gh, &efgh, 64);
+   double L_p[64], *L = L_p;
+   int L_len = o.Gen_Diff_With_PreAlloc(abcd_len, abcd, efgh_len, efgh, &L, 64);
+
+   return_value = L[L_len - 1];
+   if (L_p != L) free(L);
+   if (efgh_p != efgh) free(efgh);
+   if (abcd_p != abcd) free(abcd);
+   if (gh_p != gh) free(gh);
+   if (ef_p != ef) free(ef);
+   if (cd_p != cd) free(cd);
+   if (ab_p != ab) free(ab);
+   if (g_p != g) free(g);
+   if (f_p != f) free(f);
+   if (e_p != e) free(e);
+   if (c_p != c) free(c);
+   if (b_p != b) free(b);
+   if (a_p != a) free(a);
+ }
+
+ if (l1y_p != l1y) free(l1y);
+ if (l1z_p != l1z) free(l1z);
+ if (l1x_p != l1x) free(l1x);
+ if (d1_p != d1) free(d1);
+ if (l2y_p != l2y) free(l2y);
+ if (l2z_p != l2z) free(l2z);
+ if (l2x_p != l2x) free(l2x);
+ if (d2_p != d2) free(d2);
+
+ if (return_value > 0) return IP_Sign::POSITIVE;
+ if (return_value < 0) return IP_Sign::NEGATIVE;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
+}
+
+int orient2dzx_indirect_TTE(const implicitPoint3D_TPI& p1, const implicitPoint3D_TPI& p2, double p3x, double p3y)
+{
+   int ret;
+   ret = orient2dzx_indirect_TTE_filtered(p1, p2, p3x, p3y);
+   if (ret != Filtered_Sign::UNCERTAIN) return ret;
+   ret = orient2dzx_indirect_TTE_interval(p1, p2, p3x, p3y);
+   if (ret != Filtered_Sign::UNCERTAIN) return ret;
+   return orient2dzx_indirect_TTE_exact(p1, p2, p3x, p3y);
+}
+
+int orient2dzx_indirect_TTT_filtered(const implicitPoint3D_TPI& p1, const implicitPoint3D_TPI& p2, const implicitPoint3D_TPI& p3)
+{
+   double l1y, l1z, l1x, d1, l2y, l2z, l2x, d2, l3y, l3z, l3x, d3, max_var = 0;
+    if (
+       !p1.getFilteredLambda(l1y, l1z, l1x, d1, max_var)
+       || !p2.getFilteredLambda(l2y, l2z, l2x, d2, max_var)
+       || !p3.getFilteredLambda(l3y, l3z, l3x, d3, max_var)
+   ) return Filtered_Sign::UNCERTAIN;
+
+   double a = d1 * l2x;
+   double b = d2 * l1x;
+   double c = d1 * l3y;
+   double d = d3 * l1y;
+   double e = d1 * l2y;
+   double f = d2 * l1y;
+   double g = d1 * l3x;
+   double h = d3 * l1x;
+   double ab = a - b;
+   double cd = c - d;
+   double ef = e - f;
+   double gh = g - h;
+   double abcd = ab * cd;
+   double efgh = ef * gh;
+   double L = abcd - efgh;
+   double epsilon = max_var;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= epsilon;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= max_var;
+   epsilon *= 3.103174776697444e-06;
+   if (L > epsilon) return IP_Sign::POSITIVE;
+   if (-L > epsilon) return IP_Sign::NEGATIVE;
+   return Filtered_Sign::UNCERTAIN;
+}
+
+int orient2dzx_indirect_TTT_interval(const implicitPoint3D_TPI& p1, const implicitPoint3D_TPI& p2, const implicitPoint3D_TPI& p3)
+{
+   interval_number l1y, l1z, l1x, d1, l2y, l2z, l2x, d2, l3y, l3z, l3x, d3;
+   if (
+   !p1.getIntervalLambda(l1y, l1z, l1x, d1)
+   || !p2.getIntervalLambda(l2y, l2z, l2x, d2)
+   || !p3.getIntervalLambda(l3y, l3z, l3x, d3)
+   ) return Filtered_Sign::UNCERTAIN;
+
+   setFPUModeToRoundUP();
+   interval_number a(d1 * l2x);
+   interval_number b(d2 * l1x);
+   interval_number c(d1 * l3y);
+   interval_number d(d3 * l1y);
+   interval_number e(d1 * l2y);
+   interval_number f(d2 * l1y);
+   interval_number g(d1 * l3x);
+   interval_number h(d3 * l1x);
+   interval_number ab(a - b);
+   interval_number cd(c - d);
+   interval_number ef(e - f);
+   interval_number gh(g - h);
+   interval_number abcd(ab * cd);
+   interval_number efgh(ef * gh);
+   interval_number L(abcd - efgh);
+   setFPUModeToRoundNEAR();
+
+   if (!L.signIsReliable()) return Filtered_Sign::UNCERTAIN;
+   return L.sign();
+}
+
+int orient2dzx_indirect_TTT_exact(const implicitPoint3D_TPI& p1, const implicitPoint3D_TPI& p2, const implicitPoint3D_TPI& p3)
+{
+ double return_value = NAN;
+ double l1y_p[64], *l1y = l1y_p, l1z_p[64], *l1z = l1z_p, l1x_p[64], *l1x = l1x_p, d1_p[64], *d1 = d1_p, l2y_p[64], *l2y = l2y_p, l2z_p[64], *l2z = l2z_p, l2x_p[64], *l2x = l2x_p, d2_p[64], *d2 = d2_p, l3y_p[64], *l3y = l3y_p, l3z_p[64], *l3z = l3z_p, l3x_p[64], *l3x = l3x_p, d3_p[64], *d3 = d3_p;
+ int l1y_len, l1z_len, l1x_len, d1_len, l2y_len, l2z_len, l2x_len, d2_len, l3y_len, l3z_len, l3x_len, d3_len;
+ p1.getExactLambda(l1y, l1y_len, l1z, l1z_len, l1x, l1x_len, d1, d1_len);
+ p2.getExactLambda(l2y, l2y_len, l2z, l2z_len, l2x, l2x_len, d2, d2_len);
+ p3.getExactLambda(l3y, l3y_len, l3z, l3z_len, l3x, l3x_len, d3, d3_len);
+ if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0) && (d3[d3_len - 1] != 0))
+ {
+   expansionObject o;
+   double a_p[64], *a = a_p;
+   int a_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l2x_len, l2x, &a, 64);
+   double b_p[64], *b = b_p;
+   int b_len = o.Gen_Product_With_PreAlloc(d2_len, d2, l1x_len, l1x, &b, 64);
+   double c_p[64], *c = c_p;
+   int c_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l3y_len, l3y, &c, 64);
+   double d_p[64], *d = d_p;
+   int d_len = o.Gen_Product_With_PreAlloc(d3_len, d3, l1y_len, l1y, &d, 64);
+   double e_p[64], *e = e_p;
+   int e_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l2y_len, l2y, &e, 64);
+   double f_p[64], *f = f_p;
+   int f_len = o.Gen_Product_With_PreAlloc(d2_len, d2, l1y_len, l1y, &f, 64);
+   double g_p[64], *g = g_p;
+   int g_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l3x_len, l3x, &g, 64);
+   double h_p[64], *h = h_p;
+   int h_len = o.Gen_Product_With_PreAlloc(d3_len, d3, l1x_len, l1x, &h, 64);
+   double ab_p[64], *ab = ab_p;
+   int ab_len = o.Gen_Diff_With_PreAlloc(a_len, a, b_len, b, &ab, 64);
+   double cd_p[64], *cd = cd_p;
+   int cd_len = o.Gen_Diff_With_PreAlloc(c_len, c, d_len, d, &cd, 64);
+   double ef_p[64], *ef = ef_p;
+   int ef_len = o.Gen_Diff_With_PreAlloc(e_len, e, f_len, f, &ef, 64);
+   double gh_p[64], *gh = gh_p;
+   int gh_len = o.Gen_Diff_With_PreAlloc(g_len, g, h_len, h, &gh, 64);
+   double abcd_p[64], *abcd = abcd_p;
+   int abcd_len = o.Gen_Product_With_PreAlloc(ab_len, ab, cd_len, cd, &abcd, 64);
+   double efgh_p[64], *efgh = efgh_p;
+   int efgh_len = o.Gen_Product_With_PreAlloc(ef_len, ef, gh_len, gh, &efgh, 64);
+   double L_p[64], *L = L_p;
+   int L_len = o.Gen_Diff_With_PreAlloc(abcd_len, abcd, efgh_len, efgh, &L, 64);
+
+   return_value = L[L_len - 1];
+   if (L_p != L) free(L);
+   if (efgh_p != efgh) free(efgh);
+   if (abcd_p != abcd) free(abcd);
+   if (gh_p != gh) free(gh);
+   if (ef_p != ef) free(ef);
+   if (cd_p != cd) free(cd);
+   if (ab_p != ab) free(ab);
+   if (h_p != h) free(h);
+   if (g_p != g) free(g);
+   if (f_p != f) free(f);
+   if (e_p != e) free(e);
+   if (d_p != d) free(d);
+   if (c_p != c) free(c);
+   if (b_p != b) free(b);
+   if (a_p != a) free(a);
+ }
+
+ if (l1y_p != l1y) free(l1y);
+ if (l1z_p != l1z) free(l1z);
+ if (l1x_p != l1x) free(l1x);
+ if (d1_p != d1) free(d1);
+ if (l2y_p != l2y) free(l2y);
+ if (l2z_p != l2z) free(l2z);
+ if (l2x_p != l2x) free(l2x);
+ if (d2_p != d2) free(d2);
+ if (l3y_p != l3y) free(l3y);
+ if (l3z_p != l3z) free(l3z);
+ if (l3x_p != l3x) free(l3x);
+ if (d3_p != d3) free(d3);
+
+ if (return_value > 0) return IP_Sign::POSITIVE;
+ if (return_value < 0) return IP_Sign::NEGATIVE;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
+}
+
+int orient2dzx_indirect_TTT(const implicitPoint3D_TPI& p1, const implicitPoint3D_TPI& p2, const implicitPoint3D_TPI& p3)
+{
+   int ret;
+//   ret = orient2dzx_indirect_TTT_filtered(p1, p2, p3);
+//   if (ret != Filtered_Sign::UNCERTAIN) return ret;
+   ret = orient2dzx_indirect_TTT_interval(p1, p2, p3);
+   if (ret != Filtered_Sign::UNCERTAIN) return ret;
+   return orient2dzx_indirect_TTT_exact(p1, p2, p3);
 }
 
 int orient2d_indirect_SEE_filtered(const implicitPoint2D_SSI& p1, double p2x, double p2y, double p3x, double p3y)
@@ -6471,7 +9515,6 @@ int orient2d_indirect_SEE_filtered(const implicitPoint2D_SSI& p1, double p2x, do
    epsilon *= epsilon;
    epsilon *= epsilon;
    epsilon *= 1.110439865059654e-14;
-   if (((d1 < 0))) det = -det;
    if (det > epsilon) return IP_Sign::POSITIVE;
    if (-det > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -6498,13 +9541,12 @@ int orient2d_indirect_SEE_interval(const implicitPoint2D_SSI& p1, interval_numbe
    setFPUModeToRoundNEAR();
 
    if (!det.signIsReliable()) return Filtered_Sign::UNCERTAIN;
-   if (((d1 < 0))) return -det.sign();
-   else   return det.sign();
+   return det.sign();
 }
 
 int orient2d_indirect_SEE_exact(const implicitPoint2D_SSI& p1, double p2x, double p2y, double p3x, double p3y)
 {
- double return_value = 0.0;
+ double return_value = NAN;
  double l1x[32], l1y[32], d1[16];
  int l1x_len, l1y_len, d1_len;
  p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, d1, d1_len);
@@ -6535,13 +9577,13 @@ int orient2d_indirect_SEE_exact(const implicitPoint2D_SSI& p1, double p2x, doubl
    return_value = det[det_len - 1];
    if (det_p != det) free(det);
    if (e_p != e) free(e);
-   if (( (d1[d1_len -1] < 0))) return_value = -return_value;
  }
 
 
  if (return_value > 0) return IP_Sign::POSITIVE;
  if (return_value < 0) return IP_Sign::NEGATIVE;
- return IP_Sign::ZERO;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
 }
 
 int orient2d_indirect_SEE(const implicitPoint2D_SSI& p1, double p2x, double p2y, double p3x, double p3y)
@@ -6584,7 +9626,6 @@ int orient2d_indirect_SSE_filtered(const implicitPoint2D_SSI& p1, const implicit
    epsilon *= epsilon;
    epsilon *= epsilon;
    epsilon *= 3.837902218251096e-13;
-   if (((d2 < 0))) L = -L;
    if (L > epsilon) return IP_Sign::POSITIVE;
    if (-L > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -6615,13 +9656,12 @@ int orient2d_indirect_SSE_interval(const implicitPoint2D_SSI& p1, const implicit
    setFPUModeToRoundNEAR();
 
    if (!L.signIsReliable()) return Filtered_Sign::UNCERTAIN;
-   if (((d2 < 0))) return -L.sign();
-   else   return L.sign();
+   return L.sign();
 }
 
 int orient2d_indirect_SSE_exact(const implicitPoint2D_SSI& p1, const implicitPoint2D_SSI& p2, double p3x, double p3y)
 {
- double return_value = 0.0;
+ double return_value = NAN;
  double l1x[32], l1y[32], d1[16], l2x[32], l2y[32], d2[16];
  int l1x_len, l1y_len, d1_len, l2x_len, l2y_len, d2_len;
  p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, d1, d1_len);
@@ -6666,13 +9706,13 @@ int orient2d_indirect_SSE_exact(const implicitPoint2D_SSI& p1, const implicitPoi
    if (e_p != e) free(e);
    if (b_p != b) free(b);
    if (a_p != a) free(a);
-   if (( (d2[d2_len -1] < 0))) return_value = -return_value;
  }
 
 
  if (return_value > 0) return IP_Sign::POSITIVE;
  if (return_value < 0) return IP_Sign::NEGATIVE;
- return IP_Sign::ZERO;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
 }
 
 int orient2d_indirect_SSE(const implicitPoint2D_SSI& p1, const implicitPoint2D_SSI& p2, double p3x, double p3y)
@@ -6716,7 +9756,6 @@ int orient2d_indirect_SSS_filtered(const implicitPoint2D_SSI& p1, const implicit
    epsilon *= max_var;
    epsilon *= max_var;
    epsilon *= 1.364575119566784e-12;
-   if (((d2 < 0) + (d3 < 0)) & 1) L = -L;
    if (L > epsilon) return IP_Sign::POSITIVE;
    if (-L > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -6750,13 +9789,12 @@ int orient2d_indirect_SSS_interval(const implicitPoint2D_SSI& p1, const implicit
    setFPUModeToRoundNEAR();
 
    if (!L.signIsReliable()) return Filtered_Sign::UNCERTAIN;
-   if (((d2 < 0) + (d3 < 0)) & 1) return -L.sign();
-   else   return L.sign();
+   return L.sign();
 }
 
 int orient2d_indirect_SSS_exact(const implicitPoint2D_SSI& p1, const implicitPoint2D_SSI& p2, const implicitPoint2D_SSI& p3)
 {
- double return_value = 0.0;
+ double return_value = NAN;
  double l1x[32], l1y[32], d1[16], l2x[32], l2y[32], d2[16], l3x[32], l3y[32], d3[16];
  int l1x_len, l1y_len, d1_len, l2x_len, l2y_len, d2_len, l3x_len, l3y_len, d3_len;
  p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, d1, d1_len);
@@ -6812,13 +9850,13 @@ int orient2d_indirect_SSS_exact(const implicitPoint2D_SSI& p1, const implicitPoi
    if (c_p != c) free(c);
    if (b_p != b) free(b);
    if (a_p != a) free(a);
-   if (( (d2[d2_len -1] < 0) + (d3[d3_len -1] < 0)) & 1) return_value = -return_value;
  }
 
 
  if (return_value > 0) return IP_Sign::POSITIVE;
  if (return_value < 0) return IP_Sign::NEGATIVE;
- return IP_Sign::ZERO;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
 }
 
 int orient2d_indirect_SSS(const implicitPoint2D_SSI& p1, const implicitPoint2D_SSI& p2, const implicitPoint2D_SSI& p3)
@@ -6881,7 +9919,6 @@ int orient3d_indirect_LEEE_filtered(const implicitPoint3D_LPI& p1, double ax, do
    epsilon *= max_var;
    epsilon *= max_var;
    epsilon *= 1.861039534284405e-13;
-   if (((d1 < 0))) m012 = -m012;
    if (m012 > epsilon) return IP_Sign::POSITIVE;
    if (-m012 > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -6924,13 +9961,12 @@ int orient3d_indirect_LEEE_interval(const implicitPoint3D_LPI& p1, interval_numb
    setFPUModeToRoundNEAR();
 
    if (!m012.signIsReliable()) return Filtered_Sign::UNCERTAIN;
-   if (((d1 < 0))) return -m012.sign();
-   else   return m012.sign();
+   return m012.sign();
 }
 
 int orient3d_indirect_LEEE_exact(const implicitPoint3D_LPI& p1, double ax, double ay, double az, double bx, double by, double bz, double cx, double cy, double cz)
 {
- double return_value = 0.0;
+ double return_value = NAN;
  double l1x_p[64], *l1x = l1x_p, l1y_p[64], *l1y = l1y_p, l1z_p[64], *l1z = l1z_p, d1_p[64], *d1 = d1_p;
  int l1x_len, l1y_len, l1z_len, d1_len;
  p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, l1z, l1z_len, d1, d1_len);
@@ -7011,7 +10047,6 @@ int orient3d_indirect_LEEE_exact(const implicitPoint3D_LPI& p1, double ax, doubl
    if (dcz_p != dcz) free(dcz);
    if (dcy_p != dcy) free(dcy);
    if (dcx_p != dcx) free(dcx);
-   if (( (d1[d1_len -1] < 0))) return_value = -return_value;
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -7021,7 +10056,8 @@ int orient3d_indirect_LEEE_exact(const implicitPoint3D_LPI& p1, double ax, doubl
 
  if (return_value > 0) return IP_Sign::POSITIVE;
  if (return_value < 0) return IP_Sign::NEGATIVE;
- return IP_Sign::ZERO;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
 }
 
 int orient3d_indirect_LEEE(const implicitPoint3D_LPI& p1, double ax, double ay, double az, double bx, double by, double bz, double cx, double cy, double cz)
@@ -7085,7 +10121,6 @@ int orient3d_indirect_LLEE_filtered(const implicitPoint3D_LPI& p1, const implici
    epsilon *= epsilon;
    epsilon *= max_var;
    epsilon *= 5.12855469897434e-12;
-   if (((d1 < 0) + (d2 < 0)) & 1) m012 = -m012;
    if (m012 > epsilon) return IP_Sign::POSITIVE;
    if (-m012 > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -7132,13 +10167,12 @@ int orient3d_indirect_LLEE_interval(const implicitPoint3D_LPI& p1, const implici
    setFPUModeToRoundNEAR();
 
    if (!m012.signIsReliable()) return Filtered_Sign::UNCERTAIN;
-   if (((d1 < 0) + (d2 < 0)) & 1) return -m012.sign();
-   else   return m012.sign();
+   return m012.sign();
 }
 
 int orient3d_indirect_LLEE_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, double p3x, double p3y, double p3z, double p4x, double p4y, double p4z)
 {
- double return_value = 0.0;
+ double return_value = NAN;
  double l1x_p[32], *l1x = l1x_p, l1y_p[32], *l1y = l1y_p, l1z_p[32], *l1z = l1z_p, d1_p[32], *d1 = d1_p, l2x_p[32], *l2x = l2x_p, l2y_p[32], *l2y = l2y_p, l2z_p[32], *l2z = l2z_p, d2_p[32], *d2 = d2_p;
  int l1x_len, l1y_len, l1z_len, d1_len, l2x_len, l2y_len, l2z_len, d2_len;
  p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, l1z, l1z_len, d1, d1_len);
@@ -7232,7 +10266,6 @@ int orient3d_indirect_LLEE_exact(const implicitPoint3D_LPI& p1, const implicitPo
    if (d1p4z_p != d1p4z) free(d1p4z);
    if (d1p4y_p != d1p4y) free(d1p4y);
    if (d1p4x_p != d1p4x) free(d1p4x);
-   if (( (d1[d1_len -1] < 0) + (d2[d2_len -1] < 0)) & 1) return_value = -return_value;
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -7246,7 +10279,8 @@ int orient3d_indirect_LLEE_exact(const implicitPoint3D_LPI& p1, const implicitPo
 
  if (return_value > 0) return IP_Sign::POSITIVE;
  if (return_value < 0) return IP_Sign::NEGATIVE;
- return IP_Sign::ZERO;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
 }
 
 int orient3d_indirect_LLEE(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, double p3x, double p3y, double p3z, double p4x, double p4y, double p4z)
@@ -7314,7 +10348,6 @@ int orient3d_indirect_LLLE_filtered(const implicitPoint3D_LPI& p1, const implici
    epsilon *= max_var;
    epsilon *= max_var;
    epsilon *= 1.270161397934348e-10;
-   if (((d1 < 0) + (d2 < 0) + (d3 < 0)) & 1) m012 = -m012;
    if (m012 > epsilon) return IP_Sign::POSITIVE;
    if (-m012 > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -7365,13 +10398,12 @@ int orient3d_indirect_LLLE_interval(const implicitPoint3D_LPI& p1, const implici
    setFPUModeToRoundNEAR();
 
    if (!m012.signIsReliable()) return Filtered_Sign::UNCERTAIN;
-   if (((d1 < 0) + (d2 < 0) + (d3 < 0)) & 1) return -m012.sign();
-   else   return m012.sign();
+   return m012.sign();
 }
 
 int orient3d_indirect_LLLE_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, const implicitPoint3D_LPI& p3, double p4x, double p4y, double p4z)
 {
- double return_value = 0.0;
+ double return_value = NAN;
  double l1x_p[32], *l1x = l1x_p, l1y_p[32], *l1y = l1y_p, l1z_p[32], *l1z = l1z_p, d1_p[32], *d1 = d1_p, l2x_p[32], *l2x = l2x_p, l2y_p[32], *l2y = l2y_p, l2z_p[32], *l2z = l2z_p, d2_p[32], *d2 = d2_p, l3x_p[32], *l3x = l3x_p, l3y_p[32], *l3y = l3y_p, l3z_p[32], *l3z = l3z_p, d3_p[32], *d3 = d3_p;
  int l1x_len, l1y_len, l1z_len, d1_len, l2x_len, l2y_len, l2z_len, d2_len, l3x_len, l3y_len, l3z_len, d3_len;
  p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, l1z, l1z_len, d1, d1_len);
@@ -7478,7 +10510,6 @@ int orient3d_indirect_LLLE_exact(const implicitPoint3D_LPI& p1, const implicitPo
    if (d1p4z_p != d1p4z) free(d1p4z);
    if (d1p4y_p != d1p4y) free(d1p4y);
    if (d1p4x_p != d1p4x) free(d1p4x);
-   if (( (d1[d1_len -1] < 0) + (d2[d2_len -1] < 0) + (d3[d3_len -1] < 0)) & 1) return_value = -return_value;
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -7496,7 +10527,8 @@ int orient3d_indirect_LLLE_exact(const implicitPoint3D_LPI& p1, const implicitPo
 
  if (return_value > 0) return IP_Sign::POSITIVE;
  if (return_value < 0) return IP_Sign::NEGATIVE;
- return IP_Sign::ZERO;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
 }
 
 int orient3d_indirect_LLLE(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, const implicitPoint3D_LPI& p3, double p4x, double p4y, double p4z)
@@ -7571,7 +10603,6 @@ int orient3d_indirect_LLLL_filtered(const implicitPoint3D_LPI& p1, const implici
    epsilon *= max_var;
    epsilon *= max_var;
    epsilon *= 1.164303613521163e-07;
-   if (((d1 < 0) + (d2 < 0) + (d3 < 0) + (d4 < 0)) & 1) m012 = -m012;
    if (m012 > epsilon) return IP_Sign::POSITIVE;
    if (-m012 > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -7632,13 +10663,12 @@ int orient3d_indirect_LLLL_interval(const implicitPoint3D_LPI& p1, const implici
    setFPUModeToRoundNEAR();
 
    if (!m012.signIsReliable()) return Filtered_Sign::UNCERTAIN;
-   if (((d1 < 0) + (d2 < 0) + (d3 < 0) + (d4 < 0)) & 1) return -m012.sign();
-   else   return m012.sign();
+   return m012.sign();
 }
 
 int orient3d_indirect_LLLL_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, const implicitPoint3D_LPI& p3, const implicitPoint3D_LPI& p4)
 {
- double return_value = 0.0;
+ double return_value = NAN;
  double l1x_p[32], *l1x = l1x_p, l1y_p[32], *l1y = l1y_p, l1z_p[32], *l1z = l1z_p, d1_p[32], *d1 = d1_p, l2x_p[32], *l2x = l2x_p, l2y_p[32], *l2y = l2y_p, l2z_p[32], *l2z = l2z_p, d2_p[32], *d2 = d2_p, l3x_p[32], *l3x = l3x_p, l3y_p[32], *l3y = l3y_p, l3z_p[32], *l3z = l3z_p, d3_p[32], *d3 = d3_p, l4x_p[32], *l4x = l4x_p, l4y_p[32], *l4y = l4y_p, l4z_p[32], *l4z = l4z_p, d4_p[32], *d4 = d4_p;
  int l1x_len, l1y_len, l1z_len, d1_len, l2x_len, l2y_len, l2z_len, d2_len, l3x_len, l3y_len, l3z_len, d3_len, l4x_len, l4y_len, l4z_len, d4_len;
  p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, l1z, l1z_len, d1, d1_len);
@@ -7773,7 +10803,6 @@ int orient3d_indirect_LLLL_exact(const implicitPoint3D_LPI& p1, const implicitPo
    if (d1p4z_p != d1p4z) free(d1p4z);
    if (d1p4y_p != d1p4y) free(d1p4y);
    if (d1p4x_p != d1p4x) free(d1p4x);
-   if (( (d1[d1_len -1] < 0) + (d2[d2_len -1] < 0) + (d3[d3_len -1] < 0) + (d4[d4_len -1] < 0)) & 1) return_value = -return_value;
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -7795,7 +10824,8 @@ int orient3d_indirect_LLLL_exact(const implicitPoint3D_LPI& p1, const implicitPo
 
  if (return_value > 0) return IP_Sign::POSITIVE;
  if (return_value < 0) return IP_Sign::NEGATIVE;
- return IP_Sign::ZERO;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
 }
 
 int orient3d_indirect_LLLL(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, const implicitPoint3D_LPI& p3, const implicitPoint3D_LPI& p4)
@@ -7879,7 +10909,6 @@ int orient3d_indirect_LLLT_filtered(const implicitPoint3D_LPI& p1, const implici
    epsilon *= max_var;
    epsilon *= max_var;
    epsilon *= 0.0001675978376241023;
-   if (((d1 < 0) + (d2 < 0) + (d3 < 0) + (d4 < 0)) & 1) m012 = -m012;
    if (m012 > epsilon) return IP_Sign::POSITIVE;
    if (-m012 > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -7940,13 +10969,12 @@ int orient3d_indirect_LLLT_interval(const implicitPoint3D_LPI& p1, const implici
    setFPUModeToRoundNEAR();
 
    if (!m012.signIsReliable()) return Filtered_Sign::UNCERTAIN;
-   if (((d1 < 0) + (d2 < 0) + (d3 < 0) + (d4 < 0)) & 1) return -m012.sign();
-   else   return m012.sign();
+   return m012.sign();
 }
 
 int orient3d_indirect_LLLT_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, const implicitPoint3D_LPI& p3, const implicitPoint3D_TPI& p4)
 {
- double return_value = 0.0;
+ double return_value = NAN;
  double l1x_p[32], *l1x = l1x_p, l1y_p[32], *l1y = l1y_p, l1z_p[32], *l1z = l1z_p, d1_p[32], *d1 = d1_p, l2x_p[32], *l2x = l2x_p, l2y_p[32], *l2y = l2y_p, l2z_p[32], *l2z = l2z_p, d2_p[32], *d2 = d2_p, l3x_p[32], *l3x = l3x_p, l3y_p[32], *l3y = l3y_p, l3z_p[32], *l3z = l3z_p, d3_p[32], *d3 = d3_p, l4x_p[32], *l4x = l4x_p, l4y_p[32], *l4y = l4y_p, l4z_p[32], *l4z = l4z_p, d4_p[32], *d4 = d4_p;
  int l1x_len, l1y_len, l1z_len, d1_len, l2x_len, l2y_len, l2z_len, d2_len, l3x_len, l3y_len, l3z_len, d3_len, l4x_len, l4y_len, l4z_len, d4_len;
  p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, l1z, l1z_len, d1, d1_len);
@@ -8081,7 +11109,6 @@ int orient3d_indirect_LLLT_exact(const implicitPoint3D_LPI& p1, const implicitPo
    if (d1p4z_p != d1p4z) free(d1p4z);
    if (d1p4y_p != d1p4y) free(d1p4y);
    if (d1p4x_p != d1p4x) free(d1p4x);
-   if (( (d1[d1_len -1] < 0) + (d2[d2_len -1] < 0) + (d3[d3_len -1] < 0) + (d4[d4_len -1] < 0)) & 1) return_value = -return_value;
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -8103,7 +11130,8 @@ int orient3d_indirect_LLLT_exact(const implicitPoint3D_LPI& p1, const implicitPo
 
  if (return_value > 0) return IP_Sign::POSITIVE;
  if (return_value < 0) return IP_Sign::NEGATIVE;
- return IP_Sign::ZERO;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
 }
 
 int orient3d_indirect_LLLT(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, const implicitPoint3D_LPI& p3, const implicitPoint3D_TPI& p4)
@@ -8174,7 +11202,6 @@ int orient3d_indirect_LLTE_filtered(const implicitPoint3D_LPI& p1, const implici
    epsilon *= max_var;
    epsilon *= max_var;
    epsilon *= 1.706094390763199e-09;
-   if (((d1 < 0) + (d2 < 0) + (d3 < 0)) & 1) m012 = -m012;
    if (m012 > epsilon) return IP_Sign::POSITIVE;
    if (-m012 > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -8225,13 +11252,12 @@ int orient3d_indirect_LLTE_interval(const implicitPoint3D_LPI& p1, const implici
    setFPUModeToRoundNEAR();
 
    if (!m012.signIsReliable()) return Filtered_Sign::UNCERTAIN;
-   if (((d1 < 0) + (d2 < 0) + (d3 < 0)) & 1) return -m012.sign();
-   else   return m012.sign();
+   return m012.sign();
 }
 
 int orient3d_indirect_LLTE_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, const implicitPoint3D_TPI& p3, double p4x, double p4y, double p4z)
 {
- double return_value = 0.0;
+ double return_value = NAN;
  double l1x_p[32], *l1x = l1x_p, l1y_p[32], *l1y = l1y_p, l1z_p[32], *l1z = l1z_p, d1_p[32], *d1 = d1_p, l2x_p[32], *l2x = l2x_p, l2y_p[32], *l2y = l2y_p, l2z_p[32], *l2z = l2z_p, d2_p[32], *d2 = d2_p, l3x_p[32], *l3x = l3x_p, l3y_p[32], *l3y = l3y_p, l3z_p[32], *l3z = l3z_p, d3_p[32], *d3 = d3_p;
  int l1x_len, l1y_len, l1z_len, d1_len, l2x_len, l2y_len, l2z_len, d2_len, l3x_len, l3y_len, l3z_len, d3_len;
  p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, l1z, l1z_len, d1, d1_len);
@@ -8338,7 +11364,6 @@ int orient3d_indirect_LLTE_exact(const implicitPoint3D_LPI& p1, const implicitPo
    if (d1p4z_p != d1p4z) free(d1p4z);
    if (d1p4y_p != d1p4y) free(d1p4y);
    if (d1p4x_p != d1p4x) free(d1p4x);
-   if (( (d1[d1_len -1] < 0) + (d2[d2_len -1] < 0) + (d3[d3_len -1] < 0)) & 1) return_value = -return_value;
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -8356,7 +11381,8 @@ int orient3d_indirect_LLTE_exact(const implicitPoint3D_LPI& p1, const implicitPo
 
  if (return_value > 0) return IP_Sign::POSITIVE;
  if (return_value < 0) return IP_Sign::NEGATIVE;
- return IP_Sign::ZERO;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
 }
 
 int orient3d_indirect_LLTE(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, const implicitPoint3D_TPI& p3, double p4x, double p4y, double p4z)
@@ -8428,7 +11454,6 @@ int orient3d_indirect_LLTT_filtered(const implicitPoint3D_LPI& p1, const implici
    epsilon *= epsilon;
    epsilon *= max_var;
    epsilon *= 0.001770733197190587;
-   if (((d1 < 0) + (d2 < 0) + (d3 < 0) + (d4 < 0)) & 1) m012 = -m012;
    if (m012 > epsilon) return IP_Sign::POSITIVE;
    if (-m012 > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -8489,13 +11514,12 @@ int orient3d_indirect_LLTT_interval(const implicitPoint3D_LPI& p1, const implici
    setFPUModeToRoundNEAR();
 
    if (!m012.signIsReliable()) return Filtered_Sign::UNCERTAIN;
-   if (((d1 < 0) + (d2 < 0) + (d3 < 0) + (d4 < 0)) & 1) return -m012.sign();
-   else   return m012.sign();
+   return m012.sign();
 }
 
 int orient3d_indirect_LLTT_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, const implicitPoint3D_TPI& p3, const implicitPoint3D_TPI& p4)
 {
- double return_value = 0.0;
+ double return_value = NAN;
  double l1x_p[32], *l1x = l1x_p, l1y_p[32], *l1y = l1y_p, l1z_p[32], *l1z = l1z_p, d1_p[32], *d1 = d1_p, l2x_p[32], *l2x = l2x_p, l2y_p[32], *l2y = l2y_p, l2z_p[32], *l2z = l2z_p, d2_p[32], *d2 = d2_p, l3x_p[32], *l3x = l3x_p, l3y_p[32], *l3y = l3y_p, l3z_p[32], *l3z = l3z_p, d3_p[32], *d3 = d3_p, l4x_p[32], *l4x = l4x_p, l4y_p[32], *l4y = l4y_p, l4z_p[32], *l4z = l4z_p, d4_p[32], *d4 = d4_p;
  int l1x_len, l1y_len, l1z_len, d1_len, l2x_len, l2y_len, l2z_len, d2_len, l3x_len, l3y_len, l3z_len, d3_len, l4x_len, l4y_len, l4z_len, d4_len;
  p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, l1z, l1z_len, d1, d1_len);
@@ -8630,7 +11654,6 @@ int orient3d_indirect_LLTT_exact(const implicitPoint3D_LPI& p1, const implicitPo
    if (d1p4z_p != d1p4z) free(d1p4z);
    if (d1p4y_p != d1p4y) free(d1p4y);
    if (d1p4x_p != d1p4x) free(d1p4x);
-   if (( (d1[d1_len -1] < 0) + (d2[d2_len -1] < 0) + (d3[d3_len -1] < 0) + (d4[d4_len -1] < 0)) & 1) return_value = -return_value;
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -8652,7 +11675,8 @@ int orient3d_indirect_LLTT_exact(const implicitPoint3D_LPI& p1, const implicitPo
 
  if (return_value > 0) return IP_Sign::POSITIVE;
  if (return_value < 0) return IP_Sign::NEGATIVE;
- return IP_Sign::ZERO;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
 }
 
 int orient3d_indirect_LLTT(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, const implicitPoint3D_TPI& p3, const implicitPoint3D_TPI& p4)
@@ -8719,7 +11743,6 @@ int orient3d_indirect_LTEE_filtered(const implicitPoint3D_LPI& p1, const implici
    epsilon *= max_var;
    epsilon *= max_var;
    epsilon *= 7.437036403379365e-11;
-   if (((d1 < 0) + (d2 < 0)) & 1) m012 = -m012;
    if (m012 > epsilon) return IP_Sign::POSITIVE;
    if (-m012 > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -8766,13 +11789,12 @@ int orient3d_indirect_LTEE_interval(const implicitPoint3D_LPI& p1, const implici
    setFPUModeToRoundNEAR();
 
    if (!m012.signIsReliable()) return Filtered_Sign::UNCERTAIN;
-   if (((d1 < 0) + (d2 < 0)) & 1) return -m012.sign();
-   else   return m012.sign();
+   return m012.sign();
 }
 
 int orient3d_indirect_LTEE_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_TPI& p2, double p3x, double p3y, double p3z, double p4x, double p4y, double p4z)
 {
- double return_value = 0.0;
+ double return_value = NAN;
  double l1x_p[32], *l1x = l1x_p, l1y_p[32], *l1y = l1y_p, l1z_p[32], *l1z = l1z_p, d1_p[32], *d1 = d1_p, l2x_p[32], *l2x = l2x_p, l2y_p[32], *l2y = l2y_p, l2z_p[32], *l2z = l2z_p, d2_p[32], *d2 = d2_p;
  int l1x_len, l1y_len, l1z_len, d1_len, l2x_len, l2y_len, l2z_len, d2_len;
  p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, l1z, l1z_len, d1, d1_len);
@@ -8866,7 +11888,6 @@ int orient3d_indirect_LTEE_exact(const implicitPoint3D_LPI& p1, const implicitPo
    if (d1p4z_p != d1p4z) free(d1p4z);
    if (d1p4y_p != d1p4y) free(d1p4y);
    if (d1p4x_p != d1p4x) free(d1p4x);
-   if (( (d1[d1_len -1] < 0) + (d2[d2_len -1] < 0)) & 1) return_value = -return_value;
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -8880,7 +11901,8 @@ int orient3d_indirect_LTEE_exact(const implicitPoint3D_LPI& p1, const implicitPo
 
  if (return_value > 0) return IP_Sign::POSITIVE;
  if (return_value < 0) return IP_Sign::NEGATIVE;
- return IP_Sign::ZERO;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
 }
 
 int orient3d_indirect_LTEE(const implicitPoint3D_LPI& p1, const implicitPoint3D_TPI& p2, double p3x, double p3y, double p3z, double p4x, double p4y, double p4z)
@@ -8947,7 +11969,6 @@ int orient3d_indirect_LTTE_filtered(const implicitPoint3D_LPI& p1, const implici
    epsilon *= max_var;
    epsilon *= max_var;
    epsilon *= 2.211968919141341e-08;
-   if (((d1 < 0) + (d2 < 0) + (d3 < 0)) & 1) m012 = -m012;
    if (m012 > epsilon) return IP_Sign::POSITIVE;
    if (-m012 > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -8998,13 +12019,12 @@ int orient3d_indirect_LTTE_interval(const implicitPoint3D_LPI& p1, const implici
    setFPUModeToRoundNEAR();
 
    if (!m012.signIsReliable()) return Filtered_Sign::UNCERTAIN;
-   if (((d1 < 0) + (d2 < 0) + (d3 < 0)) & 1) return -m012.sign();
-   else   return m012.sign();
+   return m012.sign();
 }
 
 int orient3d_indirect_LTTE_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_TPI& p2, const implicitPoint3D_TPI& p3, double p4x, double p4y, double p4z)
 {
- double return_value = 0.0;
+ double return_value = NAN;
  double l1x_p[32], *l1x = l1x_p, l1y_p[32], *l1y = l1y_p, l1z_p[32], *l1z = l1z_p, d1_p[32], *d1 = d1_p, l2x_p[32], *l2x = l2x_p, l2y_p[32], *l2y = l2y_p, l2z_p[32], *l2z = l2z_p, d2_p[32], *d2 = d2_p, l3x_p[32], *l3x = l3x_p, l3y_p[32], *l3y = l3y_p, l3z_p[32], *l3z = l3z_p, d3_p[32], *d3 = d3_p;
  int l1x_len, l1y_len, l1z_len, d1_len, l2x_len, l2y_len, l2z_len, d2_len, l3x_len, l3y_len, l3z_len, d3_len;
  p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, l1z, l1z_len, d1, d1_len);
@@ -9111,7 +12131,6 @@ int orient3d_indirect_LTTE_exact(const implicitPoint3D_LPI& p1, const implicitPo
    if (d1p4z_p != d1p4z) free(d1p4z);
    if (d1p4y_p != d1p4y) free(d1p4y);
    if (d1p4x_p != d1p4x) free(d1p4x);
-   if (( (d1[d1_len -1] < 0) + (d2[d2_len -1] < 0) + (d3[d3_len -1] < 0)) & 1) return_value = -return_value;
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -9129,7 +12148,8 @@ int orient3d_indirect_LTTE_exact(const implicitPoint3D_LPI& p1, const implicitPo
 
  if (return_value > 0) return IP_Sign::POSITIVE;
  if (return_value < 0) return IP_Sign::NEGATIVE;
- return IP_Sign::ZERO;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
 }
 
 int orient3d_indirect_LTTE(const implicitPoint3D_LPI& p1, const implicitPoint3D_TPI& p2, const implicitPoint3D_TPI& p3, double p4x, double p4y, double p4z)
@@ -9204,7 +12224,6 @@ int orient3d_indirect_LTTT_filtered(const implicitPoint3D_LPI& p1, const implici
    epsilon *= max_var;
    epsilon *= max_var;
    epsilon *= 0.01883943108077826;
-   if (((d1 < 0) + (d2 < 0) + (d3 < 0) + (d4 < 0)) & 1) m012 = -m012;
    if (m012 > epsilon) return IP_Sign::POSITIVE;
    if (-m012 > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -9265,13 +12284,12 @@ int orient3d_indirect_LTTT_interval(const implicitPoint3D_LPI& p1, const implici
    setFPUModeToRoundNEAR();
 
    if (!m012.signIsReliable()) return Filtered_Sign::UNCERTAIN;
-   if (((d1 < 0) + (d2 < 0) + (d3 < 0) + (d4 < 0)) & 1) return -m012.sign();
-   else   return m012.sign();
+   return m012.sign();
 }
 
 int orient3d_indirect_LTTT_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_TPI& p2, const implicitPoint3D_TPI& p3, const implicitPoint3D_TPI& p4)
 {
- double return_value = 0.0;
+ double return_value = NAN;
  double l1x_p[32], *l1x = l1x_p, l1y_p[32], *l1y = l1y_p, l1z_p[32], *l1z = l1z_p, d1_p[32], *d1 = d1_p, l2x_p[32], *l2x = l2x_p, l2y_p[32], *l2y = l2y_p, l2z_p[32], *l2z = l2z_p, d2_p[32], *d2 = d2_p, l3x_p[32], *l3x = l3x_p, l3y_p[32], *l3y = l3y_p, l3z_p[32], *l3z = l3z_p, d3_p[32], *d3 = d3_p, l4x_p[32], *l4x = l4x_p, l4y_p[32], *l4y = l4y_p, l4z_p[32], *l4z = l4z_p, d4_p[32], *d4 = d4_p;
  int l1x_len, l1y_len, l1z_len, d1_len, l2x_len, l2y_len, l2z_len, d2_len, l3x_len, l3y_len, l3z_len, d3_len, l4x_len, l4y_len, l4z_len, d4_len;
  p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, l1z, l1z_len, d1, d1_len);
@@ -9406,7 +12424,6 @@ int orient3d_indirect_LTTT_exact(const implicitPoint3D_LPI& p1, const implicitPo
    if (d1p4z_p != d1p4z) free(d1p4z);
    if (d1p4y_p != d1p4y) free(d1p4y);
    if (d1p4x_p != d1p4x) free(d1p4x);
-   if (( (d1[d1_len -1] < 0) + (d2[d2_len -1] < 0) + (d3[d3_len -1] < 0) + (d4[d4_len -1] < 0)) & 1) return_value = -return_value;
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -9428,7 +12445,8 @@ int orient3d_indirect_LTTT_exact(const implicitPoint3D_LPI& p1, const implicitPo
 
  if (return_value > 0) return IP_Sign::POSITIVE;
  if (return_value < 0) return IP_Sign::NEGATIVE;
- return IP_Sign::ZERO;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
 }
 
 int orient3d_indirect_LTTT(const implicitPoint3D_LPI& p1, const implicitPoint3D_TPI& p2, const implicitPoint3D_TPI& p3, const implicitPoint3D_TPI& p4)
@@ -9491,7 +12509,6 @@ int orient3d_indirect_TEEE_filtered(const implicitPoint3D_TPI& p1, double ax, do
    epsilon *= epsilon;
    epsilon *= max_var;
    epsilon *= 3.070283610684406e-12;
-   if (((d1 < 0))) m012 = -m012;
    if (m012 > epsilon) return IP_Sign::POSITIVE;
    if (-m012 > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -9534,13 +12551,12 @@ int orient3d_indirect_TEEE_interval(const implicitPoint3D_TPI& p1, interval_numb
    setFPUModeToRoundNEAR();
 
    if (!m012.signIsReliable()) return Filtered_Sign::UNCERTAIN;
-   if (((d1 < 0))) return -m012.sign();
-   else   return m012.sign();
+   return m012.sign();
 }
 
 int orient3d_indirect_TEEE_exact(const implicitPoint3D_TPI& p1, double ax, double ay, double az, double bx, double by, double bz, double cx, double cy, double cz)
 {
- double return_value = 0.0;
+ double return_value = NAN;
  double l1x_p[64], *l1x = l1x_p, l1y_p[64], *l1y = l1y_p, l1z_p[64], *l1z = l1z_p, d1_p[64], *d1 = d1_p;
  int l1x_len, l1y_len, l1z_len, d1_len;
  p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, l1z, l1z_len, d1, d1_len);
@@ -9621,7 +12637,6 @@ int orient3d_indirect_TEEE_exact(const implicitPoint3D_TPI& p1, double ax, doubl
    if (dcz_p != dcz) free(dcz);
    if (dcy_p != dcy) free(dcy);
    if (dcx_p != dcx) free(dcx);
-   if (( (d1[d1_len -1] < 0))) return_value = -return_value;
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -9631,7 +12646,8 @@ int orient3d_indirect_TEEE_exact(const implicitPoint3D_TPI& p1, double ax, doubl
 
  if (return_value > 0) return IP_Sign::POSITIVE;
  if (return_value < 0) return IP_Sign::NEGATIVE;
- return IP_Sign::ZERO;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
 }
 
 int orient3d_indirect_TEEE(const implicitPoint3D_TPI& p1, double ax, double ay, double az, double bx, double by, double bz, double cx, double cy, double cz)
@@ -9701,7 +12717,6 @@ int orient3d_indirect_TTEE_filtered(const implicitPoint3D_TPI& p1, const implici
    epsilon *= max_var;
    epsilon *= max_var;
    epsilon *= 1.036198238324465e-09;
-   if (((d1 < 0) + (d2 < 0)) & 1) m012 = -m012;
    if (m012 > epsilon) return IP_Sign::POSITIVE;
    if (-m012 > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -9748,13 +12763,12 @@ int orient3d_indirect_TTEE_interval(const implicitPoint3D_TPI& p1, const implici
    setFPUModeToRoundNEAR();
 
    if (!m012.signIsReliable()) return Filtered_Sign::UNCERTAIN;
-   if (((d1 < 0) + (d2 < 0)) & 1) return -m012.sign();
-   else   return m012.sign();
+   return m012.sign();
 }
 
 int orient3d_indirect_TTEE_exact(const implicitPoint3D_TPI& p1, const implicitPoint3D_TPI& p2, double p3x, double p3y, double p3z, double p4x, double p4y, double p4z)
 {
- double return_value = 0.0;
+ double return_value = NAN;
  double l1x_p[32], *l1x = l1x_p, l1y_p[32], *l1y = l1y_p, l1z_p[32], *l1z = l1z_p, d1_p[32], *d1 = d1_p, l2x_p[32], *l2x = l2x_p, l2y_p[32], *l2y = l2y_p, l2z_p[32], *l2z = l2z_p, d2_p[32], *d2 = d2_p;
  int l1x_len, l1y_len, l1z_len, d1_len, l2x_len, l2y_len, l2z_len, d2_len;
  p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, l1z, l1z_len, d1, d1_len);
@@ -9848,7 +12862,6 @@ int orient3d_indirect_TTEE_exact(const implicitPoint3D_TPI& p1, const implicitPo
    if (d1p4z_p != d1p4z) free(d1p4z);
    if (d1p4y_p != d1p4y) free(d1p4y);
    if (d1p4x_p != d1p4x) free(d1p4x);
-   if (( (d1[d1_len -1] < 0) + (d2[d2_len -1] < 0)) & 1) return_value = -return_value;
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -9862,7 +12875,8 @@ int orient3d_indirect_TTEE_exact(const implicitPoint3D_TPI& p1, const implicitPo
 
  if (return_value > 0) return IP_Sign::POSITIVE;
  if (return_value < 0) return IP_Sign::NEGATIVE;
- return IP_Sign::ZERO;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
 }
 
 int orient3d_indirect_TTEE(const implicitPoint3D_TPI& p1, const implicitPoint3D_TPI& p2, double p3x, double p3y, double p3z, double p4x, double p4y, double p4z)
@@ -9932,7 +12946,6 @@ int orient3d_indirect_TTTE_filtered(const implicitPoint3D_TPI& p1, const implici
    epsilon *= max_var;
    epsilon *= max_var;
    epsilon *= 2.808754828720361e-07;
-   if (((d1 < 0) + (d2 < 0) + (d3 < 0)) & 1) m012 = -m012;
    if (m012 > epsilon) return IP_Sign::POSITIVE;
    if (-m012 > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -9983,13 +12996,12 @@ int orient3d_indirect_TTTE_interval(const implicitPoint3D_TPI& p1, const implici
    setFPUModeToRoundNEAR();
 
    if (!m012.signIsReliable()) return Filtered_Sign::UNCERTAIN;
-   if (((d1 < 0) + (d2 < 0) + (d3 < 0)) & 1) return -m012.sign();
-   else   return m012.sign();
+   return m012.sign();
 }
 
 int orient3d_indirect_TTTE_exact(const implicitPoint3D_TPI& p1, const implicitPoint3D_TPI& p2, const implicitPoint3D_TPI& p3, double p4x, double p4y, double p4z)
 {
- double return_value = 0.0;
+ double return_value = NAN;
  double l1x_p[32], *l1x = l1x_p, l1y_p[32], *l1y = l1y_p, l1z_p[32], *l1z = l1z_p, d1_p[32], *d1 = d1_p, l2x_p[32], *l2x = l2x_p, l2y_p[32], *l2y = l2y_p, l2z_p[32], *l2z = l2z_p, d2_p[32], *d2 = d2_p, l3x_p[32], *l3x = l3x_p, l3y_p[32], *l3y = l3y_p, l3z_p[32], *l3z = l3z_p, d3_p[32], *d3 = d3_p;
  int l1x_len, l1y_len, l1z_len, d1_len, l2x_len, l2y_len, l2z_len, d2_len, l3x_len, l3y_len, l3z_len, d3_len;
  p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, l1z, l1z_len, d1, d1_len);
@@ -10096,7 +13108,6 @@ int orient3d_indirect_TTTE_exact(const implicitPoint3D_TPI& p1, const implicitPo
    if (d1p4z_p != d1p4z) free(d1p4z);
    if (d1p4y_p != d1p4y) free(d1p4y);
    if (d1p4x_p != d1p4x) free(d1p4x);
-   if (( (d1[d1_len -1] < 0) + (d2[d2_len -1] < 0) + (d3[d3_len -1] < 0)) & 1) return_value = -return_value;
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -10114,7 +13125,8 @@ int orient3d_indirect_TTTE_exact(const implicitPoint3D_TPI& p1, const implicitPo
 
  if (return_value > 0) return IP_Sign::POSITIVE;
  if (return_value < 0) return IP_Sign::NEGATIVE;
- return IP_Sign::ZERO;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
 }
 
 int orient3d_indirect_TTTE(const implicitPoint3D_TPI& p1, const implicitPoint3D_TPI& p2, const implicitPoint3D_TPI& p3, double p4x, double p4y, double p4z)
@@ -10192,7 +13204,6 @@ int orient3d_indirect_TTTT_filtered(const implicitPoint3D_TPI& p1, const implici
    epsilon *= max_var;
    epsilon *= max_var;
    epsilon *= 0.1952243033447331;
-   if (((d1 < 0) + (d2 < 0) + (d3 < 0) + (d4 < 0)) & 1) m012 = -m012;
    if (m012 > epsilon) return IP_Sign::POSITIVE;
    if (-m012 > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -10253,13 +13264,12 @@ int orient3d_indirect_TTTT_interval(const implicitPoint3D_TPI& p1, const implici
    setFPUModeToRoundNEAR();
 
    if (!m012.signIsReliable()) return Filtered_Sign::UNCERTAIN;
-   if (((d1 < 0) + (d2 < 0) + (d3 < 0) + (d4 < 0)) & 1) return -m012.sign();
-   else   return m012.sign();
+   return m012.sign();
 }
 
 int orient3d_indirect_TTTT_exact(const implicitPoint3D_TPI& p1, const implicitPoint3D_TPI& p2, const implicitPoint3D_TPI& p3, const implicitPoint3D_TPI& p4)
 {
- double return_value = 0.0;
+ double return_value = NAN;
  double l1x_p[32], *l1x = l1x_p, l1y_p[32], *l1y = l1y_p, l1z_p[32], *l1z = l1z_p, d1_p[32], *d1 = d1_p, l2x_p[32], *l2x = l2x_p, l2y_p[32], *l2y = l2y_p, l2z_p[32], *l2z = l2z_p, d2_p[32], *d2 = d2_p, l3x_p[32], *l3x = l3x_p, l3y_p[32], *l3y = l3y_p, l3z_p[32], *l3z = l3z_p, d3_p[32], *d3 = d3_p, l4x_p[32], *l4x = l4x_p, l4y_p[32], *l4y = l4y_p, l4z_p[32], *l4z = l4z_p, d4_p[32], *d4 = d4_p;
  int l1x_len, l1y_len, l1z_len, d1_len, l2x_len, l2y_len, l2z_len, d2_len, l3x_len, l3y_len, l3z_len, d3_len, l4x_len, l4y_len, l4z_len, d4_len;
  p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, l1z, l1z_len, d1, d1_len);
@@ -10394,7 +13404,6 @@ int orient3d_indirect_TTTT_exact(const implicitPoint3D_TPI& p1, const implicitPo
    if (d1p4z_p != d1p4z) free(d1p4z);
    if (d1p4y_p != d1p4y) free(d1p4y);
    if (d1p4x_p != d1p4x) free(d1p4x);
-   if (( (d1[d1_len -1] < 0) + (d2[d2_len -1] < 0) + (d3[d3_len -1] < 0) + (d4[d4_len -1] < 0)) & 1) return_value = -return_value;
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -10416,7 +13425,8 @@ int orient3d_indirect_TTTT_exact(const implicitPoint3D_TPI& p1, const implicitPo
 
  if (return_value > 0) return IP_Sign::POSITIVE;
  if (return_value < 0) return IP_Sign::NEGATIVE;
- return IP_Sign::ZERO;
+ if (return_value == 0) return IP_Sign::ZERO;
+ return IP_Sign::UNDEFINED;
 }
 
 int orient3d_indirect_TTTT(const implicitPoint3D_TPI& p1, const implicitPoint3D_TPI& p2, const implicitPoint3D_TPI& p3, const implicitPoint3D_TPI& p4)

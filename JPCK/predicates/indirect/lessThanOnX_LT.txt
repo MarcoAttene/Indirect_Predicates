@@ -5,4 +5,4 @@ k1 = d2 * l1x
 k2 = d1 * l2x
 kx = k1 - k2
 
-SIGN d1 d2
+// SIGN d1 d2

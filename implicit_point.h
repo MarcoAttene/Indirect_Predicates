@@ -113,21 +113,27 @@ public:
 	// These are the indirect predicates supported up to now
 
 	// Orient2D - fully supported
-	// Input points can be:
-	// 1) any combination of 2D points (explicit or SSI)
-	// 2) any combination of 3D points (explicit, LPI or TPI). Orientation is computed on XY.
+	// Input points can be any combination of 2D points (explicit or SSI)
 	static int orient2D(const genericPoint& a, const genericPoint& b, const genericPoint& c);
+
+	// Orient2Dxy - fully supported
+	// Input points can be any combination of 3D points (explicit, LPI or TPI). Orientation is computed on XY.
+	static int orient2Dxy(const genericPoint& a, const genericPoint& b, const genericPoint& c);
+	static int orient2Dyz(const genericPoint& a, const genericPoint& b, const genericPoint& c);
+	static int orient2Dzx(const genericPoint& a, const genericPoint& b, const genericPoint& c);
 
 	// Orient3D - fully supported
 	// Input can be:
 	// 1) any combination of 3D points (explicit, LPI or TPI)
 	static int orient3D(const genericPoint& a, const genericPoint& b, const genericPoint& c, const genericPoint& d);
 
-	// incircle - partly supported
-	// Input points can be:
-	// 1) any combination of 2D points (explicit or SSI)
-	// 2) any combination of either explicit or LPI 3D points. Incircle is computed on XY.
+	// incircle - fully supported
+	// Input points can be any combination of 2D points (explicit or SSI)
 	static int incircle(const genericPoint& a, const genericPoint& b, const genericPoint& c, const genericPoint& d);
+
+	// incircle - partly supported
+	// Input points can be any combination of either explicit or LPI 3D points. Incircle is computed on XY.
+	static int incirclexy(const genericPoint& a, const genericPoint& b, const genericPoint& c, const genericPoint& d);
 
 	// inSphere - partly supported
 	// Input points can be only explicit
