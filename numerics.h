@@ -128,11 +128,11 @@
 				lhhl = _mm_mul_pd(interval, _mm_shuffle_pd(b.interval, b.interval, 1));
 				return interval_number(_mm_max_pd(_mm_unpacklo_pd(llhh, lhhl), _mm_unpackhi_pd(llhh, lhhl)));
 			case 1:
-				return interval_number(_mm_mul_pd(_mm_shuffle_pd(b.interval, b.interval, 3), interval));
+				return interval_number(_mm_mul_pd(_mm_shuffle_pd(b.interval, b.interval, 3), _mm_shuffle_pd(interval, interval, 1)));
 			case 2:
 				return interval_number(_mm_mul_pd(_mm_shuffle_pd(b.interval, b.interval, 0), interval));
 			case 4:
-				return interval_number(_mm_mul_pd(_mm_shuffle_pd(interval, interval, 3), b.interval));
+				return interval_number(_mm_mul_pd(_mm_shuffle_pd(interval, interval, 3), _mm_shuffle_pd(b.interval, b.interval, 1)));
 			case 5:
 				ip = _mm_mul_pd(_mm_castsi128_pd(_mm_xor_si128(_mm_castpd_si128(interval), sign_high_mask)), b.interval);
 				return interval_number(_mm_shuffle_pd(ip, ip, 1));
@@ -140,7 +140,7 @@
 				ssg = _mm_xor_si128(_mm_castpd_si128(b.interval), sign_low_mask);
 				return interval_number(_mm_mul_pd(interval, _mm_shuffle_pd(_mm_castsi128_pd(ssg), _mm_castsi128_pd(ssg), 1)));
 			case 8:
-				return interval_number(_mm_mul_pd(_mm_shuffle_pd(interval, interval, 0), _mm_shuffle_pd(b.interval, b.interval, 1)));
+				return interval_number(_mm_mul_pd(_mm_shuffle_pd(interval, interval, 0), b.interval));
 			case 9:
 				ssg = _mm_xor_si128(_mm_castpd_si128(interval), sign_low_mask);
 				return interval_number(_mm_mul_pd(b.interval, _mm_shuffle_pd(_mm_castsi128_pd(ssg), _mm_castsi128_pd(ssg), 1)));
