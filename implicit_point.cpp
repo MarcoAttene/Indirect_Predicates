@@ -361,7 +361,7 @@ inline int orient3d_IIEE(const genericPoint& a, const genericPoint& b, const gen
 	if (a.isLPI() && b.isLPI()) return orient3d_LLEE(a, b, c, d);
 	if (a.isLPI() && b.isTPI()) return orient3d_LTEE(a, b, c, d);
 	if (a.isTPI() && b.isTPI()) return orient3d_TTEE(a, b, c, d);
-	return -orient3d_LTEE(b, a, c, d);
+	return orient3d_LTEE(b, a, d, c);
 }
 
 inline int orient3d_IIIE(const genericPoint& a, const genericPoint& b, const genericPoint& c, const genericPoint& d)
@@ -370,9 +370,9 @@ inline int orient3d_IIIE(const genericPoint& a, const genericPoint& b, const gen
 	if (a.isLPI() && b.isLPI() && c.isTPI()) return orient3d_LLTE(a, b, c, d);
 	if (a.isLPI() && b.isTPI() && c.isTPI()) return orient3d_LTTE(a, b, c, d);
 	if (a.isTPI() && b.isTPI() && c.isTPI()) return orient3d_TTTE(a, b, c, d);
-	if (a.isLPI() && b.isTPI() && c.isLPI()) return -orient3d_LLTE(a, c, b, d);
-	if (a.isTPI() && b.isLPI() && c.isLPI()) return -orient3d_LLTE(b, c, a, d);
-	if (a.isTPI() && b.isLPI() && c.isTPI()) return -orient3d_LTTE(b, a, c, d);
+	if (a.isLPI() && b.isTPI() && c.isLPI()) return orient3d_LLTE(c, a, b, d);
+	if (a.isTPI() && b.isLPI() && c.isLPI()) return orient3d_LLTE(c, b, a, d);
+	if (a.isTPI() && b.isLPI() && c.isTPI()) return orient3d_LTTE(b, c, a, d);
 	return -orient3d_LTTE(c, a, b, d);
 }
 
@@ -388,12 +388,12 @@ int genericPoint::orient3D(const genericPoint& a, const genericPoint& b, const g
 	{
 		if (a.isLPI()) return orient3d_LEEE(a, b, c, d);
 		if (a.isTPI()) return orient3d_TEEE(a, b, c, d);
-		if (b.isLPI()) return -orient3d_LEEE(b, c, d, a);
-		if (b.isTPI()) return -orient3d_TEEE(b, c, d, a);
+		if (b.isLPI()) return orient3d_LEEE(b, c, a, d);
+		if (b.isTPI()) return orient3d_TEEE(b, c, a, d);
 		if (c.isLPI()) return orient3d_LEEE(c, d, a, b);
 		if (c.isTPI()) return orient3d_TEEE(c, d, a, b);
-		if (d.isLPI()) return -orient3d_LEEE(d, a, b, c);
-		if (d.isTPI()) return -orient3d_TEEE(d, a, b, c);
+		if (d.isLPI()) return orient3d_LEEE(d, a, c, b);
+		if (d.isTPI()) return orient3d_TEEE(d, a, c, b);
 
 		ip_error("genericPoint::orient3d - should not happen (3)\n");
 	}
@@ -401,10 +401,10 @@ int genericPoint::orient3D(const genericPoint& a, const genericPoint& b, const g
 	if (i == 2)
 	{
 		if (c.isExplicit3D() && d.isExplicit3D()) return orient3d_IIEE(a, b, c, d);
-		if (b.isExplicit3D() && d.isExplicit3D()) return -orient3d_IIEE(a, c, b, d);
-		if (a.isExplicit3D() && d.isExplicit3D()) return orient3d_IIEE(b, c, d, a);
-		if (b.isExplicit3D() && c.isExplicit3D()) return orient3d_IIEE(d, a, b, c);
-		if (a.isExplicit3D() && c.isExplicit3D()) return -orient3d_IIEE(d, b, a, c);
+		if (b.isExplicit3D() && d.isExplicit3D()) return orient3d_IIEE(a, c, d, b);
+		if (a.isExplicit3D() && d.isExplicit3D()) return orient3d_IIEE(b, c, a, d);
+		if (b.isExplicit3D() && c.isExplicit3D()) return orient3d_IIEE(d, a, c, b);
+		if (a.isExplicit3D() && c.isExplicit3D()) return orient3d_IIEE(d, b, a, c);
 		if (a.isExplicit3D() && b.isExplicit3D()) return orient3d_IIEE(c, d, a, b);
 
 		ip_error("genericPoint::orient3d - should not happen (2)\n");
@@ -413,9 +413,9 @@ int genericPoint::orient3D(const genericPoint& a, const genericPoint& b, const g
 	if (i == 1)
 	{
 		if (d.isExplicit3D()) return orient3d_IIIE(a, b, c, d);
-		if (c.isExplicit3D()) return orient3d_IIIE(d, a, b, c);
+		if (c.isExplicit3D()) return orient3d_IIIE(d, b, a, c);
 		if (b.isExplicit3D()) return orient3d_IIIE(a, c, d, b);
-		if (a.isExplicit3D()) return orient3d_IIIE(b, c, d, a);
+		if (a.isExplicit3D()) return orient3d_IIIE(b, d, c, a);
 
 		ip_error("genericPoint::orient3d - should not happen (1)\n");
 	}
@@ -430,9 +430,9 @@ int genericPoint::orient3D(const genericPoint& a, const genericPoint& b, const g
 		if (a.isLPI() && b.isLPI() && c.isTPI() && d.isLPI()) return orient3d_LLLT(d, a, b, c);
 		if (a.isLPI() && b.isTPI() && c.isLPI() && d.isLPI()) return orient3d_LLLT(c, d, a, b);
 		if (a.isTPI() && b.isLPI() && c.isLPI() && d.isLPI()) return orient3d_LLLT(b, c, d, a);
-		if (a.isLPI() && b.isTPI() && c.isLPI() && d.isTPI()) return -orient3d_LLTT(a, c, b, d);
+		if (a.isLPI() && b.isTPI() && c.isLPI() && d.isTPI()) return orient3d_LLTT(c, a, b, d);
 		if (a.isTPI() && b.isLPI() && c.isLPI() && d.isTPI()) return orient3d_LLTT(b, c, d, a);
-		if (a.isTPI() && b.isLPI() && c.isTPI() && d.isLPI()) return -orient3d_LLTT(b, d, c, a);
+		if (a.isTPI() && b.isLPI() && c.isTPI() && d.isLPI()) return orient3d_LLTT(d, b, c, a);
 		if (a.isTPI() && b.isTPI() && c.isLPI() && d.isLPI()) return orient3d_LLTT(c, d, a, b);
 		if (a.isLPI() && b.isTPI() && c.isTPI() && d.isLPI()) return orient3d_LLTT(d, a, b, c);
 		if (a.isTPI() && b.isLPI() && c.isTPI() && d.isTPI()) return orient3d_LTTT(b, c, d, a);
@@ -477,21 +477,21 @@ int genericPoint::incircle(const genericPoint& a, const genericPoint& b, const g
 		if (a.isExplicit2D() && b.isExplicit2D() && c.isExplicit2D() && d.isExplicit2D()) return incircle2d_EEEE(a, b, c, d);
 
 		if (a.isSSI() && b.isExplicit2D() && c.isExplicit2D() && d.isExplicit2D()) return incircle2d_SEEE(a, b, c, d);
-		if (a.isExplicit2D() && b.isSSI() && c.isExplicit2D() && d.isExplicit2D()) return -incircle2d_SEEE(b, a, c, d);
+		if (a.isExplicit2D() && b.isSSI() && c.isExplicit2D() && d.isExplicit2D()) return incircle2d_SEEE(b, a, d, c);
 		if (a.isExplicit2D() && b.isExplicit2D() && c.isSSI() && d.isExplicit2D()) return incircle2d_SEEE(c, a, b, d);
-		if (a.isExplicit2D() && b.isExplicit2D() && c.isExplicit2D() && d.isSSI()) return -incircle2d_SEEE(d, a, b, c);
+		if (a.isExplicit2D() && b.isExplicit2D() && c.isExplicit2D() && d.isSSI()) return incircle2d_SEEE(d, a, c, b);
 
 		if (a.isSSI() && b.isSSI() && c.isExplicit2D() && d.isExplicit2D()) return incircle2d_SSEE(a, b, c, d);
 		if (a.isExplicit2D() && b.isExplicit2D() && c.isSSI() && d.isSSI()) return incircle2d_SSEE(c, d, a, b);
-		if (a.isExplicit2D() && b.isSSI() && c.isExplicit2D() && d.isSSI()) return -incircle2d_SSEE(b, d, a, c);
+		if (a.isExplicit2D() && b.isSSI() && c.isExplicit2D() && d.isSSI()) return incircle2d_SSEE(b, d, c, a);
 		if (a.isExplicit2D() && b.isSSI() && c.isSSI() && d.isExplicit2D()) return incircle2d_SSEE(b, c, a, d);
 		if (a.isSSI() && b.isExplicit2D() && c.isExplicit2D() && d.isSSI()) return incircle2d_SSEE(a, d, b, c);
-		if (a.isSSI() && b.isExplicit2D() && c.isSSI() && d.isExplicit2D()) return -incircle2d_SSEE(a, c, b, d);
+		if (a.isSSI() && b.isExplicit2D() && c.isSSI() && d.isExplicit2D()) return incircle2d_SSEE(a, c, d, b);
 
 		if (a.isSSI() && b.isSSI() && c.isSSI() && d.isExplicit2D()) return incircle2d_SSSE(a, b, c, d);
-		if (a.isExplicit2D() && b.isSSI() && c.isSSI() && d.isSSI()) return -incircle2d_SSSE(b, c, d, a);
+		if (a.isExplicit2D() && b.isSSI() && c.isSSI() && d.isSSI()) return incircle2d_SSSE(c, b, d, a);
 		if (a.isSSI() && b.isExplicit2D() && c.isSSI() && d.isSSI()) return incircle2d_SSSE(a, c, d, b);
-		if (a.isSSI() && b.isSSI() && c.isExplicit2D() && d.isSSI()) return -incircle2d_SSSE(a, b, d, c);
+		if (a.isSSI() && b.isSSI() && c.isExplicit2D() && d.isSSI()) return incircle2d_SSSE(b, a, d, c);
 
 		if (a.isSSI() && b.isSSI() && c.isSSI() && d.isSSI()) return incircle2d_SSSS(a, b, c, d);
 
@@ -530,21 +530,21 @@ int genericPoint::incirclexy(const genericPoint& a, const genericPoint& b, const
 		if (a.isExplicit3D() && b.isExplicit3D() && c.isExplicit3D() && d.isExplicit3D()) return incircle2dxy_EEEE(a, b, c, d);
 
 		if (a.isLPI() && b.isExplicit3D() && c.isExplicit3D() && d.isExplicit3D()) return incircle2dxy_LEEE(a, b, c, d);
-		if (a.isExplicit3D() && b.isLPI() && c.isExplicit3D() && d.isExplicit3D()) return -incircle2dxy_LEEE(b, a, c, d);
+		if (a.isExplicit3D() && b.isLPI() && c.isExplicit3D() && d.isExplicit3D()) return incircle2dxy_LEEE(b, a, d, c);
 		if (a.isExplicit3D() && b.isExplicit3D() && c.isLPI() && d.isExplicit3D()) return incircle2dxy_LEEE(c, a, b, d);
-		if (a.isExplicit3D() && b.isExplicit3D() && c.isExplicit3D() && d.isLPI()) return -incircle2dxy_LEEE(d, a, b, c);
+		if (a.isExplicit3D() && b.isExplicit3D() && c.isExplicit3D() && d.isLPI()) return incircle2dxy_LEEE(d, a, c, b);
 
 		if (a.isLPI() && b.isLPI() && c.isExplicit3D() && d.isExplicit3D()) return incircle2dxy_LLEE(a, b, c, d);
 		if (a.isExplicit3D() && b.isExplicit3D() && c.isLPI() && d.isLPI()) return incircle2dxy_LLEE(c, d, a, b);
-		if (a.isExplicit3D() && b.isLPI() && c.isExplicit3D() && d.isLPI()) return -incircle2dxy_LLEE(b, d, a, c);
+		if (a.isExplicit3D() && b.isLPI() && c.isExplicit3D() && d.isLPI()) return incircle2dxy_LLEE(b, d, c, a);
 		if (a.isExplicit3D() && b.isLPI() && c.isLPI() && d.isExplicit3D()) return incircle2dxy_LLEE(b, c, a, d);
 		if (a.isLPI() && b.isExplicit3D() && c.isExplicit3D() && d.isLPI()) return incircle2dxy_LLEE(a, d, b, c);
-		if (a.isLPI() && b.isExplicit3D() && c.isLPI() && d.isExplicit3D()) return -incircle2dxy_LLEE(a, c, b, d);
+		if (a.isLPI() && b.isExplicit3D() && c.isLPI() && d.isExplicit3D()) return incircle2dxy_LLEE(a, c, d, b);
 
 		if (a.isLPI() && b.isLPI() && c.isLPI() && d.isExplicit3D()) return incircle2dxy_LLLE(a, b, c, d);
-		if (a.isExplicit3D() && b.isLPI() && c.isLPI() && d.isLPI()) return -incircle2dxy_LLLE(b, c, d, a);
+		if (a.isExplicit3D() && b.isLPI() && c.isLPI() && d.isLPI()) return incircle2dxy_LLLE(c, b, d, a);
 		if (a.isLPI() && b.isExplicit3D() && c.isLPI() && d.isLPI()) return incircle2dxy_LLLE(a, c, d, b);
-		if (a.isLPI() && b.isLPI() && c.isExplicit3D() && d.isLPI()) return -incircle2dxy_LLLE(a, b, d, c);
+		if (a.isLPI() && b.isLPI() && c.isExplicit3D() && d.isLPI()) return incircle2dxy_LLLE(b, a, d, c);
 
 		if (a.isLPI() && b.isLPI() && c.isLPI() && d.isLPI()) return incircle2dxy_LLLL(a, b, c, d);
 
