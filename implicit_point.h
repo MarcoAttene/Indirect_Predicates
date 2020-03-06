@@ -116,8 +116,9 @@ public:
 	// Input points can be any combination of 2D points (explicit or SSI)
 	static int orient2D(const genericPoint& a, const genericPoint& b, const genericPoint& c);
 
-	// Orient2Dxy - fully supported
-	// Input points can be any combination of 3D points (explicit, LPI or TPI). Orientation is computed on XY.
+	// Orient2Dxy (resp. Orient2Dyz, Orient2Dzx) - fully supported
+	// Input points can be any combination of 3D points (explicit, LPI or TPI). 
+	// Orientation is computed on XY (resp. YZ, ZX).
 	static int orient2Dxy(const genericPoint& a, const genericPoint& b, const genericPoint& c);
 	static int orient2Dyz(const genericPoint& a, const genericPoint& b, const genericPoint& c);
 	static int orient2Dzx(const genericPoint& a, const genericPoint& b, const genericPoint& c);
@@ -139,6 +140,16 @@ public:
 	// Input points can be only explicit
 	static int inSphere(const genericPoint& a, const genericPoint& b, const genericPoint& c, const genericPoint& d, const genericPoint& e);
 
+	// lessThanOnX (resp. Y, Z) - partly supported (only 3D)
+	// Input points can be any combination of 3D points
+	// lessThanOnX(a,b) =
+	// -1 - if a.X < b.X
+	// 0  - if a.X == b.X
+	// 1  - if a.X > b.X
+	static int lessThanOnX(const genericPoint& a, const genericPoint& b);
+	static int lessThanOnY(const genericPoint& a, const genericPoint& b);
+	static int lessThanOnZ(const genericPoint& a, const genericPoint& b);
+
 	// lessThan - partly supported (only 3D)
 	// Input points can be any combination of 3D points
 	// lessThan(a,b) =
@@ -147,6 +158,9 @@ public:
 	// 1  - if a > b
 	// in lexicographical order
 	static int lessThan(const genericPoint& a, const genericPoint& b);
+
+	// TRUE if the two points are coincident
+	static bool coincident(const genericPoint& a, const genericPoint& b) { return lessThan(a, b) == 0; }
 
 	// Let n = (x,y,z) be the normal of the triangle <v1,v2,v3>
 	// and let m be the absolute value of its largest component.
@@ -158,6 +172,36 @@ public:
 	//
 	// Warning: this function assumes that the triangle is not exactly degenerate. It may crash otherwise.
 	static int maxComponentInTriangleNormal(double v1x, double v1y, double v1z, double v2x, double v2y, double v2z, double v3x, double v3y, double v3z);
+
+	// TRUE if A-B-C are not collinear
+	static bool misaligned(const genericPoint& A, const genericPoint& B, const genericPoint& C) {
+		return (orient2Dxy(A, B, C) || orient2Dyz(A, B, C) || orient2Dzx(A, B, C));
+	}
+
+	// TRUE if 'p' is in the interior of v1-v2
+	static bool pointInInnerSegment(const genericPoint& p, const genericPoint& v1, const genericPoint& v2);
+
+	// TRUE if 'p' is in the closure of v1-v2
+	static bool pointInSegment(const genericPoint& p, const genericPoint& v1, const genericPoint& v2);
+
+	// TRUE if P is in the interior of <A,B,C>
+	// Points are assumed to be coplanar. Undetermined otherwise.
+	static bool pointInInnerTriangle(const genericPoint& P, const genericPoint& A, const genericPoint& B, const genericPoint& C);
+
+	// TRUE if P is in the closure of <A,B,C>
+	// Points are assumed to be coplanar. Undetermined otherwise.
+	static bool pointInTriangle(const genericPoint& P, const genericPoint& A, const genericPoint& B, const genericPoint& C);
+
+	// TRUE if the interior of A-B intersects the interior of P-Q at a single point
+	// Points are assumed to be coplanar. Undetermined otherwise.
+	static bool innerSegmentsCross(const genericPoint& A, const genericPoint& B, const genericPoint& P, const genericPoint& Q);
+
+	// TRUE if the closure of A-B intersects the closure of P-Q at a single point
+	// Points are assumed to be coplanar. Undetermined otherwise.
+	static bool segmentsCross(const genericPoint& A, const genericPoint& B, const genericPoint& P, const genericPoint& Q);
+
+	// TRUE if interior of s1-s2 intersects interior of <v1,v2,v3> at a single point
+	static bool innerSegmentCrossesInnerTriangle(const genericPoint& s1, const genericPoint& s2, const genericPoint& v1, const genericPoint& v2, const genericPoint& v3);
 };
 
 

@@ -85,8 +85,6 @@ inline int lessThan_TT(const genericPoint& a, const genericPoint& b) { return le
 
 int genericPoint::lessThan(const genericPoint& a, const genericPoint& b)
 {
-	if (a.is3D()) // Here we may want to check that b is also 3D, but for now we just assume it is
-	{
 		if (a.isExplicit3D() && b.isExplicit3D()) return lessThan_EE(a, b);
 		if (a.isLPI() && b.isExplicit3D()) return lessThan_LE(a, b);
 		if (a.isTPI() && b.isExplicit3D()) return lessThan_TE(a, b);
@@ -97,9 +95,65 @@ int genericPoint::lessThan(const genericPoint& a, const genericPoint& b)
 		if (a.isLPI() && b.isTPI())	return lessThan_LT(a, b);
 		if (a.isTPI() && b.isTPI())	return lessThan_TT(a, b);
 
-		ip_error("genericPoint::lessThan - should not happen (3D)\n");
-	}
-	ip_error("genericPoint::lessThan - points must be 3D\n");
+		ip_error("genericPoint::lessThan - points must be 3D\n");
+}
+
+
+int genericPoint::lessThanOnX(const genericPoint& a, const genericPoint& b)
+{
+		if (a.isExplicit3D() && b.isExplicit3D())
+		{
+			double av = a.toExplicit3D().X(), bv = b.toExplicit3D().X();
+			return ((av > bv) - (av < bv));
+		}
+		if (a.isLPI() && b.isExplicit3D()) return lessThanOnX_LE(a.toLPI(), b.toExplicit3D().X());
+		if (a.isTPI() && b.isExplicit3D()) return lessThanOnX_TE(a.toTPI(), b.toExplicit3D().X());
+		if (a.isExplicit3D() && b.isLPI()) return -lessThanOnX_LE(b.toLPI(), a.toExplicit3D().X());
+		if (a.isLPI() && b.isLPI()) return lessThanOnX_LL(a.toLPI(), b.toLPI());
+		if (a.isTPI() && b.isLPI())	return -lessThanOnX_LT(b.toLPI(), a.toTPI());
+		if (a.isExplicit3D() && b.isTPI()) return -lessThanOnX_TE(b.toTPI(), a.toExplicit3D().X());
+		if (a.isLPI() && b.isTPI())	return lessThanOnX_LT(a.toLPI(), b.toTPI());
+		if (a.isTPI() && b.isTPI())	return lessThanOnX_TT(a.toTPI(), b.toTPI());
+
+	ip_error("genericPoint::lessThanOnX - points must be 3D\n");
+}
+
+int genericPoint::lessThanOnY(const genericPoint& a, const genericPoint& b)
+{
+		if (a.isExplicit3D() && b.isExplicit3D())
+		{
+			double av = a.toExplicit3D().Y(), bv = b.toExplicit3D().Y();
+			return ((av > bv) - (av < bv));
+		}
+		if (a.isLPI() && b.isExplicit3D()) return lessThanOnY_LE(a.toLPI(), b.toExplicit3D().Y());
+		if (a.isTPI() && b.isExplicit3D()) return lessThanOnY_TE(a.toTPI(), b.toExplicit3D().Y());
+		if (a.isExplicit3D() && b.isLPI()) return -lessThanOnY_LE(b.toLPI(), a.toExplicit3D().Y());
+		if (a.isLPI() && b.isLPI()) return lessThanOnY_LL(a.toLPI(), b.toLPI());
+		if (a.isTPI() && b.isLPI())	return -lessThanOnY_LT(b.toLPI(), a.toTPI());
+		if (a.isExplicit3D() && b.isTPI()) return -lessThanOnY_TE(b.toTPI(), a.toExplicit3D().Y());
+		if (a.isLPI() && b.isTPI())	return lessThanOnY_LT(a.toLPI(), b.toTPI());
+		if (a.isTPI() && b.isTPI())	return lessThanOnY_TT(a.toTPI(), b.toTPI());
+
+	ip_error("genericPoint::lessThanOnY - points must be 3D\n");
+}
+
+int genericPoint::lessThanOnZ(const genericPoint& a, const genericPoint& b)
+{
+		if (a.isExplicit3D() && b.isExplicit3D())
+		{
+			double av = a.toExplicit3D().Z(), bv = b.toExplicit3D().Z();
+			return ((av > bv) - (av < bv));
+		}
+		if (a.isLPI() && b.isExplicit3D()) return lessThanOnZ_LE(a.toLPI(), b.toExplicit3D().Z());
+		if (a.isTPI() && b.isExplicit3D()) return lessThanOnZ_TE(a.toTPI(), b.toExplicit3D().Z());
+		if (a.isExplicit3D() && b.isLPI()) return -lessThanOnZ_LE(b.toLPI(), a.toExplicit3D().Z());
+		if (a.isLPI() && b.isLPI()) return lessThanOnZ_LL(a.toLPI(), b.toLPI());
+		if (a.isTPI() && b.isLPI())	return -lessThanOnZ_LT(b.toLPI(), a.toTPI());
+		if (a.isExplicit3D() && b.isTPI()) return -lessThanOnZ_TE(b.toTPI(), a.toExplicit3D().Z());
+		if (a.isLPI() && b.isTPI())	return lessThanOnZ_LT(a.toLPI(), b.toTPI());
+		if (a.isTPI() && b.isTPI())	return lessThanOnZ_TT(a.toTPI(), b.toTPI());
+
+	ip_error("genericPoint::lessThanOnZ - points must be 3D\n");
 }
 
 inline int orient2d_EEE(const genericPoint& a, const genericPoint& b, const genericPoint& c) { return orient2d(a.toExplicit2D().X(), a.toExplicit2D().Y(), b.toExplicit2D().X(), b.toExplicit2D().Y(), c.toExplicit2D().X(), c.toExplicit2D().Y()); }
@@ -992,4 +1046,146 @@ int genericPoint::maxComponentInTriangleNormal(double ov1x, double ov1y, double 
 	int ret;
 	if ((ret = maxComponentInTriangleNormal_filtered(ov1x, ov1y, ov1z, ov2x, ov2y, ov2z, ov3x, ov3y, ov3z)) >= 0) return ret;
 	return maxComponentInTriangleNormal_exact(ov1x, ov1y, ov1z, ov2x, ov2y, ov2z, ov3x, ov3y, ov3z);
+}
+
+
+/////////////////////////////////////////////
+//
+// Derived predicates
+//
+/////////////////////////////////////////////
+
+bool genericPoint::innerSegmentsCross(const genericPoint& A, const genericPoint& B, const genericPoint& P, const genericPoint& Q)
+{
+	int o11, o12, o21, o22;
+
+	o11 = orient2Dxy(P, A, B);
+	o12 = orient2Dxy(Q, B, A);
+	o21 = orient2Dxy(A, P, Q);
+	o22 = orient2Dxy(B, Q, P);
+	if (o11 || o21 || o12 || o22) return (o11 == o12 && o21 == o22);
+
+	o11 = orient2Dyz(P, A, B);
+	o12 = orient2Dyz(Q, B, A);
+	o21 = orient2Dyz(A, P, Q);
+	o22 = orient2Dyz(B, Q, P);
+	if (o11 || o21 || o12 || o22) return (o11 == o12 && o21 == o22);
+
+	o11 = orient2Dzx(P, A, B);
+	o12 = orient2Dzx(Q, B, A);
+	o21 = orient2Dzx(A, P, Q);
+	o22 = orient2Dzx(B, Q, P);
+	if (o11 || o21 || o12 || o22) return (o11 == o12 && o21 == o22);
+
+	return false;
+}
+
+bool genericPoint::segmentsCross(const genericPoint& A, const genericPoint& B, const genericPoint& P, const genericPoint& Q)
+{
+	int o11, o12, o21, o22;
+
+	o11 = orient2Dxy(P, A, B);
+	o12 = orient2Dxy(Q, B, A);
+	o21 = orient2Dxy(A, P, Q);
+	o22 = orient2Dxy(B, Q, P);
+	if ((o11 || o12) && (o11 * o12 >= 0) && (o21 || o22) && (o21 * o22 >= 0)) return true;
+
+	o11 = orient2Dyz(P, A, B);
+	o12 = orient2Dyz(Q, B, A);
+	o21 = orient2Dyz(A, P, Q);
+	o22 = orient2Dyz(B, Q, P);
+	if ((o11 || o12) && (o11 * o12 >= 0) && (o21 || o22) && (o21 * o22 >= 0)) return true;
+
+	o11 = orient2Dzx(P, A, B);
+	o12 = orient2Dzx(Q, B, A);
+	o21 = orient2Dzx(A, P, Q);
+	o22 = orient2Dzx(B, Q, P);
+	if ((o11 || o12) && (o11 * o12 >= 0) && (o21 || o22) && (o21 * o22 >= 0)) return true;
+
+	return false;
+}
+
+bool genericPoint::innerSegmentCrossesInnerTriangle(const genericPoint& s1, const genericPoint& s2, const genericPoint& v1, const genericPoint& v2, const genericPoint& v3)
+{
+	int o1 = orient3D(s1, v1, v2, v3); if (o1 == 0) return false;
+	int o2 = orient3D(s2, v1, v2, v3); if (o2 == 0) return false;
+
+	if ((o1 > 0 && o2 > 0) || (o1 < 0 && o2 < 0)) return false;
+	o1 = orient3D(s1, s2, v1, v2);
+	o2 = orient3D(s1, s2, v2, v3);
+	if ((o1 >= 0 && o2 <= 0) || (o1 <= 0 && o2 >= 0)) return false;
+	int o3 = orient3D(s1, s2, v3, v1);
+	if ((o1 >= 0 && o3 <= 0) || (o1 <= 0 && o3 >= 0)) return false;
+	if ((o2 >= 0 && o3 <= 0) || (o2 <= 0 && o3 >= 0)) return false;
+	return true;
+}
+
+bool genericPoint::pointInInnerSegment(const genericPoint& p, const genericPoint& v1, const genericPoint& v2)
+{
+	if (misaligned(p, v1, v2)) return false;
+
+	int lt2, lt3;
+	lt2 = lessThanOnX(v1, p);
+	lt3 = lessThanOnX(p, v2);
+	if (lt2) return (lt2 == lt3);
+	lt2 = lessThanOnY(v1, p);
+	lt3 = lessThanOnY(p, v2);
+	if (lt2) return (lt2 == lt3);
+	lt2 = lessThanOnZ(v1, p);
+	lt3 = lessThanOnZ(p, v2);
+	if (lt2) return (lt2 == lt3);
+	return false;
+}
+
+bool genericPoint::pointInSegment(const genericPoint& p, const genericPoint& v1, const genericPoint& v2)
+{
+	if (misaligned(p, v1, v2)) return false;
+
+	int lt2x = lessThanOnX(v1, p);
+	int lt3x = lessThanOnX(p, v2);
+	if (lt2x) return (lt2x == lt3x);
+	int lt2y = lessThanOnY(v1, p);
+	int lt3y = lessThanOnY(p, v2);
+	if (lt2y) return (lt2y == lt3y);
+	int lt2z = lessThanOnZ(v1, p);
+	int lt3z = lessThanOnZ(p, v2);
+	if (lt2z) return (lt2z == lt3z);
+
+	return ((lt2x == 0 && lt2y == 0 && lt2z == 0) || (lt3x == 0 && lt3y == 0 && lt3z == 0));
+}
+
+bool genericPoint::pointInTriangle(const genericPoint& P, const genericPoint& A, const genericPoint& B, const genericPoint& C)
+{
+	int o1, o2, o3;
+	o1 = orient2Dxy(P, A, B);
+	o2 = orient2Dxy(P, B, C);
+	o3 = orient2Dxy(P, C, A);
+	if (!((o1 >= 0 && o2 >= 0 && o3 >= 0) || (o1 <= 0 && o2 <= 0 && o3 <= 0))) return false;
+	o1 = orient2Dyz(P, A, B);
+	o2 = orient2Dyz(P, B, C);
+	o3 = orient2Dyz(P, C, A);
+	if (!((o1 >= 0 && o2 >= 0 && o3 >= 0) || (o1 <= 0 && o2 <= 0 && o3 <= 0))) return false;
+	o1 = orient2Dzx(P, A, B);
+	o2 = orient2Dzx(P, B, C);
+	o3 = orient2Dzx(P, C, A);
+	if (!((o1 >= 0 && o2 >= 0 && o3 >= 0) || (o1 <= 0 && o2 <= 0 && o3 <= 0))) return false;
+	return true;
+}
+
+bool genericPoint::pointInInnerTriangle(const genericPoint& P, const genericPoint& A, const genericPoint& B, const genericPoint& C)
+{
+	int o1, o2, o3;
+	o1 = orient2Dxy(P, A, B);
+	o2 = orient2Dxy(P, B, C);
+	o3 = orient2Dxy(P, C, A);
+	if (!((o1 > 0 && o2 > 0 && o3 > 0) || (o1 < 0 && o2 < 0 && o3 < 0))) return false;
+	o1 = orient2Dyz(P, A, B);
+	o2 = orient2Dyz(P, B, C);
+	o3 = orient2Dyz(P, C, A);
+	if (!((o1 > 0 && o2 > 0 && o3 > 0) || (o1 < 0 && o2 < 0 && o3 < 0))) return false;
+	o1 = orient2Dzx(P, A, B);
+	o2 = orient2Dzx(P, B, C);
+	o3 = orient2Dzx(P, C, A);
+	if (!((o1 > 0 && o2 > 0 && o3 > 0) || (o1 < 0 && o2 < 0 && o3 < 0))) return false;
+	return true;
 }
