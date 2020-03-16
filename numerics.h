@@ -34,6 +34,7 @@
 #include <float.h>
 #include <math.h>
 #include <fenv.h>
+#include <iostream>
 
 	inline void ip_error(const char* msg)
 	{
@@ -75,6 +76,10 @@
 
 #ifdef USE_SIMD_INSTRUCTIONS
 #include <emmintrin.h>
+
+	//inline void setFPUModeToRoundUP() { _MM_SET_ROUNDING_MODE(_MM_ROUND_UP); }
+	//inline void setFPUModeToRoundNEAR() { _MM_SET_ROUNDING_MODE(_MM_ROUND_NEAREST); }
+	
 
 	class interval_number
 	{
@@ -185,7 +190,7 @@
 		inline double width() const { return sup() - inf(); }
 
 		inline bool isNegative() const { return (high < 0); }
-		inline void invert() { double tmp = -min_low; min_low = -high; high = tmp; }
+		inline void invert() { double tmp = min_low; min_low = high; high = tmp; }
 
 		inline bool signIsReliable() const { return (min_low < 0 || high < 0); }
 		inline int sign() const { return (min_low < 0) ? (1) : ((high < 0) ? (-1) : (0)); }
@@ -229,6 +234,12 @@
 		}
 	};
 #endif // USE_SIMD_INSTRUCTIONS
+
+	inline std::ostream& operator<<(std::ostream& os, const interval_number& p)
+	{
+		os << "[ " << p.inf() << ", " << p.sup() << " ]";
+		return os;
+	}
 
 
 	// The following macros are fast implementations of basic expansion arithmetic due

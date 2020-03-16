@@ -4230,7 +4230,7 @@ int lessThanOnX_LL_interval(const implicitPoint3D_LPI& p1, const implicitPoint3D
    !p1.getIntervalLambda(l1x, l1y, l1z, d1)
    || !p2.getIntervalLambda(l2x, l2y, l2z, d2)
    ) return Filtered_Sign::UNCERTAIN;
-
+   
    setFPUModeToRoundUP();
    interval_number k1(d2 * l1x);
    interval_number k2(d1 * l2x);
