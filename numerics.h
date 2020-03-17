@@ -64,10 +64,6 @@
 
 #else
 
-#ifdef USE_SIMD_INSTRUCTIONS
-#include <stdalign.h>
-#endif
-
 #pragma STDC FENV_ACCESS ON
 
 	inline void setFPUModeToRoundUP() { fesetround(FE_UPWARD); }
@@ -111,7 +107,7 @@
 		inline bool signIsReliable() const { return (isNegative() || isPositive()); } // Zero is not accounted for
 		inline int sign() const { return (isNegative()) ? (-1) : (1); } // Zero is not accounted for
 
-		inline bool isNAN() const { return _mm_comineq_sd(interval, interval); }
+		inline bool isNAN() const {	return sup() != sup(); }
 
 		inline bool operator<(const double b) const { return (_mm_comilt_sd(interval, _mm_set_sd(b))); }
 
