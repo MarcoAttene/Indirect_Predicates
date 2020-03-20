@@ -881,7 +881,29 @@ void implicitPoint3D_TPI::getExactLambda(double *lx, int& lxl, double *ly, int& 
 bool implicitPoint2D_SSI::approxExplicit(explicitPoint2D& e) const
 {
 	double lambda_x, lambda_y, lambda_d, max_var = 0;
-	if (!getFilteredLambda(lambda_x, lambda_y, lambda_d, max_var)) return false;
+	if (!getFilteredLambda(lambda_x, lambda_y, lambda_d, max_var))
+	{
+		interval_number ilx, ily, id;
+		if (!getIntervalLambda(ilx, ily, id))
+		{
+			double l1x_p[128], * l1x = l1x_p, l1y_p[128], * l1y = l1y_p, d1_p[128], * d1 = d1_p;
+			int l1x_len, l1y_len, d1_len;
+			getExactLambda(l1x, l1x_len, l1y, l1y_len, d1, d1_len);
+			lambda_x = l1x[l1x_len - 1];
+			lambda_y = l1y[l1y_len - 1];
+			lambda_d = d1[d1_len - 1];
+			if (l1x_p != l1x) free(l1x);
+			if (l1y_p != l1y) free(l1y);
+			if (d1_p != d1) free(d1);
+			if (lambda_d == 0) return false;
+		}
+		else
+		{
+			lambda_x = ilx.sup();
+			lambda_y = ily.sup();
+			lambda_d = id.sup();
+		}
+	}
 	e = explicitPoint2D(lambda_x / lambda_d, lambda_y / lambda_d);
 	return true;
 }
@@ -889,7 +911,32 @@ bool implicitPoint2D_SSI::approxExplicit(explicitPoint2D& e) const
 bool implicitPoint3D_LPI::approxExplicit(explicitPoint3D& e) const
 {
 	double lambda_x, lambda_y, lambda_z, lambda_d, max_var = 0;
-	if (!getFilteredLambda(lambda_x, lambda_y, lambda_z, lambda_d, max_var)) return false;
+	if (!getFilteredLambda(lambda_x, lambda_y, lambda_z, lambda_d, max_var))
+	{
+		interval_number ilx, ily, ilz, id;
+		if (!getIntervalLambda(ilx, ily, ilz, id))
+		{
+			double l1z_p[128], * l1z = l1z_p, l1x_p[128], * l1x = l1x_p, l1y_p[128], * l1y = l1y_p, d1_p[128], * d1 = d1_p;
+			int l1z_len, l1x_len, l1y_len, d1_len;
+			getExactLambda(l1z, l1z_len, l1x, l1x_len, l1y, l1y_len, d1, d1_len);
+			lambda_x = l1x[l1x_len - 1];
+			lambda_y = l1y[l1y_len - 1];
+			lambda_z = l1z[l1z_len - 1];
+			lambda_d = d1[d1_len - 1];
+			if (l1z_p != l1z) free(l1z);
+			if (l1x_p != l1x) free(l1x);
+			if (l1y_p != l1y) free(l1y);
+			if (d1_p != d1) free(d1);
+			if (lambda_d == 0) return false;
+		}
+		else
+		{
+			lambda_x = ilx.sup();
+			lambda_y = ily.sup();
+			lambda_z = ilz.sup();
+			lambda_d = id.sup();
+		}
+	}
 	e = explicitPoint3D(lambda_x / lambda_d, lambda_y / lambda_d, lambda_z / lambda_d);
 	return true;
 }
@@ -897,7 +944,32 @@ bool implicitPoint3D_LPI::approxExplicit(explicitPoint3D& e) const
 bool implicitPoint3D_TPI::approxExplicit(explicitPoint3D& e) const
 {
 	double lambda_x, lambda_y, lambda_z, lambda_d, max_var = 0;
-	if (!getFilteredLambda(lambda_x, lambda_y, lambda_z, lambda_d, max_var)) return false;
+	if (!getFilteredLambda(lambda_x, lambda_y, lambda_z, lambda_d, max_var))
+	{
+		interval_number ilx, ily, ilz, id;
+		if (!getIntervalLambda(ilx, ily, ilz, id))
+		{
+			double l1z_p[128], * l1z = l1z_p, l1x_p[128], * l1x = l1x_p, l1y_p[128], * l1y = l1y_p, d1_p[128], * d1 = d1_p;
+			int l1z_len, l1x_len, l1y_len, d1_len;
+			getExactLambda(l1z, l1z_len, l1x, l1x_len, l1y, l1y_len, d1, d1_len);
+			lambda_x = l1x[l1x_len - 1];
+			lambda_y = l1y[l1y_len - 1];
+			lambda_z = l1z[l1z_len - 1];
+			lambda_d = d1[d1_len - 1];
+			if (l1z_p != l1z) free(l1z);
+			if (l1x_p != l1x) free(l1x);
+			if (l1y_p != l1y) free(l1y);
+			if (d1_p != d1) free(d1);
+			if (lambda_d == 0) return false;
+		}
+		else
+		{
+			lambda_x = ilx.sup();
+			lambda_y = ily.sup();
+			lambda_z = ilz.sup();
+			lambda_d = id.sup();
+		}
+	}
 	e = explicitPoint3D(lambda_x / lambda_d, lambda_y / lambda_d, lambda_z / lambda_d);
 	return true;
 }
