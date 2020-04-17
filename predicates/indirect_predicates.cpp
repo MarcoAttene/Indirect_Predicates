@@ -599,114 +599,6 @@ int inSphere(double pax, double pay, double paz, double pbx, double pby, double 
    return inSphere_exact(pax, pay, paz, pbx, pby, pbz, pcx, pcy, pcz, pdx, pdy, pdz, pex, pey, pez);
 }
 
-bool misaligned3d_filtered(double ax, double ay, double az, double bx, double by, double bz, double cx, double cy, double cz)
-{
-   double dx = cx - bx;
-   double dy = cy - by;
-   double dz = cz - bz;
-   double ex = bx - ax;
-   double ey = by - ay;
-   double ez = bz - az;
-   double px1 = dy * ez;
-   double px2 = dz * ey;
-   double px = px1 - px2;
-   double py1 = dz * ex;
-   double py2 = dx * ez;
-   double py = py1 - py2;
-   double pz1 = dx * ey;
-   double pz2 = dy * ex;
-   double pz = pz1 - pz2;
-
-   double _tmp_fabs;
-
-   double max_var = 0.0;
-   if ((_tmp_fabs = fabs(dx)) > max_var) max_var = _tmp_fabs;
-   if ((_tmp_fabs = fabs(dy)) > max_var) max_var = _tmp_fabs;
-   if ((_tmp_fabs = fabs(dz)) > max_var) max_var = _tmp_fabs;
-   if ((_tmp_fabs = fabs(ex)) > max_var) max_var = _tmp_fabs;
-   if ((_tmp_fabs = fabs(ey)) > max_var) max_var = _tmp_fabs;
-   if ((_tmp_fabs = fabs(ez)) > max_var) max_var = _tmp_fabs;
-   double epsilon = max_var;
-   epsilon *= epsilon;
-   epsilon *= 8.881784197001252e-16;
-
-   return ( (px > epsilon || -px < epsilon) || (py > epsilon || -py < epsilon) || (pz > epsilon || -pz < epsilon) );
-}
-
-bool misaligned3d_interval(interval_number ax, interval_number ay, interval_number az, interval_number bx, interval_number by, interval_number bz, interval_number cx, interval_number cy, interval_number cz)
-{
-   setFPUModeToRoundUP();
-   interval_number dx(cx - bx);
-   interval_number dy(cy - by);
-   interval_number dz(cz - bz);
-   interval_number ex(bx - ax);
-   interval_number ey(by - ay);
-   interval_number ez(bz - az);
-   interval_number px1(dy * ez);
-   interval_number px2(dz * ey);
-   interval_number px(px1 - px2);
-   interval_number py1(dz * ex);
-   interval_number py2(dx * ez);
-   interval_number py(py1 - py2);
-   interval_number pz1(dx * ey);
-   interval_number pz2(dy * ex);
-   interval_number pz(pz1 - pz2);
-   setFPUModeToRoundNEAR();
-
-   return (
-      px.signIsReliable()
-      || py.signIsReliable()
-      || pz.signIsReliable()
-   );
-}
-
-int misaligned3d_exact(double ax, double ay, double az, double bx, double by, double bz, double cx, double cy, double cz)
-{
-   expansionObject o;
-   double dx[2];
-   o.two_Diff(cx, bx, dx);
-   double dy[2];
-   o.two_Diff(cy, by, dy);
-   double dz[2];
-   o.two_Diff(cz, bz, dz);
-   double ex[2];
-   o.two_Diff(bx, ax, ex);
-   double ey[2];
-   o.two_Diff(by, ay, ey);
-   double ez[2];
-   o.two_Diff(bz, az, ez);
-   double px1[8];
-   int px1_len = o.Gen_Product(2, dy, 2, ez, px1);
-   double px2[8];
-   int px2_len = o.Gen_Product(2, dz, 2, ey, px2);
-   double px[16];
-   int px_len = o.Gen_Diff(px1_len, px1, px2_len, px2, px);
-   double py1[8];
-   int py1_len = o.Gen_Product(2, dz, 2, ex, py1);
-   double py2[8];
-   int py2_len = o.Gen_Product(2, dx, 2, ez, py2);
-   double py[16];
-   int py_len = o.Gen_Diff(py1_len, py1, py2_len, py2, py);
-   double pz1[8];
-   int pz1_len = o.Gen_Product(2, dx, 2, ey, pz1);
-   double pz2[8];
-   int pz2_len = o.Gen_Product(2, dy, 2, ex, pz2);
-   double pz[16];
-   int pz_len = o.Gen_Diff(pz1_len, pz1, pz2_len, pz2, pz);
-
- return ( (px[px_len - 1] != 0) || (py[py_len - 1] != 0) || (pz[pz_len - 1] != 0) );
-}
-
-int misaligned3d(double ax, double ay, double az, double bx, double by, double bz, double cx, double cy, double cz)
-{
-   int ret;
-   ret = misaligned3d_filtered(ax, ay, az, bx, by, bz, cx, cy, cz);
-   if (ret != Filtered_Sign::UNCERTAIN) return ret;
-   ret = misaligned3d_interval(ax, ay, az, bx, by, bz, cx, cy, cz);
-   if (ret != Filtered_Sign::UNCERTAIN) return ret;
-   return misaligned3d_exact(ax, ay, az, bx, by, bz, cx, cy, cz);
-}
-
 int orient2d_filtered(double p1x, double p1y, double p2x, double p2y, double p3x, double p3y)
 {
    double a11 = p2x - p1x;
@@ -932,192 +824,171 @@ int orient3d(double px, double py, double pz, double qx, double qy, double qz, d
    return orient3d_exact(px, py, pz, qx, qy, qz, rx, ry, rz, sx, sy, sz);
 }
 
-int relativeOrientation_filtered(double ax, double ay, double az, double bx, double by, double bz, double px, double py, double pz, double qx, double qy, double qz)
+int orient3d_shift_filtered(double px, double py, double pz, double dx, double dy, double dz, double qx, double qy, double qz, double rx, double ry, double rz, double sx, double sy, double sz)
 {
-   double v1x = px - ax;
-   double v1y = py - ay;
-   double v1z = pz - az;
-   double v2x = px - bx;
-   double v2y = py - by;
-   double v2z = pz - bz;
-   double v3x = qx - ax;
-   double v3y = qy - ay;
-   double v3z = qz - az;
-   double v4x = qx - bx;
-   double v4y = qy - by;
-   double v4z = qz - bz;
-   double c1x1 = v1y * v2z;
-   double c1x2 = v1z * v2y;
-   double c1x = c1x1 - c1x2;
-   double c1y1 = v1z * v2x;
-   double c1y2 = v1x * v2z;
-   double c1y = c1y1 - c1y2;
-   double c1z1 = v1x * v2y;
-   double c1z2 = v1y * v2x;
-   double c1z = c1z1 - c1z2;
-   double c2x1 = v3y * v4z;
-   double c2x2 = v3z * v4y;
-   double c2x = c2x1 - c2x2;
-   double c2y1 = v3z * v4x;
-   double c2y2 = v3x * v4z;
-   double c2y = c2y1 - c2y2;
-   double c2z1 = v3x * v4y;
-   double c2z2 = v3y * v4x;
-   double c2z = c2z1 - c2z2;
-   double dpx = c1x * c2x;
-   double dpy = c1y * c2y;
-   double dpz = c1z * c2z;
-   double dpxy = dpx + dpy;
-   double dp = dpxy + dpz;
+   double qx_px1 = qx - px;
+   double qy_py1 = qy - py;
+   double rx_px1 = rx - px;
+   double ry_py1 = ry - py;
+   double rz_pz1 = rz - pz;
+   double qz_pz1 = qz - pz;
+   double sx_px1 = sx - px;
+   double sy_py1 = sy - py;
+   double sz_pz1 = sz - pz;
+   double qx_px = qx_px1 - dx;
+   double qy_py = qy_py1 - dy;
+   double rx_px = rx_px1 - dx;
+   double ry_py = ry_py1 - dy;
+   double rz_pz = rz_pz1 - dz;
+   double qz_pz = qz_pz1 - dz;
+   double sx_px = sx_px1 - dx;
+   double sy_py = sy_py1 - dy;
+   double sz_pz = sz_pz1 - dz;
+   double tmp_a = qx_px * ry_py;
+   double tmp_b = qy_py * rx_px;
+   double m01 = tmp_a - tmp_b;
+   double tmq_a = qx_px * rz_pz;
+   double tmq_b = qz_pz * rx_px;
+   double m02 = tmq_a - tmq_b;
+   double tmr_a = qy_py * rz_pz;
+   double tmr_b = qz_pz * ry_py;
+   double m12 = tmr_a - tmr_b;
+   double mt1 = m01 * sz_pz;
+   double mt2 = m02 * sy_py;
+   double mt3 = m12 * sx_px;
+   double mtt = mt1 - mt2;
+   double m012 = mtt + mt3;
 
    double _tmp_fabs;
 
    double max_var = 0.0;
-   if ((_tmp_fabs = fabs(v1x)) > max_var) max_var = _tmp_fabs;
-   if ((_tmp_fabs = fabs(v1y)) > max_var) max_var = _tmp_fabs;
-   if ((_tmp_fabs = fabs(v1z)) > max_var) max_var = _tmp_fabs;
-   if ((_tmp_fabs = fabs(v2x)) > max_var) max_var = _tmp_fabs;
-   if ((_tmp_fabs = fabs(v2y)) > max_var) max_var = _tmp_fabs;
-   if ((_tmp_fabs = fabs(v2z)) > max_var) max_var = _tmp_fabs;
-   if ((_tmp_fabs = fabs(v3x)) > max_var) max_var = _tmp_fabs;
-   if ((_tmp_fabs = fabs(v3y)) > max_var) max_var = _tmp_fabs;
-   if ((_tmp_fabs = fabs(v3z)) > max_var) max_var = _tmp_fabs;
-   if ((_tmp_fabs = fabs(v4x)) > max_var) max_var = _tmp_fabs;
-   if ((_tmp_fabs = fabs(v4y)) > max_var) max_var = _tmp_fabs;
-   if ((_tmp_fabs = fabs(v4z)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(dx)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(dy)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(dz)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(qx_px1)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(qy_py1)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(rx_px1)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(ry_py1)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(rz_pz1)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(qz_pz1)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(sx_px1)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(sy_py1)) > max_var) max_var = _tmp_fabs;
+   if ((_tmp_fabs = fabs(sz_pz1)) > max_var) max_var = _tmp_fabs;
    double epsilon = max_var;
    epsilon *= epsilon;
-   epsilon *= epsilon;
-   epsilon *= 1.376676550535194e-14;
-   if (dp > epsilon) return IP_Sign::POSITIVE;
-   if (-dp > epsilon) return IP_Sign::NEGATIVE;
+   epsilon *= max_var;
+   epsilon *= 4.707345624410668e-14;
+   if (m012 > epsilon) return IP_Sign::POSITIVE;
+   if (-m012 > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
 }
 
-int relativeOrientation_interval(interval_number ax, interval_number ay, interval_number az, interval_number bx, interval_number by, interval_number bz, interval_number px, interval_number py, interval_number pz, interval_number qx, interval_number qy, interval_number qz)
+int orient3d_shift_interval(interval_number px, interval_number py, interval_number pz, interval_number dx, interval_number dy, interval_number dz, interval_number qx, interval_number qy, interval_number qz, interval_number rx, interval_number ry, interval_number rz, interval_number sx, interval_number sy, interval_number sz)
 {
    setFPUModeToRoundUP();
-   interval_number v1x(px - ax);
-   interval_number v1y(py - ay);
-   interval_number v1z(pz - az);
-   interval_number v2x(px - bx);
-   interval_number v2y(py - by);
-   interval_number v2z(pz - bz);
-   interval_number v3x(qx - ax);
-   interval_number v3y(qy - ay);
-   interval_number v3z(qz - az);
-   interval_number v4x(qx - bx);
-   interval_number v4y(qy - by);
-   interval_number v4z(qz - bz);
-   interval_number c1x1(v1y * v2z);
-   interval_number c1x2(v1z * v2y);
-   interval_number c1x(c1x1 - c1x2);
-   interval_number c1y1(v1z * v2x);
-   interval_number c1y2(v1x * v2z);
-   interval_number c1y(c1y1 - c1y2);
-   interval_number c1z1(v1x * v2y);
-   interval_number c1z2(v1y * v2x);
-   interval_number c1z(c1z1 - c1z2);
-   interval_number c2x1(v3y * v4z);
-   interval_number c2x2(v3z * v4y);
-   interval_number c2x(c2x1 - c2x2);
-   interval_number c2y1(v3z * v4x);
-   interval_number c2y2(v3x * v4z);
-   interval_number c2y(c2y1 - c2y2);
-   interval_number c2z1(v3x * v4y);
-   interval_number c2z2(v3y * v4x);
-   interval_number c2z(c2z1 - c2z2);
-   interval_number dpx(c1x * c2x);
-   interval_number dpy(c1y * c2y);
-   interval_number dpz(c1z * c2z);
-   interval_number dpxy(dpx + dpy);
-   interval_number dp(dpxy + dpz);
+   interval_number qx_px1(qx - px);
+   interval_number qy_py1(qy - py);
+   interval_number rx_px1(rx - px);
+   interval_number ry_py1(ry - py);
+   interval_number rz_pz1(rz - pz);
+   interval_number qz_pz1(qz - pz);
+   interval_number sx_px1(sx - px);
+   interval_number sy_py1(sy - py);
+   interval_number sz_pz1(sz - pz);
+   interval_number qx_px(qx_px1 - dx);
+   interval_number qy_py(qy_py1 - dy);
+   interval_number rx_px(rx_px1 - dx);
+   interval_number ry_py(ry_py1 - dy);
+   interval_number rz_pz(rz_pz1 - dz);
+   interval_number qz_pz(qz_pz1 - dz);
+   interval_number sx_px(sx_px1 - dx);
+   interval_number sy_py(sy_py1 - dy);
+   interval_number sz_pz(sz_pz1 - dz);
+   interval_number tmp_a(qx_px * ry_py);
+   interval_number tmp_b(qy_py * rx_px);
+   interval_number m01(tmp_a - tmp_b);
+   interval_number tmq_a(qx_px * rz_pz);
+   interval_number tmq_b(qz_pz * rx_px);
+   interval_number m02(tmq_a - tmq_b);
+   interval_number tmr_a(qy_py * rz_pz);
+   interval_number tmr_b(qz_pz * ry_py);
+   interval_number m12(tmr_a - tmr_b);
+   interval_number mt1(m01 * sz_pz);
+   interval_number mt2(m02 * sy_py);
+   interval_number mt3(m12 * sx_px);
+   interval_number mtt(mt1 - mt2);
+   interval_number m012(mtt + mt3);
    setFPUModeToRoundNEAR();
 
-   if (!dp.signIsReliable()) return Filtered_Sign::UNCERTAIN;
-   return dp.sign();
+   if (!m012.signIsReliable()) return Filtered_Sign::UNCERTAIN;
+   return m012.sign();
 }
 
-int relativeOrientation_exact(double ax, double ay, double az, double bx, double by, double bz, double px, double py, double pz, double qx, double qy, double qz)
+int orient3d_shift_exact(double px, double py, double pz, double dx, double dy, double dz, double qx, double qy, double qz, double rx, double ry, double rz, double sx, double sy, double sz)
 {
    expansionObject o;
-   double v1x[2];
-   o.two_Diff(px, ax, v1x);
-   double v1y[2];
-   o.two_Diff(py, ay, v1y);
-   double v1z[2];
-   o.two_Diff(pz, az, v1z);
-   double v2x[2];
-   o.two_Diff(px, bx, v2x);
-   double v2y[2];
-   o.two_Diff(py, by, v2y);
-   double v2z[2];
-   o.two_Diff(pz, bz, v2z);
-   double v3x[2];
-   o.two_Diff(qx, ax, v3x);
-   double v3y[2];
-   o.two_Diff(qy, ay, v3y);
-   double v3z[2];
-   o.two_Diff(qz, az, v3z);
-   double v4x[2];
-   o.two_Diff(qx, bx, v4x);
-   double v4y[2];
-   o.two_Diff(qy, by, v4y);
-   double v4z[2];
-   o.two_Diff(qz, bz, v4z);
-   double c1x1[8];
-   int c1x1_len = o.Gen_Product(2, v1y, 2, v2z, c1x1);
-   double c1x2[8];
-   int c1x2_len = o.Gen_Product(2, v1z, 2, v2y, c1x2);
-   double c1x[16];
-   int c1x_len = o.Gen_Diff(c1x1_len, c1x1, c1x2_len, c1x2, c1x);
-   double c1y1[8];
-   int c1y1_len = o.Gen_Product(2, v1z, 2, v2x, c1y1);
-   double c1y2[8];
-   int c1y2_len = o.Gen_Product(2, v1x, 2, v2z, c1y2);
-   double c1y[16];
-   int c1y_len = o.Gen_Diff(c1y1_len, c1y1, c1y2_len, c1y2, c1y);
-   double c1z1[8];
-   int c1z1_len = o.Gen_Product(2, v1x, 2, v2y, c1z1);
-   double c1z2[8];
-   int c1z2_len = o.Gen_Product(2, v1y, 2, v2x, c1z2);
-   double c1z[16];
-   int c1z_len = o.Gen_Diff(c1z1_len, c1z1, c1z2_len, c1z2, c1z);
-   double c2x1[8];
-   int c2x1_len = o.Gen_Product(2, v3y, 2, v4z, c2x1);
-   double c2x2[8];
-   int c2x2_len = o.Gen_Product(2, v3z, 2, v4y, c2x2);
-   double c2x[16];
-   int c2x_len = o.Gen_Diff(c2x1_len, c2x1, c2x2_len, c2x2, c2x);
-   double c2y1[8];
-   int c2y1_len = o.Gen_Product(2, v3z, 2, v4x, c2y1);
-   double c2y2[8];
-   int c2y2_len = o.Gen_Product(2, v3x, 2, v4z, c2y2);
-   double c2y[16];
-   int c2y_len = o.Gen_Diff(c2y1_len, c2y1, c2y2_len, c2y2, c2y);
-   double c2z1[8];
-   int c2z1_len = o.Gen_Product(2, v3x, 2, v4y, c2z1);
-   double c2z2[8];
-   int c2z2_len = o.Gen_Product(2, v3y, 2, v4x, c2z2);
-   double c2z[16];
-   int c2z_len = o.Gen_Diff(c2z1_len, c2z1, c2z2_len, c2z2, c2z);
-   double dpx_p[128], *dpx = dpx_p;
-   int dpx_len = o.Gen_Product_With_PreAlloc(c1x_len, c1x, c2x_len, c2x, &dpx, 128);
-   double dpy_p[128], *dpy = dpy_p;
-   int dpy_len = o.Gen_Product_With_PreAlloc(c1y_len, c1y, c2y_len, c2y, &dpy, 128);
-   double dpz_p[128], *dpz = dpz_p;
-   int dpz_len = o.Gen_Product_With_PreAlloc(c1z_len, c1z, c2z_len, c2z, &dpz, 128);
-   double dpxy_p[128], *dpxy = dpxy_p;
-   int dpxy_len = o.Gen_Sum_With_PreAlloc(dpx_len, dpx, dpy_len, dpy, &dpxy, 128);
-   double dp_p[128], *dp = dp_p;
-   int dp_len = o.Gen_Sum_With_PreAlloc(dpxy_len, dpxy, dpz_len, dpz, &dp, 128);
+   double qx_px1[2];
+   o.two_Diff(qx, px, qx_px1);
+   double qy_py1[2];
+   o.two_Diff(qy, py, qy_py1);
+   double rx_px1[2];
+   o.two_Diff(rx, px, rx_px1);
+   double ry_py1[2];
+   o.two_Diff(ry, py, ry_py1);
+   double rz_pz1[2];
+   o.two_Diff(rz, pz, rz_pz1);
+   double qz_pz1[2];
+   o.two_Diff(qz, pz, qz_pz1);
+   double sx_px1[2];
+   o.two_Diff(sx, px, sx_px1);
+   double sy_py1[2];
+   o.two_Diff(sy, py, sy_py1);
+   double sz_pz1[2];
+   o.two_Diff(sz, pz, sz_pz1);
+   double qx_px[3];
+   double qy_py[3];
+   double rx_px[3];
+   double ry_py[3];
+   double rz_pz[3];
+   double qz_pz[3];
+   double sx_px[3];
+   double sy_py[3];
+   double sz_pz[3];
+   double tmp_a[18];
+   int tmp_a_len = o.Gen_Product(3, qx_px, 3, ry_py, tmp_a);
+   double tmp_b[18];
+   int tmp_b_len = o.Gen_Product(3, qy_py, 3, rx_px, tmp_b);
+   double m01[36];
+   int m01_len = o.Gen_Diff(tmp_a_len, tmp_a, tmp_b_len, tmp_b, m01);
+   double tmq_a[18];
+   int tmq_a_len = o.Gen_Product(3, qx_px, 3, rz_pz, tmq_a);
+   double tmq_b[18];
+   int tmq_b_len = o.Gen_Product(3, qz_pz, 3, rx_px, tmq_b);
+   double m02[36];
+   int m02_len = o.Gen_Diff(tmq_a_len, tmq_a, tmq_b_len, tmq_b, m02);
+   double tmr_a[18];
+   int tmr_a_len = o.Gen_Product(3, qy_py, 3, rz_pz, tmr_a);
+   double tmr_b[18];
+   int tmr_b_len = o.Gen_Product(3, qz_pz, 3, ry_py, tmr_b);
+   double m12[36];
+   int m12_len = o.Gen_Diff(tmr_a_len, tmr_a, tmr_b_len, tmr_b, m12);
+   double mt1_p[128], *mt1 = mt1_p;
+   int mt1_len = o.Gen_Product_With_PreAlloc(m01_len, m01, 3, sz_pz, &mt1, 128);
+   double mt2_p[128], *mt2 = mt2_p;
+   int mt2_len = o.Gen_Product_With_PreAlloc(m02_len, m02, 3, sy_py, &mt2, 128);
+   double mt3_p[128], *mt3 = mt3_p;
+   int mt3_len = o.Gen_Product_With_PreAlloc(m12_len, m12, 3, sx_px, &mt3, 128);
+   double mtt_p[128], *mtt = mtt_p;
+   int mtt_len = o.Gen_Diff_With_PreAlloc(mt1_len, mt1, mt2_len, mt2, &mtt, 128);
+   double m012_p[128], *m012 = m012_p;
+   int m012_len = o.Gen_Sum_With_PreAlloc(mtt_len, mtt, mt3_len, mt3, &m012, 128);
 
-   double return_value = dp[dp_len - 1];
-   if (dp_p != dp) free(dp);
-   if (dpxy_p != dpxy) free(dpxy);
-   if (dpz_p != dpz) free(dpz);
-   if (dpy_p != dpy) free(dpy);
-   if (dpx_p != dpx) free(dpx);
+   double return_value = m012[m012_len - 1];
+   if (m012_p != m012) free(m012);
+   if (mtt_p != mtt) free(mtt);
+   if (mt3_p != mt3) free(mt3);
+   if (mt2_p != mt2) free(mt2);
+   if (mt1_p != mt1) free(mt1);
 
  if (return_value > 0) return IP_Sign::POSITIVE;
  if (return_value < 0) return IP_Sign::NEGATIVE;
@@ -1125,14 +996,14 @@ int relativeOrientation_exact(double ax, double ay, double az, double bx, double
  return IP_Sign::UNDEFINED;
 }
 
-int relativeOrientation(double ax, double ay, double az, double bx, double by, double bz, double px, double py, double pz, double qx, double qy, double qz)
+int orient3d_shift(double px, double py, double pz, double dx, double dy, double dz, double qx, double qy, double qz, double rx, double ry, double rz, double sx, double sy, double sz)
 {
    int ret;
-   ret = relativeOrientation_filtered(ax, ay, az, bx, by, bz, px, py, pz, qx, qy, qz);
+   ret = orient3d_shift_filtered(px, py, pz, dx, dy, dz, qx, qy, qz, rx, ry, rz, sx, sy, sz);
    if (ret != Filtered_Sign::UNCERTAIN) return ret;
-   ret = relativeOrientation_interval(ax, ay, az, bx, by, bz, px, py, pz, qx, qy, qz);
+   ret = orient3d_shift_interval(px, py, pz, dx, dy, dz, qx, qy, qz, rx, ry, rz, sx, sy, sz);
    if (ret != Filtered_Sign::UNCERTAIN) return ret;
-   return relativeOrientation_exact(ax, ay, az, bx, by, bz, px, py, pz, qx, qy, qz);
+   return orient3d_shift_exact(px, py, pz, dx, dy, dz, qx, qy, qz, rx, ry, rz, sx, sy, sz);
 }
 
 int incirclexy_indirect_LEEE_filtered(const implicitPoint3D_LPI& p1, double pbx, double pby, double pcx, double pcy, double pdx, double pdy)
@@ -4230,7 +4101,7 @@ int lessThanOnX_LL_interval(const implicitPoint3D_LPI& p1, const implicitPoint3D
    !p1.getIntervalLambda(l1x, l1y, l1z, d1)
    || !p2.getIntervalLambda(l2x, l2y, l2z, d2)
    ) return Filtered_Sign::UNCERTAIN;
-   
+
    setFPUModeToRoundUP();
    interval_number k1(d2 * l1x);
    interval_number k2(d1 * l2x);
@@ -5402,149 +5273,6 @@ int lessThanOnZ_TT(const implicitPoint3D_TPI& p1, const implicitPoint3D_TPI& p2)
    ret = lessThanOnZ_TT_interval(p1, p2);
    if (ret != Filtered_Sign::UNCERTAIN) return ret;
    return lessThanOnZ_TT_exact(p1, p2);
-}
-
-bool misaligned3d_indirect_LEE_filtered(const implicitPoint3D_LPI& p1, double bx, double by, double bz, double cx, double cy, double cz)
-{
-   double l1x, l1y, l1z, d1, max_var = 0;
-    if (
-       !p1.getFilteredLambda(l1x, l1y, l1z, d1, max_var)
-   ) return Filtered_Sign::UNCERTAIN;
-
-   double dx = cx - bx;
-   double dy = cy - by;
-   double dz = cz - bz;
-   double d1bx = d1 * bx;
-   double d1by = d1 * by;
-   double d1bz = d1 * bz;
-   double ex = d1bx - l1x;
-   double ey = d1by - l1y;
-   double ez = d1bz - l1z;
-   double px1 = dy * ez;
-   double px2 = dz * ey;
-   double px = px1 - px2;
-   double py1 = dz * ex;
-   double py2 = dx * ez;
-   double py = py1 - py2;
-   double pz1 = dx * ey;
-   double pz2 = dy * ex;
-   double pz = pz1 - pz2;
-
-   double _tmp_fabs;
-   if ((_tmp_fabs = fabs(bx)) > max_var) max_var = _tmp_fabs;
-   if ((_tmp_fabs = fabs(by)) > max_var) max_var = _tmp_fabs;
-   if ((_tmp_fabs = fabs(bz)) > max_var) max_var = _tmp_fabs;
-   if ((_tmp_fabs = fabs(dx)) > max_var) max_var = _tmp_fabs;
-   if ((_tmp_fabs = fabs(dy)) > max_var) max_var = _tmp_fabs;
-   if ((_tmp_fabs = fabs(dz)) > max_var) max_var = _tmp_fabs;
-   double epsilon = max_var;
-   epsilon *= epsilon;
-   epsilon *= epsilon;
-   epsilon *= max_var;
-   epsilon *= 4.974818300362841e-14;
-
-   return ( (px > epsilon || -px < epsilon) || (py > epsilon || -py < epsilon) || (pz > epsilon || -pz < epsilon) );
-}
-
-bool misaligned3d_indirect_LEE_interval(const implicitPoint3D_LPI& p1, interval_number bx, interval_number by, interval_number bz, interval_number cx, interval_number cy, interval_number cz)
-{
-   interval_number l1x, l1y, l1z, d1;
-   if (
-   !p1.getIntervalLambda(l1x, l1y, l1z, d1)
-   ) return Filtered_Sign::UNCERTAIN;
-
-   setFPUModeToRoundUP();
-   interval_number dx(cx - bx);
-   interval_number dy(cy - by);
-   interval_number dz(cz - bz);
-   interval_number d1bx(d1 * bx);
-   interval_number d1by(d1 * by);
-   interval_number d1bz(d1 * bz);
-   interval_number ex(d1bx - l1x);
-   interval_number ey(d1by - l1y);
-   interval_number ez(d1bz - l1z);
-   interval_number px1(dy * ez);
-   interval_number px2(dz * ey);
-   interval_number px(px1 - px2);
-   interval_number py1(dz * ex);
-   interval_number py2(dx * ez);
-   interval_number py(py1 - py2);
-   interval_number pz1(dx * ey);
-   interval_number pz2(dy * ex);
-   interval_number pz(pz1 - pz2);
-   setFPUModeToRoundNEAR();
-
-   return (
-      px.signIsReliable()
-      || py.signIsReliable()
-      || pz.signIsReliable()
-   );
-}
-
-int misaligned3d_indirect_LEE_exact(const implicitPoint3D_LPI& p1, double bx, double by, double bz, double cx, double cy, double cz)
-{
- int return_value = IP_Sign::UNDEFINED;
- double l1x_p[64], *l1x = l1x_p, l1y_p[64], *l1y = l1y_p, l1z_p[64], *l1z = l1z_p, d1_p[64], *d1 = d1_p;
- int l1x_len, l1y_len, l1z_len, d1_len;
- p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, l1z, l1z_len, d1, d1_len);
- if ((d1[d1_len - 1] != 0))
- {
-   expansionObject o;
-   double dx[2];
-   o.two_Diff(cx, bx, dx);
-   double dy[2];
-   o.two_Diff(cy, by, dy);
-   double dz[2];
-   o.two_Diff(cz, bz, dz);
-   double d1bx_p[64], *d1bx = d1bx_p;
-   int d1bx_len = o.Gen_Scale_With_PreAlloc(d1_len, d1, bx, &d1bx, 64);
-   double d1by_p[64], *d1by = d1by_p;
-   int d1by_len = o.Gen_Scale_With_PreAlloc(d1_len, d1, by, &d1by, 64);
-   double d1bz_p[64], *d1bz = d1bz_p;
-   int d1bz_len = o.Gen_Scale_With_PreAlloc(d1_len, d1, bz, &d1bz, 64);
-   double ex_p[64], *ex = ex_p;
-   int ex_len = o.Gen_Diff_With_PreAlloc(d1bx_len, d1bx, l1x_len, l1x, &ex, 64);
-   double ey_p[64], *ey = ey_p;
-   int ey_len = o.Gen_Diff_With_PreAlloc(d1by_len, d1by, l1y_len, l1y, &ey, 64);
-   double ez_p[64], *ez = ez_p;
-   int ez_len = o.Gen_Diff_With_PreAlloc(d1bz_len, d1bz, l1z_len, l1z, &ez, 64);
-   double px1_p[64], *px1 = px1_p;
-   int px1_len = o.Gen_Product_With_PreAlloc(2, dy, ez_len, ez, &px1, 64);
-   double px2_p[64], *px2 = px2_p;
-   int px2_len = o.Gen_Product_With_PreAlloc(2, dz, ey_len, ey, &px2, 64);
-   double px_p[64], *px = px_p;
-   int px_len = o.Gen_Diff_With_PreAlloc(px1_len, px1, px2_len, px2, &px, 64);
-   double py1_p[64], *py1 = py1_p;
-   int py1_len = o.Gen_Product_With_PreAlloc(2, dz, ex_len, ex, &py1, 64);
-   double py2_p[64], *py2 = py2_p;
-   int py2_len = o.Gen_Product_With_PreAlloc(2, dx, ez_len, ez, &py2, 64);
-   double py_p[64], *py = py_p;
-   int py_len = o.Gen_Diff_With_PreAlloc(py1_len, py1, py2_len, py2, &py, 64);
-   double pz1_p[64], *pz1 = pz1_p;
-   int pz1_len = o.Gen_Product_With_PreAlloc(2, dx, ey_len, ey, &pz1, 64);
-   double pz2_p[64], *pz2 = pz2_p;
-   int pz2_len = o.Gen_Product_With_PreAlloc(2, dy, ex_len, ex, &pz2, 64);
-   double pz_p[64], *pz = pz_p;
-   int pz_len = o.Gen_Diff_With_PreAlloc(pz1_len, pz1, pz2_len, pz2, &pz, 64);
-
-   return_value = ( (px[px_len - 1] != 0) || (py[py_len - 1] != 0) || (pz[pz_len - 1] != 0) );
- }
-
- if (l1x_p != l1x) free(l1x);
- if (l1y_p != l1y) free(l1y);
- if (l1z_p != l1z) free(l1z);
- if (d1_p != d1) free(d1);
- return return_value;
-}
-
-int misaligned3d_indirect_LEE(const implicitPoint3D_LPI& p1, double bx, double by, double bz, double cx, double cy, double cz)
-{
-   int ret;
-   ret = misaligned3d_indirect_LEE_filtered(p1, bx, by, bz, cx, cy, cz);
-   if (ret != Filtered_Sign::UNCERTAIN) return ret;
-   ret = misaligned3d_indirect_LEE_interval(p1, bx, by, bz, cx, cy, cz);
-   if (ret != Filtered_Sign::UNCERTAIN) return ret;
-   return misaligned3d_indirect_LEE_exact(p1, bx, by, bz, cx, cy, cz);
 }
 
 int orient2dxy_indirect_LEE_filtered(const implicitPoint3D_LPI& p1, double p2x, double p2y, double p3x, double p3y)

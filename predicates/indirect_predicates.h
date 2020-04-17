@@ -32,10 +32,9 @@
 
 int incircle(double pax, double pay, double pbx, double pby, double pcx, double pcy, double pdx, double pdy);
 int inSphere(double pax, double pay, double paz, double pbx, double pby, double pbz, double pcx, double pcy, double pcz, double pdx, double pdy, double pdz, double pex, double pey, double pez);
-int misaligned3d(double ax, double ay, double az, double bx, double by, double bz, double cx, double cy, double cz);
 int orient2d(double p1x, double p1y, double p2x, double p2y, double p3x, double p3y);
 int orient3d(double px, double py, double pz, double qx, double qy, double qz, double rx, double ry, double rz, double sx, double sy, double sz);
-int relativeOrientation(double ax, double ay, double az, double bx, double by, double bz, double px, double py, double pz, double qx, double qy, double qz);
+int orient3d_shift(double px, double py, double pz, double dx, double dy, double dz, double qx, double qy, double qz, double rx, double ry, double rz, double sx, double sy, double sz);
 int incirclexy_indirect_LEEE(const implicitPoint3D_LPI& p1, double pbx, double pby, double pcx, double pcy, double pdx, double pdy);
 int incirclexy_indirect_LLEE(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, double pcx, double pcy, double pdx, double pdy);
 int incirclexy_indirect_LLLE(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, const implicitPoint3D_LPI& p3, double pdx, double pdy);
@@ -68,7 +67,6 @@ int lessThanOnZ_LL(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2)
 int lessThanOnZ_LT(const implicitPoint3D_LPI& p1, const implicitPoint3D_TPI& p2);
 int lessThanOnZ_TE(const implicitPoint3D_TPI& p1, double bz);
 int lessThanOnZ_TT(const implicitPoint3D_TPI& p1, const implicitPoint3D_TPI& p2);
-int misaligned3d_indirect_LEE(const implicitPoint3D_LPI& p1, double bx, double by, double bz, double cx, double cy, double cz);
 int orient2dxy_indirect_LEE(const implicitPoint3D_LPI& p1, double p2x, double p2y, double p3x, double p3y);
 int orient2dxy_indirect_LLE(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, double op3x, double op3y);
 int orient2dxy_indirect_LLL(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, const implicitPoint3D_LPI& p3);
