@@ -1215,13 +1215,13 @@ bool genericPoint::pointInSegment(const genericPoint& p, const genericPoint& v1,
 
 	int lt2x = lessThanOnX(v1, p);
 	int lt3x = lessThanOnX(p, v2);
-	if (lt2x) return (lt2x == lt3x);
+	if (lt2x && lt3x) return (lt2x == lt3x);
 	int lt2y = lessThanOnY(v1, p);
 	int lt3y = lessThanOnY(p, v2);
-	if (lt2y) return (lt2y == lt3y);
+	if (lt2y && lt3y) return (lt2y == lt3y);
 	int lt2z = lessThanOnZ(v1, p);
 	int lt3z = lessThanOnZ(p, v2);
-	if (lt2z) return (lt2z == lt3z);
+	if (lt2z && lt3z) return (lt2z == lt3z);
 
 	return ((lt2x == 0 && lt2y == 0 && lt2z == 0) || (lt3x == 0 && lt3y == 0 && lt3z == 0));
 }
