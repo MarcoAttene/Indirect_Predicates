@@ -9,10 +9,10 @@ Istituto di Matematica Applicata e Tecnologie Informatiche
 Sezione di Genova                                                         
 IMATI-GE / CNR                                                            
 
-This software implements fast and guaranteeed floating point geometric predicates,
+This software implements fast and guaranteed floating point geometric predicates,
 including novel indirect predicates as described in the following article:
 
-M. Attene. Indirect Predicates for Geometric Constructions. In Elsevier Computer-Aided Design (2020, to appear).
+M. Attene. Indirect Predicates for Geometric Constructions. In Elsevier Computer-Aided Design (2020, https://doi.org/10.1016/j.cad.2020.102856).
 
 -------------------
 Citation policy
