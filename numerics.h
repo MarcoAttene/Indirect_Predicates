@@ -290,6 +290,11 @@
 		}
 		inline void Square(const double a, double* xy) { Square(a, xy[1], xy[0]); }
 
+		// [x2,x1,x0] = [a1,a0]-[b]		Subtracts an expansion [b] of length one from an expansion [a1,a0] of length two
+		inline void two_One_Diff(const double a1, const double a0, const double b, double& x2, double& x1, double& x0)
+		{ Two_One_Diff(a1, a0, b, x2, x1, x0); }
+		inline void two_One_Diff(const double* a, const double b, double* x) { two_One_Diff(a[1], a[0], b, x[2], x[1], x[0]); }
+
 		// [x3,x2,x1,x0] = [a1,a0]*[b]		Multiplies an expansion [a1,a0] of length two by an expansion [b] of length one
 		inline void Two_One_Prod(const double a1, const double a0, const double b, double& x3, double& x2, double& x1, double& x0)
 		{

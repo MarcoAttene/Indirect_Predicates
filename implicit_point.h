@@ -393,7 +393,7 @@ inline ostream& operator<<(ostream& os, const implicitPoint2D_SSI& p)
 {
 	explicitPoint2D e;
 	if (p.approxExplicit(e)) return os << e;
-	else return os;
+	else return os << "UNDEF_SSI";
 }
 
 inline ostream& operator<<(ostream& os, const explicitPoint3D& p)
@@ -405,14 +405,14 @@ inline ostream& operator<<(ostream& os, const implicitPoint3D_LPI& p)
 {
 	explicitPoint3D e;
 	if (p.approxExplicit(e)) return os << e;
-	else return os;
+	else return os << "UNDEF_LPI";
 }
 
 inline ostream& operator<<(ostream& os, const implicitPoint3D_TPI& p)
 {
 	explicitPoint3D e;
 	if (p.approxExplicit(e)) return os << e;
-	else return os;
+	else return os << "UNDEF_TPI";
 }
 
 #endif // IMPLICIT_POINT_H

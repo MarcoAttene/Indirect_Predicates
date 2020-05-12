@@ -732,7 +732,11 @@ public:
 					if (v->op1 != v->op2) file << "   o.Two_Prod(" << o1 << ", " << o2 << ", " << tvname << ");\n";
 					else file << "   o.Square(" << o1 << ", " << tvname << ");\n";
 				}
-				else if (s1 == 2 && s2 == 1) file << "   o.Two_One_Prod(" << o1 << ", " << o2 << ", " << tvname << ");\n";
+				else if (s1 == 2 && s2 == 1)
+				{
+					if (v->op == '*') file << "   o.Two_One_Prod(" << o1 << ", " << o2 << ", " << tvname << ");\n";
+					else if (v->op == '-') file << "   o.two_One_Diff(" << o1 << ", " << o2 << ", " << tvname << ");\n";
+				}
 				else if (s1 == 1 && s2 == 2) file << "   o.Two_One_Prod(" << o2 << ", " << o1 << ", " << tvname << ");\n";
 				else
 				{
@@ -797,6 +801,7 @@ public:
 				else if (s1 == 2 && s2 == 1)
 				{
 					if (v->op == '*') file << "   o.Two_One_Prod(" << o1 << ", " << o2 << ", " << v->name << ");\n";
+					else if (v->op == '-') file << "   o.two_One_Diff(" << o1 << ", " << o2 << ", " << v->name << ");\n";
 				}
 				// 1,2 *
 				else if (s1 == 1 && s2 == 2)
