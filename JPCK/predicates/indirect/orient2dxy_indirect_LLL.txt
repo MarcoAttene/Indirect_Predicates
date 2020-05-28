@@ -20,3 +20,5 @@ efgh = ef * gh
 L = abcd - efgh
 
 // SIGN d2 d3
+
+// L = (d1 * l2x - d2 * l1x) * (d1 * l3y - d3 * l1y) - (d1 * l2y - d2 * l1y) * (d1 * l3x - d3 * l1x)

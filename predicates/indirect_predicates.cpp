@@ -5340,6 +5340,7 @@ int orient2dxy_indirect_LEE_exact(const implicitPoint3D_LPI& p1, double p2x, dou
  double l1x_p[128], *l1x = l1x_p, l1y_p[128], *l1y = l1y_p, l1z_p[128], *l1z = l1z_p, d1_p[128], *d1 = d1_p;
  int l1x_len, l1y_len, l1z_len, d1_len;
  p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, l1z, l1z_len, d1, d1_len);
+
  if ((d1[d1_len - 1] != 0))
  {
    expansionObject o;
