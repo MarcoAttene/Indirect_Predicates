@@ -7,7 +7,6 @@ JPCK/converter.vcxproj.user
 JPCK/predicates/other
 build
 OLD
-test.cpp
 TESTS.txt
 test_delaunay.cpp
 x64
