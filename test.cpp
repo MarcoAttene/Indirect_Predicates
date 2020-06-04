@@ -1,6 +1,6 @@
 #include "implicit_point.h"
 
-void main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
 	initFPU();
 
@@ -9,4 +9,6 @@ void main(int argc, char *argv[])
 
 	if (genericPoint::orient2D(a, i, b) == 0) std::cout << "Collinear\n";
 	else std::cout << "Not collinear\n";
+	
+	return 0;
 }
