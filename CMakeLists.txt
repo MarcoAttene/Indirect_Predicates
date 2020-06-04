@@ -8,7 +8,7 @@ add_executable(${PROJECT_NAME}
     implicit_point.cpp
     numerics.cpp
     predicates/indirect_predicates.cpp
-    test_delaunay.cpp
+    test.cpp
 )
 
 # Compiler-specific options

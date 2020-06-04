@@ -5,6 +5,7 @@ JPCK/x64
 JPCK/converter.sln
 JPCK/converter.vcxproj.user
 JPCK/predicates/other
+build
 OLD
 test.cpp
 TESTS.txt
