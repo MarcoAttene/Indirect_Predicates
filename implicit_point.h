@@ -224,6 +224,8 @@ public:
 
 	inline double X() const { return x; }
 	inline double Y() const { return y; }
+
+	inline const double * ptr() const { return &x; }
 };
 
 // Comment the following to favour low memory usage wrt speed
@@ -287,6 +289,8 @@ public:
 	inline double X() const { return x; }
 	inline double Y() const { return y; }
 	inline double Z() const { return z; }
+	
+	inline const double * ptr() const { return &x; }
 };
 
 // Implicit point defined by the intersection of a line and a plane
