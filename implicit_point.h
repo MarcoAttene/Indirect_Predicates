@@ -191,6 +191,8 @@ public:
 	// TRUE if P is in the closure of <A,B,C>
 	// Points are assumed to be coplanar. Undetermined otherwise.
 	static bool pointInTriangle(const genericPoint& P, const genericPoint& A, const genericPoint& B, const genericPoint& C);
+	// Same as above, but this version initializes oAB, oAC and oCA with the orientation of P wrt one of the edges (0 = on edge)
+	static bool pointInTriangle(const genericPoint& P, const genericPoint& A, const genericPoint& B, const genericPoint& C, int& oAB, int& oBC, int& oCA);
 
 	// TRUE if the interior of A-B intersects the interior of P-Q at a single point
 	// Points are assumed to be coplanar. Undetermined otherwise.
@@ -225,7 +227,7 @@ public:
 	inline double X() const { return x; }
 	inline double Y() const { return y; }
 
-	inline const double * ptr() const { return &x; }
+	inline const double* ptr() const { return &x; }
 };
 
 // Comment the following to favour low memory usage wrt speed
@@ -289,8 +291,8 @@ public:
 	inline double X() const { return x; }
 	inline double Y() const { return y; }
 	inline double Z() const { return z; }
-	
-	inline const double * ptr() const { return &x; }
+
+	inline const double* ptr() const { return &x; }
 };
 
 // Implicit point defined by the intersection of a line and a plane

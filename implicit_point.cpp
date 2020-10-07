@@ -28,6 +28,9 @@
 #include "implicit_point.h"
 #include "indirect_predicates.h"
 
+int orient2d(double p1x, double p1y, double p2x, double p2y, double p3x, double p3y);
+int orient3d(double px, double py, double pz, double qx, double qy, double qz, double rx, double ry, double rz, double sx, double sy, double sz);
+
 int lessThan_EE(double x1, double y1, double z1, double x2, double y2, double z2)
 {
 	int ret;
@@ -1229,6 +1232,22 @@ bool genericPoint::pointInSegment(const genericPoint& p, const genericPoint& v1,
 bool genericPoint::pointInTriangle(const genericPoint& P, const genericPoint& A, const genericPoint& B, const genericPoint& C)
 {
 	int o1, o2, o3;
+	o1 = orient2Dxy(P, A, B);
+	o2 = orient2Dxy(P, B, C);
+	o3 = orient2Dxy(P, C, A);
+	if (o1 || o2 || o3) return ((o1 >= 0 && o2 >= 0 && o3 >= 0) || (o1 <= 0 && o2 <= 0 && o3 <= 0));
+	o1 = orient2Dyz(P, A, B);
+	o2 = orient2Dyz(P, B, C);
+	o3 = orient2Dyz(P, C, A);
+	if (o1 || o2 || o3) return ((o1 >= 0 && o2 >= 0 && o3 >= 0) || (o1 <= 0 && o2 <= 0 && o3 <= 0));
+	o1 = orient2Dzx(P, A, B);
+	o2 = orient2Dzx(P, B, C);
+	o3 = orient2Dzx(P, C, A);
+	return ((o1 >= 0 && o2 >= 0 && o3 >= 0) || (o1 <= 0 && o2 <= 0 && o3 <= 0));
+}
+
+bool genericPoint::pointInTriangle(const genericPoint& P, const genericPoint& A, const genericPoint& B, const genericPoint& C, int& o1, int& o2, int& o3)
+{
 	o1 = orient2Dxy(P, A, B);
 	o2 = orient2Dxy(P, B, C);
 	o3 = orient2Dxy(P, C, A);
