@@ -33,7 +33,7 @@
 #pragma intrinsic(fabs)
 
 
-int orient2d_filtered(double p1x, double p1y, double p2x, double p2y, double p3x, double p3y)
+inline int orient2d_filtered(double p1x, double p1y, double p2x, double p2y, double p3x, double p3y)
 {
 	double dl = (p2x - p1x) * (p3y - p1y);
 	double dr = (p2y - p1y) * (p3x - p1x);
@@ -60,37 +60,63 @@ int orient2d_interval(interval_number p1x, interval_number p1y, interval_number 
 
 int orient2d_exact(double p1x, double p1y, double p2x, double p2y, double p3x, double p3y)
 {
-   expansionObject o;
-   double a11[2];
-   o.two_Diff(p2x, p1x, a11);
-   double a12[2];
-   o.two_Diff(p2y, p1y, a12);
-   double a21[2];
-   o.two_Diff(p3x, p1x, a21);
-   double a22[2];
-   o.two_Diff(p3y, p1y, a22);
-   double d1[8];
-   int d1_len = o.Gen_Product(2, a11, 2, a22, d1);
-   double d2[8];
-   int d2_len = o.Gen_Product(2, a12, 2, a21, d2);
-   double d[16];
-   int d_len = o.Gen_Diff(d1_len, d1, d2_len, d2, d);
+    double acx[2], acy[2], bcx[2], bcy[2], dtl[2], dtr[2], B[4];
+    double s[2], t[2], u[4], C1[8], C2[12], D[16];
+    int C1l, C2l, Dl;
+    expansionObject o;
 
-   double return_value = d[d_len - 1];
+    acx[1] = (p1x - p3x);
+    bcx[1] = (p2x - p3x);
+    acy[1] = (p1y - p3y);
+    bcy[1] = (p2y - p3y);
 
- if (return_value > 0) return IP_Sign::POSITIVE;
- if (return_value < 0) return IP_Sign::NEGATIVE;
- if (return_value == 0) return IP_Sign::ZERO;
- return IP_Sign::UNDEFINED;
+    o.Two_Prod(acx[1], bcy[1], dtl);
+    o.Two_Prod(acy[1], bcx[1], dtr);
+    o.Two_Two_Diff(dtl, dtr, B);
+
+    double dsm = (fabs(dtl[1]) + fabs(dtr[1]));
+    double det = expansionObject::To_Double(4, B);
+    double eb = 2.2204460492503146e-16 * dsm;
+    Dl = ((det >= eb) - (-det >= eb));
+    if (Dl) return Dl;
+
+    o.Two_Diff_Back(p1x, p3x, acx);
+    o.Two_Diff_Back(p2x, p3x, bcx);
+    o.Two_Diff_Back(p1y, p3y, acy);
+    o.Two_Diff_Back(p2y, p3y, bcy);
+
+    if ((acx[0] == 0.0) && (acy[0] == 0.0) && (bcx[0] == 0.0) && (bcy[0] == 0.0)) return ((det > 0) - (det < 0));
+
+    eb = 1.1093356479670487e-31 * dsm + 3.3306690738754706e-16 * fabs(det);
+    det += (acx[1] * bcy[0] + bcy[1] * acx[0]) - (acy[1] * bcx[0] + bcx[1] * acy[0]);
+    Dl = ((det >= eb) - (-det >= eb));
+    if (Dl) return Dl;
+
+    o.Two_Prod(acx[0], bcy[1], s);
+    o.Two_Prod(acy[0], bcx[1], t);
+    o.Two_Two_Diff(s, t, u);
+    C1l = o.Gen_Sum(4, B, 4, u, C1);
+
+    o.Two_Prod(acx[1], bcy[0], s);
+    o.Two_Prod(acy[1], bcx[0], t);
+    o.Two_Two_Diff(s, t, u);
+    C2l = o.Gen_Sum(C1l, C1, 4, u, C2);
+
+    o.Two_Prod(acx[0], bcy[0], s);
+    o.Two_Prod(acy[0], bcx[0], t);
+    o.Two_Two_Diff(s, t, u);
+    Dl = o.Gen_Sum(C2l, C2, 4, u, D);
+
+    det = D[Dl - 1];
+    return ((det >= eb) - (-det >= eb));
 }
 
 int orient2d(double p1x, double p1y, double p2x, double p2y, double p3x, double p3y)
 {
-   int ret;
-   ret = orient2d_filtered(p1x, p1y, p2x, p2y, p3x, p3y);
-   if (ret != Filtered_Sign::UNCERTAIN) return ret;
-   ret = orient2d_interval(p1x, p1y, p2x, p2y, p3x, p3y);
-   if (ret != Filtered_Sign::UNCERTAIN) return ret;
+   int ret = orient2d_filtered(p1x, p1y, p2x, p2y, p3x, p3y);
+   if (ret) return ret;
+   //ret = orient2d_interval(p1x, p1y, p2x, p2y, p3x, p3y);
+   //if (ret != Filtered_Sign::UNCERTAIN) return ret;
    return orient2d_exact(p1x, p1y, p2x, p2y, p3x, p3y);
 }
 
@@ -144,71 +170,230 @@ int orient3d_interval(interval_number px, interval_number py, interval_number pz
    return m012.sign();
 }
 
-int orient3d_exact(double px, double py, double pz, double qx, double qy, double qz, double rx, double ry, double rz, double sx, double sy, double sz)
+
+inline void supo3d1(expansionObject& o,
+	double* c1, double* c2, double* c3, double* c4, double* c5, double* c6,
+	double* a1, double* a2, double& i, double* k1, double* k2, double* k3,
+	double* k4, int& l1, int& l2)
 {
-   expansionObject o;
-   double qx_px[2];
-   o.two_Diff(qx, px, qx_px);
-   double qy_py[2];
-   o.two_Diff(qy, py, qy_py);
-   double rx_px[2];
-   o.two_Diff(rx, px, rx_px);
-   double ry_py[2];
-   o.two_Diff(ry, py, ry_py);
-   double rz_pz[2];
-   o.two_Diff(rz, pz, rz_pz);
-   double qz_pz[2];
-   o.two_Diff(qz, pz, qz_pz);
-   double sx_px[2];
-   o.two_Diff(sx, px, sx_px);
-   double sy_py[2];
-   o.two_Diff(sy, py, sy_py);
-   double sz_pz[2];
-   o.two_Diff(sz, pz, sz_pz);
-   double tmp_a[8];
-   int tmp_a_len = o.Gen_Product(2, qx_px, 2, ry_py, tmp_a);
-   double tmp_b[8];
-   int tmp_b_len = o.Gen_Product(2, qy_py, 2, rx_px, tmp_b);
-   double m01[16];
-   int m01_len = o.Gen_Diff(tmp_a_len, tmp_a, tmp_b_len, tmp_b, m01);
-   double tmq_a[8];
-   int tmq_a_len = o.Gen_Product(2, qx_px, 2, rz_pz, tmq_a);
-   double tmq_b[8];
-   int tmq_b_len = o.Gen_Product(2, qz_pz, 2, rx_px, tmq_b);
-   double m02[16];
-   int m02_len = o.Gen_Diff(tmq_a_len, tmq_a, tmq_b_len, tmq_b, m02);
-   double tmr_a[8];
-   int tmr_a_len = o.Gen_Product(2, qy_py, 2, rz_pz, tmr_a);
-   double tmr_b[8];
-   int tmr_b_len = o.Gen_Product(2, qz_pz, 2, ry_py, tmr_b);
-   double m12[16];
-   int m12_len = o.Gen_Diff(tmr_a_len, tmr_a, tmr_b_len, tmr_b, m12);
-   double mt1[64];
-   int mt1_len = o.Gen_Product(m01_len, m01, 2, sz_pz, mt1);
-   double mt2[64];
-   int mt2_len = o.Gen_Product(m02_len, m02, 2, sy_py, mt2);
-   double mt3[64];
-   int mt3_len = o.Gen_Product(m12_len, m12, 2, sx_px, mt3);
-   double mtt[128];
-   int mtt_len = o.Gen_Diff(mt1_len, mt1, mt2_len, mt2, mtt);
-   double m012_p[128], *m012 = m012_p;
-   int m012_len = o.Gen_Sum_With_PreAlloc(mtt_len, mtt, mt3_len, mt3, &m012, 128);
+	if (c1[0] == 0.0) {
+		if (c2[0] == 0.0) {
+			a1[0] = a2[0] = 0.0;
+			l1 = l2 = 1;
+		}
+		else {
+			i = -c2[0];
+			o.Two_Prod(i, c3[1], a1);
+			o.Two_Prod(c2[0], c4[1], a2);
+			l1 = l2 = 2;
+		}
+	}
+	else {
+		if (c2[0] == 0.0) {
+			i = -c1[0];
+			o.Two_Prod(c1[0], c5[1], a1);
+			o.Two_Prod(i, c6[1], a2);
+			l1 = l2 = 2;
+		}
+		else {
+			o.Two_Prod(c1[0], c5[1], k1);
+			o.Two_Prod(c2[0], c3[1], k2);
+			o.Two_Two_Diff(k1, k2, a1);
+			o.Two_Prod(c2[0], c4[1], k3);
+			o.Two_Prod(c1[0], c6[1], k4);
+			o.Two_Two_Diff(k3, k4, a2);
+			l1 = l2 = 4;
+		}
+	}
+}
 
-   double return_value = m012[m012_len - 1];
-   if (m012_p != m012) free(m012);
+inline void supo3d2(expansionObject& o,
+	double* c1, double* c2, double* c3, double* c4, double* u,
+	int& fl, double fin[2][192], int& wh,
+	double* c5, double& i, double* c6, double* c7)
 
- if (return_value > 0) return IP_Sign::POSITIVE;
- if (return_value < 0) return IP_Sign::NEGATIVE;
- if (return_value == 0) return IP_Sign::ZERO;
- return IP_Sign::UNDEFINED;
+{
+	if (c1[0] != 0.0) {
+		if (c2[0] != 0.0) {
+			o.Two_Prod(c1[0], c2[0], c3);
+			o.Two_One_Prod(c3, c4[1], u);
+			fl = o.Gen_Sum(fl, fin[wh], 4, u, fin[!wh]);
+			wh = !wh;
+			if (c4[0] != 0.0) {
+				o.Two_One_Prod(c3, c4[0], u);
+				fl = o.Gen_Sum(fl, fin[wh], 4, u, fin[!wh]);
+				wh = !wh;
+			}
+		}
+		if (c5[0] != 0.0) {
+			i = -c1[0];
+			o.Two_Prod(i, c5[0], c6);
+			o.Two_One_Prod(c6, c7[1], u);
+			fl = o.Gen_Sum(fl, fin[wh], 4, u, fin[!wh]);
+			wh = !wh;
+			if (c7[0] != 0.0) {
+				o.Two_One_Prod(c6, c7[0], u);
+				fl = o.Gen_Sum(fl, fin[wh], 4, u, fin[!wh]);
+				wh = !wh;
+			}
+		}
+	}
+}
+
+int orient3d_exact(double pdx, double pdy, double pdz, double pax, double pay, double paz, double pbx, double pby, double pbz, double pcx, double pcy, double pcz)
+{
+	double eb, det;
+	double adx[2], bdx[2], cdx[2], ady[2], bdy[2], cdy[2], adz[2], bdz[2], cdz[2];
+	double bdxcdy[2], cdxbdy[2], cdxady[2], adxcdy[2], adxbdy[2], bdxady[2];
+	double bc[4], ca[4], ab[4];
+	double bdxt_cdy[2], cdxt_bdy[2], cdxt_ady[2];
+	double adxt_cdy[2], adxt_bdy[2], bdxt_ady[2];
+	double bdyt_cdx[2], cdyt_bdx[2], cdyt_adx[2];
+	double adyt_cdx[2], adyt_bdx[2], bdyt_adx[2];
+	double bdxt_cdyt[2], cdxt_bdyt[2], cdxt_adyt[2];
+	double adxt_cdyt[2], adxt_bdyt[2], bdxt_adyt[2];
+	double u[4], v[12], w[16];
+	double adet[8], bdet[8], cdet[8], abdet[16];
+	double fin[2][192];
+	int wh = 0;
+	double at_b[4], at_c[4], bt_c[4], bt_a[4], ct_a[4], ct_b[4];
+	double bct[8], cat[8], abt[8];
+	int alen, blen, clen, finlen, vlen, wlen;
+	int at_blen, at_clen, bt_clen, bt_alen, ct_alen, ct_blen;
+	int bctlen, catlen, abtlen;
+	int ablen;
+	double inv;
+	int ri;
+
+	expansionObject o;
+
+	adx[1] = pax - pdx;
+	bdx[1] = pbx - pdx;
+	cdx[1] = pcx - pdx;
+	ady[1] = pay - pdy;
+	bdy[1] = pby - pdy;
+	cdy[1] = pcy - pdy;
+	adz[1] = paz - pdz;
+	bdz[1] = pbz - pdz;
+	cdz[1] = pcz - pdz;
+
+	o.Two_Prod(bdx[1], cdy[1], bdxcdy);
+	o.Two_Prod(cdx[1], bdy[1], cdxbdy);
+	o.Two_Two_Diff(bdxcdy, cdxbdy, bc);
+	alen = o.Gen_Scale(4, bc, adz[1], adet);
+
+	o.Two_Prod(cdx[1], ady[1], cdxady);
+	o.Two_Prod(adx[1], cdy[1], adxcdy);
+	o.Two_Two_Diff(cdxady, adxcdy, ca);
+	blen = o.Gen_Scale(4, ca, bdz[1], bdet);
+
+	o.Two_Prod(adx[1], bdy[1], adxbdy);
+	o.Two_Prod(bdx[1], ady[1], bdxady);
+	o.Two_Two_Diff(adxbdy, bdxady, ab);
+	clen = o.Gen_Scale(4, ab, cdz[1], cdet);
+
+	ablen = o.Gen_Sum(alen, adet, blen, bdet, abdet);
+	finlen = o.Gen_Sum(ablen, abdet, clen, cdet, fin[wh]);
+
+	double xx1 = bdxcdy[1] * adz[1]; double xx2 = cdxbdy[1] * adz[1];
+	double yy1 = cdxady[1] * bdz[1]; double yy2 = adxcdy[1] * bdz[1];
+	double zz1 = adxbdy[1] * cdz[1]; double zz2 = bdxady[1] * cdz[1];
+	double pm = fabs(xx1) + fabs(xx2) + fabs(yy1) + fabs(yy2) + fabs(zz1) + fabs(zz2);
+
+	det = expansionObject::To_Double(finlen, fin[wh]);
+	eb = 3.3306690738754731e-016 * pm;
+	ri = (det >= eb) - (-det >= eb);
+	if (ri) return ri;
+
+	o.Two_Diff_Back(pax, pdx, adx);
+	o.Two_Diff_Back(pbx, pdx, bdx);
+	o.Two_Diff_Back(pcx, pdx, cdx);
+	o.Two_Diff_Back(pay, pdy, ady);
+	o.Two_Diff_Back(pby, pdy, bdy);
+	o.Two_Diff_Back(pcy, pdy, cdy);
+	o.Two_Diff_Back(paz, pdz, adz);
+	o.Two_Diff_Back(pbz, pdz, bdz);
+	o.Two_Diff_Back(pcz, pdz, cdz);
+
+	if ((adx[0] == 0.0) && (bdx[0] == 0.0) && (cdx[0] == 0.0) &&
+		(ady[0] == 0.0) && (bdy[0] == 0.0) && (cdy[0] == 0.0) &&
+		(adz[0] == 0.0) && (bdz[0] == 0.0) && (cdz[0] == 0.0)) return (det > 0) - (det < 0);
+
+	eb = 3.2047474274603644e-031 * pm + 1.1102230246251565e-016 * fabs(det);
+	det += (adz[1] * ((bdx[1] * cdy[0] + cdy[1] * bdx[0])
+		- (bdy[1] * cdx[0] + cdx[1] * bdy[0]))
+		+ adz[0] * (bdx[1] * cdy[1] - bdy[1] * cdx[1]))
+		+ (bdz[1] * ((cdx[1] * ady[0] + ady[1] * cdx[0])
+			- (cdy[1] * adx[0] + adx[1] * cdy[0]))
+			+ bdz[0] * (cdx[1] * ady[1] - cdy[1] * adx[1]))
+		+ (cdz[1] * ((adx[1] * bdy[0] + bdy[1] * adx[0])
+			- (ady[1] * bdx[0] + bdx[1] * ady[0]))
+			+ cdz[0] * (adx[1] * bdy[1] - ady[1] * bdx[1]));
+	ri = (det >= eb) - (-det >= eb);
+	if (ri) return ri;
+
+	// Filters did not work. Compute exactly...
+	supo3d1(o, adx, ady, bdx, cdx, bdy, cdy, at_b, at_c, inv,
+		adxt_bdy, adyt_bdx, adyt_cdx, adxt_cdy, at_blen, at_clen);
+
+	supo3d1(o, bdx, bdy, cdx, adx, cdy, ady, bt_c, bt_a, inv,
+		bdxt_cdy, bdyt_cdx, bdyt_adx, bdxt_ady, bt_alen, bt_clen);
+
+	supo3d1(o, cdx, cdy, adx, bdx, ady, bdy, ct_a, ct_b, inv,
+		cdxt_ady, cdyt_adx, cdyt_bdx, cdxt_bdy, ct_alen, ct_blen);
+
+	bctlen = o.Gen_Sum(bt_clen, bt_c, ct_blen, ct_b, bct);
+	wlen = o.Gen_Scale(bctlen, bct, adz[1], w);
+	finlen = o.Gen_Sum(finlen, fin[wh], wlen, w, fin[(!wh)]); wh = !wh;
+
+	catlen = o.Gen_Sum(ct_alen, ct_a, at_clen, at_c, cat);
+	wlen = o.Gen_Scale(catlen, cat, bdz[1], w);
+	finlen = o.Gen_Sum(finlen, fin[wh], wlen, w, fin[(!wh)]); wh = !wh;
+
+	abtlen = o.Gen_Sum(at_blen, at_b, bt_alen, bt_a, abt);
+	wlen = o.Gen_Scale(abtlen, abt, cdz[1], w);
+	finlen = o.Gen_Sum(finlen, fin[wh], wlen, w, fin[(!wh)]); wh = !wh;
+
+	if (adz[0] != 0.0) {
+		vlen = o.Gen_Scale(4, bc, adz[0], v);
+		finlen = o.Gen_Sum(finlen, fin[wh], vlen, v, fin[(!wh)]); wh = !wh;
+	}
+	if (bdz[0] != 0.0) {
+		vlen = o.Gen_Scale(4, ca, bdz[0], v);
+		finlen = o.Gen_Sum(finlen, fin[wh], vlen, v, fin[(!wh)]); wh = !wh;
+	}
+	if (cdz[0] != 0.0) {
+		vlen = o.Gen_Scale(4, ab, cdz[0], v);
+		finlen = o.Gen_Sum(finlen, fin[wh], vlen, v, fin[(!wh)]); wh = !wh;
+	}
+
+	supo3d2(o, adx, bdy, adxt_bdyt, cdz, u, finlen, fin, wh, cdy, inv, adxt_cdyt, bdz);
+	supo3d2(o, bdx, cdy, bdxt_cdyt, adz, u, finlen, fin, wh, ady, inv, bdxt_adyt, cdz);
+	supo3d2(o, cdx, ady, cdxt_adyt, bdz, u, finlen, fin, wh, bdy, inv, cdxt_bdyt, adz);
+
+	if (adz[0] != 0.0) {
+		wlen = o.Gen_Scale(bctlen, bct, adz[0], w);
+		finlen = o.Gen_Sum(finlen, fin[wh], wlen, w, fin[!wh]); wh = !wh;
+	}
+	if (bdz[0] != 0.0) {
+		wlen = o.Gen_Scale(catlen, cat, bdz[0], w);
+		finlen = o.Gen_Sum(finlen, fin[wh], wlen, w, fin[!wh]); wh = !wh;
+	}
+	if (cdz[0] != 0.0) {
+		wlen = o.Gen_Scale(abtlen, abt, cdz[0], w);
+		finlen = o.Gen_Sum(finlen, fin[wh], wlen, w, fin[!wh]);	wh = !wh;
+	}
+
+	det = fin[wh][finlen - 1];
+	return (det > 0) - (det < 0);
 }
 
 int orient3d(double px, double py, double pz, double qx, double qy, double qz, double rx, double ry, double rz, double sx, double sy, double sz)
 {
    int ret;
    ret = orient3d_filtered(px, py, pz, qx, qy, qz, rx, ry, rz, sx, sy, sz);
-   if (ret != Filtered_Sign::UNCERTAIN) return ret;
-   ret = orient3d_interval(px, py, pz, qx, qy, qz, rx, ry, rz, sx, sy, sz);
-   if (ret != Filtered_Sign::UNCERTAIN) return ret;
+   if (ret) return ret;
+   //ret = orient3d_interval(px, py, pz, qx, qy, qz, rx, ry, rz, sx, sy, sz);
+   //if (ret != Filtered_Sign::UNCERTAIN) return ret;
    return orient3d_exact(px, py, pz, qx, qy, qz, rx, ry, rz, sx, sy, sz);
 }
