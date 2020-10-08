@@ -9,7 +9,7 @@ add_executable(${PROJECT_NAME}
     numerics.cpp
     predicates/indirect_predicates.cpp
     predicates/hand_optimized_predicates.cpp
-    test_delaunay.cpp
+    test.cpp
 )
 
 # Compiler-specific options
