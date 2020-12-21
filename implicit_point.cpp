@@ -428,7 +428,7 @@ inline int orient3d_IIIE(const genericPoint& a, const genericPoint& b, const gen
 	if (a.isLPI() && b.isTPI() && c.isTPI()) return orient3d_LTTE(a, b, c, d);
 	if (a.isTPI() && b.isTPI() && c.isTPI()) return orient3d_TTTE(a, b, c, d);
 	if (a.isLPI() && b.isTPI() && c.isLPI()) return orient3d_LLTE(c, a, b, d);
-	if (a.isTPI() && b.isLPI() && c.isLPI()) return orient3d_LLTE(c, b, a, d);
+	if (a.isTPI() && b.isLPI() && c.isLPI()) return orient3d_LLTE(b, c, a, d);
 	if (a.isTPI() && b.isLPI() && c.isTPI()) return orient3d_LTTE(b, c, a, d);
 	return -orient3d_LTTE(c, a, b, d);
 }
