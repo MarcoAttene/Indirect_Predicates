@@ -430,7 +430,7 @@ inline int orient3d_IIIE(const genericPoint& a, const genericPoint& b, const gen
 	if (a.isLPI() && b.isTPI() && c.isLPI()) return orient3d_LLTE(c, a, b, d);
 	if (a.isTPI() && b.isLPI() && c.isLPI()) return orient3d_LLTE(b, c, a, d);
 	if (a.isTPI() && b.isLPI() && c.isTPI()) return orient3d_LTTE(b, c, a, d);
-	return -orient3d_LTTE(c, a, b, d);
+        return orient3d_LTTE(c, a, b, d);
 }
 
 int genericPoint::orient3D(const genericPoint& a, const genericPoint& b, const genericPoint& c, const genericPoint& d)
@@ -484,17 +484,17 @@ int genericPoint::orient3D(const genericPoint& a, const genericPoint& b, const g
 		if (a.isLPI() && b.isLPI() && c.isTPI() && d.isTPI()) return orient3d_LLTT(a, b, c, d);
 		if (a.isLPI() && b.isTPI() && c.isTPI() && d.isTPI()) return orient3d_LTTT(a, b, c, d);
 		if (a.isTPI() && b.isTPI() && c.isTPI() && d.isTPI()) return orient3d_TTTT(a, b, c, d);
-		if (a.isLPI() && b.isLPI() && c.isTPI() && d.isLPI()) return orient3d_LLLT(d, a, b, c);
+                if (a.isLPI() && b.isLPI() && c.isTPI() && d.isLPI()) return orient3d_LLLT(b, a, d, c);
 		if (a.isLPI() && b.isTPI() && c.isLPI() && d.isLPI()) return orient3d_LLLT(c, d, a, b);
-		if (a.isTPI() && b.isLPI() && c.isLPI() && d.isLPI()) return orient3d_LLLT(b, c, d, a);
+                if (a.isTPI() && b.isLPI() && c.isLPI() && d.isLPI()) return orient3d_LLLT(d, c, b, a);
 		if (a.isLPI() && b.isTPI() && c.isLPI() && d.isTPI()) return orient3d_LLTT(c, a, b, d);
-		if (a.isTPI() && b.isLPI() && c.isLPI() && d.isTPI()) return orient3d_LLTT(b, c, d, a);
-		if (a.isTPI() && b.isLPI() && c.isTPI() && d.isLPI()) return orient3d_LLTT(d, b, c, a);
+                if (a.isTPI() && b.isLPI() && c.isLPI() && d.isTPI()) return orient3d_LLTT(b, c, a, d);
+                if (a.isTPI() && b.isLPI() && c.isTPI() && d.isLPI()) return orient3d_LLTT(b, d, c, a);
 		if (a.isTPI() && b.isTPI() && c.isLPI() && d.isLPI()) return orient3d_LLTT(c, d, a, b);
-		if (a.isLPI() && b.isTPI() && c.isTPI() && d.isLPI()) return orient3d_LLTT(d, a, b, c);
-		if (a.isTPI() && b.isLPI() && c.isTPI() && d.isTPI()) return orient3d_LTTT(b, c, d, a);
+                if (a.isLPI() && b.isTPI() && c.isTPI() && d.isLPI()) return orient3d_LLTT(a, d, b, c);
+                if (a.isTPI() && b.isLPI() && c.isTPI() && d.isTPI()) return orient3d_LTTT(b, a, d, c);
 		if (a.isTPI() && b.isTPI() && c.isLPI() && d.isTPI()) return orient3d_LTTT(c, d, a, b);
-		if (a.isTPI() && b.isTPI() && c.isTPI() && d.isLPI()) return orient3d_LTTT(d, a, b, c);
+                if (a.isTPI() && b.isTPI() && c.isTPI() && d.isLPI()) return orient3d_LTTT(d, c, b, a);
 
 		ip_error("genericPoint::orient3d - should not happen (0)\n");
 	}
