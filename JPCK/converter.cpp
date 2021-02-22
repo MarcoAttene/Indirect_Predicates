@@ -60,6 +60,8 @@ void createHeadingComment(string& s)
 #define MAX_STATIC_SIZE	128 // This is the maximum in any case, but might be reduced to avoid stack overflows
 #define MAX_WORTH_DEGREE 20 // If the polynomial degree is higher than this, avoid FP arithmetic at all
 
+#define UNDERFLOW_GUARDING // If defined, exact functions check for underflows and try to fix
+
 class lambda_variable
 {
 public:
@@ -297,6 +299,10 @@ public:
 				file << heading_comment;
 				file << "#include \"implicit_point.h\"\n\n";
 				file << "#pragma intrinsic(fabs)\n\n";
+#ifdef UNDERFLOW_GUARDING
+				file << "// Uncomment the following to activate overflow/underflow checks\n";
+				file << "//#define CHECK_FOR_XYZERFLOWS\n\n";
+#endif
 			}
 		}
 		else
@@ -304,6 +310,10 @@ public:
 			file.open(func_name + ".cpp");
 			file << "#include \"implicit_point.h\"\n\n";
 			file << "#pragma intrinsic(fabs)\n\n";
+#ifdef UNDERFLOW_GUARDING
+			file << "// Uncomment the following to activate overflow/underflow checks\n";
+			file << "//#define CHECK_FOR_XYZERFLOWS\n\n";
+#endif
 		}
 
 		produceFilteredCode(filtered_funcname, file);
@@ -688,6 +698,15 @@ public:
 
 		// Function body
 
+#ifdef UNDERFLOW_GUARDING
+		if (is_indirect && !boolean_predicate)
+		{
+			file << "#ifdef CHECK_FOR_XYZERFLOWS\n";
+			file << "   feclearexcept(FE_ALL_EXCEPT);\n";
+			file << "#endif\n";
+		}
+#endif
+
 		file << "   expansionObject o;\n";
 
 		variable* v;
@@ -892,6 +911,12 @@ public:
 
 				if (is_indirect)
 				{
+#ifdef UNDERFLOW_GUARDING
+					file << "#ifdef CHECK_FOR_XYZERFLOWS\n";
+					file << "   if (fetestexcept(FE_UNDERFLOW)) ip_error(\"" << funcname << ": Underflow!\\n\");\n";
+					file << "   if (fetestexcept(FE_OVERFLOW)) ip_error(\"" << funcname << ": Overflow!\\n\");\n";
+					file << "#endif\n";
+#endif
 					file << " }\n\n";
 					for (variable& v : all_vars) if (v.isInput() && v.is_lambda_out)
 					{

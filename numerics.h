@@ -368,6 +368,10 @@
 		// [h] = [e] * 2		Multiplies an expansion by 2
 		// 'h' must be allocated by the caller with at least elen components. This is exact up to overflows.
 		inline void Double(const int elen, const double* e, double* h) const { for (int i = 0; i < elen; i++) h[i] = 2 * e[i]; }
+		
+		// [h] = [e] * 2		Multiplies an expansion by n
+		// If 'n' is a power of two, the multiplication is exact
+		inline static void ExactScale(const int elen, double* e, const double n) { for (int i = 0; i < elen; i++) e[i] *= n; }
 
 		// [h] = [a] * [b]
 		// 'h' must be allocated by the caller with at least 2*alen*blen components.
@@ -436,6 +440,8 @@
 
 		// Approximates the expansion to a double
 		static double To_Double(const int elen, const double* e);
+
+		static void print(const int elen, const double* e) { for (int i = 0; i < elen; i++) printf("%e ", e[i]); printf("\n");}
 	};
 
 #endif //NUMERICS_H

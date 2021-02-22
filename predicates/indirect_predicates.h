@@ -32,7 +32,6 @@
 
 int incircle(double pax, double pay, double pbx, double pby, double pcx, double pcy, double pdx, double pdy);
 int inSphere(double pax, double pay, double paz, double pbx, double pby, double pbz, double pcx, double pcy, double pcz, double pdx, double pdy, double pdz, double pex, double pey, double pez);
-int orient3d_shift(double px, double py, double pz, double dx, double dy, double dz, double qx, double qy, double qz, double rx, double ry, double rz, double sx, double sy, double sz);
 int incirclexy_indirect_LEEE(const implicitPoint3D_LPI& p1, double pbx, double pby, double pcx, double pcy, double pdx, double pdy);
 int incirclexy_indirect_LLEE(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, double pcx, double pcy, double pdx, double pdy);
 int incirclexy_indirect_LLLE(const implicitPoint3D_LPI& p1, const implicitPoint3D_LPI& p2, const implicitPoint3D_LPI& p3, double pdx, double pdy);

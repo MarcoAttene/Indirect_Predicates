@@ -244,6 +244,7 @@ void initFPU()
 #ifdef IS64BITPLATFORM
 #ifdef USE_SIMD_INSTRUCTIONS
 	interval_number::init();
+	_MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
 #endif
 #else
 #ifdef USE_SIMD_INSTRUCTIONS

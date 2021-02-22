@@ -32,6 +32,9 @@
 
 #pragma intrinsic(fabs)
 
+// Uncomment the following to activate overflow/underflow checks
+//#define CHECK_FOR_XYZERFLOWS
+
 int incircle_filtered(double pax, double pay, double pbx, double pby, double pcx, double pcy, double pdx, double pdy)
 {
    double adx = pax - pdx;
@@ -76,7 +79,7 @@ int incircle_filtered(double pax, double pay, double pbx, double pby, double pcx
    double epsilon = max_var;
    epsilon *= epsilon;
    epsilon *= epsilon;
-   epsilon *= 1.376676550535194e-14;
+   epsilon *= 1.376676550535195e-14;
    if (L > epsilon) return IP_Sign::POSITIVE;
    if (-L > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -304,7 +307,7 @@ int inSphere_filtered(double pax, double pay, double paz, double pbx, double pby
    epsilon *= epsilon;
    epsilon *= epsilon;
    epsilon *= max_var;
-   epsilon *= 1.145750161413162e-13;
+   epsilon *= 1.145750161413163e-13;
    if (det > epsilon) return IP_Sign::POSITIVE;
    if (-det > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -599,188 +602,6 @@ int inSphere(double pax, double pay, double paz, double pbx, double pby, double 
    return inSphere_exact(pax, pay, paz, pbx, pby, pbz, pcx, pcy, pcz, pdx, pdy, pdz, pex, pey, pez);
 }
 
-int orient3d_shift_filtered(double px, double py, double pz, double dx, double dy, double dz, double qx, double qy, double qz, double rx, double ry, double rz, double sx, double sy, double sz)
-{
-   double qx_px1 = qx - px;
-   double qy_py1 = qy - py;
-   double rx_px1 = rx - px;
-   double ry_py1 = ry - py;
-   double rz_pz1 = rz - pz;
-   double qz_pz1 = qz - pz;
-   double sx_px1 = sx - px;
-   double sy_py1 = sy - py;
-   double sz_pz1 = sz - pz;
-   double qx_px = qx_px1 - dx;
-   double qy_py = qy_py1 - dy;
-   double rx_px = rx_px1 - dx;
-   double ry_py = ry_py1 - dy;
-   double rz_pz = rz_pz1 - dz;
-   double qz_pz = qz_pz1 - dz;
-   double sx_px = sx_px1 - dx;
-   double sy_py = sy_py1 - dy;
-   double sz_pz = sz_pz1 - dz;
-   double tmp_a = qx_px * ry_py;
-   double tmp_b = qy_py * rx_px;
-   double m01 = tmp_a - tmp_b;
-   double tmq_a = qx_px * rz_pz;
-   double tmq_b = qz_pz * rx_px;
-   double m02 = tmq_a - tmq_b;
-   double tmr_a = qy_py * rz_pz;
-   double tmr_b = qz_pz * ry_py;
-   double m12 = tmr_a - tmr_b;
-   double mt1 = m01 * sz_pz;
-   double mt2 = m02 * sy_py;
-   double mt3 = m12 * sx_px;
-   double mtt = mt1 - mt2;
-   double m012 = mtt + mt3;
-
-   double _tmp_fabs;
-
-   double max_var = 0.0;
-   if ((_tmp_fabs = fabs(dx)) > max_var) max_var = _tmp_fabs;
-   if ((_tmp_fabs = fabs(dy)) > max_var) max_var = _tmp_fabs;
-   if ((_tmp_fabs = fabs(dz)) > max_var) max_var = _tmp_fabs;
-   if ((_tmp_fabs = fabs(qx_px1)) > max_var) max_var = _tmp_fabs;
-   if ((_tmp_fabs = fabs(qy_py1)) > max_var) max_var = _tmp_fabs;
-   if ((_tmp_fabs = fabs(rx_px1)) > max_var) max_var = _tmp_fabs;
-   if ((_tmp_fabs = fabs(ry_py1)) > max_var) max_var = _tmp_fabs;
-   if ((_tmp_fabs = fabs(rz_pz1)) > max_var) max_var = _tmp_fabs;
-   if ((_tmp_fabs = fabs(qz_pz1)) > max_var) max_var = _tmp_fabs;
-   if ((_tmp_fabs = fabs(sx_px1)) > max_var) max_var = _tmp_fabs;
-   if ((_tmp_fabs = fabs(sy_py1)) > max_var) max_var = _tmp_fabs;
-   if ((_tmp_fabs = fabs(sz_pz1)) > max_var) max_var = _tmp_fabs;
-   double epsilon = max_var;
-   epsilon *= epsilon;
-   epsilon *= max_var;
-   epsilon *= 4.707345624410668e-14;
-   if (m012 > epsilon) return IP_Sign::POSITIVE;
-   if (-m012 > epsilon) return IP_Sign::NEGATIVE;
-   return Filtered_Sign::UNCERTAIN;
-}
-
-int orient3d_shift_interval(interval_number px, interval_number py, interval_number pz, interval_number dx, interval_number dy, interval_number dz, interval_number qx, interval_number qy, interval_number qz, interval_number rx, interval_number ry, interval_number rz, interval_number sx, interval_number sy, interval_number sz)
-{
-   setFPUModeToRoundUP();
-   interval_number qx_px1(qx - px);
-   interval_number qy_py1(qy - py);
-   interval_number rx_px1(rx - px);
-   interval_number ry_py1(ry - py);
-   interval_number rz_pz1(rz - pz);
-   interval_number qz_pz1(qz - pz);
-   interval_number sx_px1(sx - px);
-   interval_number sy_py1(sy - py);
-   interval_number sz_pz1(sz - pz);
-   interval_number qx_px(qx_px1 - dx);
-   interval_number qy_py(qy_py1 - dy);
-   interval_number rx_px(rx_px1 - dx);
-   interval_number ry_py(ry_py1 - dy);
-   interval_number rz_pz(rz_pz1 - dz);
-   interval_number qz_pz(qz_pz1 - dz);
-   interval_number sx_px(sx_px1 - dx);
-   interval_number sy_py(sy_py1 - dy);
-   interval_number sz_pz(sz_pz1 - dz);
-   interval_number tmp_a(qx_px * ry_py);
-   interval_number tmp_b(qy_py * rx_px);
-   interval_number m01(tmp_a - tmp_b);
-   interval_number tmq_a(qx_px * rz_pz);
-   interval_number tmq_b(qz_pz * rx_px);
-   interval_number m02(tmq_a - tmq_b);
-   interval_number tmr_a(qy_py * rz_pz);
-   interval_number tmr_b(qz_pz * ry_py);
-   interval_number m12(tmr_a - tmr_b);
-   interval_number mt1(m01 * sz_pz);
-   interval_number mt2(m02 * sy_py);
-   interval_number mt3(m12 * sx_px);
-   interval_number mtt(mt1 - mt2);
-   interval_number m012(mtt + mt3);
-   setFPUModeToRoundNEAR();
-
-   if (!m012.signIsReliable()) return Filtered_Sign::UNCERTAIN;
-   return m012.sign();
-}
-
-int orient3d_shift_exact(double px, double py, double pz, double dx, double dy, double dz, double qx, double qy, double qz, double rx, double ry, double rz, double sx, double sy, double sz)
-{
-   expansionObject o;
-   double qx_px1[2];
-   o.two_Diff(qx, px, qx_px1);
-   double qy_py1[2];
-   o.two_Diff(qy, py, qy_py1);
-   double rx_px1[2];
-   o.two_Diff(rx, px, rx_px1);
-   double ry_py1[2];
-   o.two_Diff(ry, py, ry_py1);
-   double rz_pz1[2];
-   o.two_Diff(rz, pz, rz_pz1);
-   double qz_pz1[2];
-   o.two_Diff(qz, pz, qz_pz1);
-   double sx_px1[2];
-   o.two_Diff(sx, px, sx_px1);
-   double sy_py1[2];
-   o.two_Diff(sy, py, sy_py1);
-   double sz_pz1[2];
-   o.two_Diff(sz, pz, sz_pz1);
-   double qx_px[3];
-   double qy_py[3];
-   double rx_px[3];
-   double ry_py[3];
-   double rz_pz[3];
-   double qz_pz[3];
-   double sx_px[3];
-   double sy_py[3];
-   double sz_pz[3];
-   double tmp_a[18];
-   int tmp_a_len = o.Gen_Product(3, qx_px, 3, ry_py, tmp_a);
-   double tmp_b[18];
-   int tmp_b_len = o.Gen_Product(3, qy_py, 3, rx_px, tmp_b);
-   double m01[36];
-   int m01_len = o.Gen_Diff(tmp_a_len, tmp_a, tmp_b_len, tmp_b, m01);
-   double tmq_a[18];
-   int tmq_a_len = o.Gen_Product(3, qx_px, 3, rz_pz, tmq_a);
-   double tmq_b[18];
-   int tmq_b_len = o.Gen_Product(3, qz_pz, 3, rx_px, tmq_b);
-   double m02[36];
-   int m02_len = o.Gen_Diff(tmq_a_len, tmq_a, tmq_b_len, tmq_b, m02);
-   double tmr_a[18];
-   int tmr_a_len = o.Gen_Product(3, qy_py, 3, rz_pz, tmr_a);
-   double tmr_b[18];
-   int tmr_b_len = o.Gen_Product(3, qz_pz, 3, ry_py, tmr_b);
-   double m12[36];
-   int m12_len = o.Gen_Diff(tmr_a_len, tmr_a, tmr_b_len, tmr_b, m12);
-   double mt1_p[128], *mt1 = mt1_p;
-   int mt1_len = o.Gen_Product_With_PreAlloc(m01_len, m01, 3, sz_pz, &mt1, 128);
-   double mt2_p[128], *mt2 = mt2_p;
-   int mt2_len = o.Gen_Product_With_PreAlloc(m02_len, m02, 3, sy_py, &mt2, 128);
-   double mt3_p[128], *mt3 = mt3_p;
-   int mt3_len = o.Gen_Product_With_PreAlloc(m12_len, m12, 3, sx_px, &mt3, 128);
-   double mtt_p[128], *mtt = mtt_p;
-   int mtt_len = o.Gen_Diff_With_PreAlloc(mt1_len, mt1, mt2_len, mt2, &mtt, 128);
-   double m012_p[128], *m012 = m012_p;
-   int m012_len = o.Gen_Sum_With_PreAlloc(mtt_len, mtt, mt3_len, mt3, &m012, 128);
-
-   double return_value = m012[m012_len - 1];
-   if (m012_p != m012) free(m012);
-   if (mtt_p != mtt) free(mtt);
-   if (mt3_p != mt3) free(mt3);
-   if (mt2_p != mt2) free(mt2);
-   if (mt1_p != mt1) free(mt1);
-
- if (return_value > 0) return IP_Sign::POSITIVE;
- if (return_value < 0) return IP_Sign::NEGATIVE;
- if (return_value == 0) return IP_Sign::ZERO;
- return IP_Sign::UNDEFINED;
-}
-
-int orient3d_shift(double px, double py, double pz, double dx, double dy, double dz, double qx, double qy, double qz, double rx, double ry, double rz, double sx, double sy, double sz)
-{
-   int ret;
-   ret = orient3d_shift_filtered(px, py, pz, dx, dy, dz, qx, qy, qz, rx, ry, rz, sx, sy, sz);
-   if (ret != Filtered_Sign::UNCERTAIN) return ret;
-   ret = orient3d_shift_interval(px, py, pz, dx, dy, dz, qx, qy, qz, rx, ry, rz, sx, sy, sz);
-   if (ret != Filtered_Sign::UNCERTAIN) return ret;
-   return orient3d_shift_exact(px, py, pz, dx, dy, dz, qx, qy, qz, rx, ry, rz, sx, sy, sz);
-}
-
 int incirclexy_indirect_LEEE_filtered(const implicitPoint3D_LPI& p1, double pbx, double pby, double pcx, double pcy, double pdx, double pdy)
 {
    double l1x, l1y, l1z, d1, max_var = 0;
@@ -896,6 +717,9 @@ int incirclexy_indirect_LEEE_exact(const implicitPoint3D_LPI& p1, double pbx, do
  p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, l1z, l1z_len, d1, d1_len);
  if ((d1[d1_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double pdxt_p[64], *pdxt = pdxt_p;
    int pdxt_len = o.Gen_Scale_With_PreAlloc(d1_len, d1, pdx, &pdxt, 64);
@@ -985,6 +809,10 @@ int incirclexy_indirect_LEEE_exact(const implicitPoint3D_LPI& p1, double pbx, do
    if (adx_p != adx) free(adx);
    if (pdyt_p != pdyt) free(pdyt);
    if (pdxt_p != pdxt) free(pdxt);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("incirclexy_indirect_LEEE_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("incirclexy_indirect_LEEE_exact: Overflow!\n");
+#endif
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -1063,7 +891,7 @@ int incirclexy_indirect_LLEE_filtered(const implicitPoint3D_LPI& p1, const impli
    epsilon *= epsilon;
    epsilon *= epsilon;
    epsilon *= epsilon;
-   epsilon *= 1.564426935218861e-09;
+   epsilon *= 1.564426935218862e-09;
    if (L > epsilon) return IP_Sign::POSITIVE;
    if (-L > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -1129,6 +957,9 @@ int incirclexy_indirect_LLEE_exact(const implicitPoint3D_LPI& p1, const implicit
  p2.getExactLambda(l2x, l2x_len, l2y, l2y_len, l2z, l2z_len, d2, d2_len);
  if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double pdx1_p[32], *pdx1 = pdx1_p;
    int pdx1_len = o.Gen_Scale_With_PreAlloc(d1_len, d1, pdx, &pdx1, 32);
@@ -1235,6 +1066,10 @@ int incirclexy_indirect_LLEE_exact(const implicitPoint3D_LPI& p1, const implicit
    if (adx_p != adx) free(adx);
    if (pdy1_p != pdy1) free(pdy1);
    if (pdx1_p != pdx1) free(pdx1);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("incirclexy_indirect_LLEE_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("incirclexy_indirect_LLEE_exact: Overflow!\n");
+#endif
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -1398,6 +1233,9 @@ int incirclexy_indirect_LLLE_exact(const implicitPoint3D_LPI& p1, const implicit
  p3.getExactLambda(l3x, l3x_len, l3y, l3y_len, l3z, l3z_len, d3, d3_len);
  if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0) && (d3[d3_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double pdx1_p[32], *pdx1 = pdx1_p;
    int pdx1_len = o.Gen_Scale_With_PreAlloc(d1_len, d1, pdx, &pdx1, 32);
@@ -1521,6 +1359,10 @@ int incirclexy_indirect_LLLE_exact(const implicitPoint3D_LPI& p1, const implicit
    if (adx_p != adx) free(adx);
    if (pdy1_p != pdy1) free(pdy1);
    if (pdx1_p != pdx1) free(pdx1);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("incirclexy_indirect_LLLE_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("incirclexy_indirect_LLLE_exact: Overflow!\n");
+#endif
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -1696,6 +1538,9 @@ int incirclexy_indirect_LLLL_exact(const implicitPoint3D_LPI& p1, const implicit
  p4.getExactLambda(l4x, l4x_len, l4y, l4y_len, l4z, l4z_len, d4, d4_len);
  if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0) && (d3[d3_len - 1] != 0) && (d4[d4_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double l1xt_p[16], *l1xt = l1xt_p;
    int l1xt_len = o.Gen_Product_With_PreAlloc(l1x_len, l1x, d4_len, d4, &l1xt, 16);
@@ -1837,6 +1682,10 @@ int incirclexy_indirect_LLLL_exact(const implicitPoint3D_LPI& p1, const implicit
    if (l2xt_p != l2xt) free(l2xt);
    if (l1yt_p != l1yt) free(l1yt);
    if (l1xt_p != l1xt) free(l1xt);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("incirclexy_indirect_LLLL_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("incirclexy_indirect_LLLL_exact: Overflow!\n");
+#endif
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -1985,6 +1834,9 @@ int incircle_indirect_SEEE_exact(const implicitPoint2D_SSI& p1, double pbx, doub
  p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, d1, d1_len);
  if ((d1[d1_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double pdxt[32];
    int pdxt_len = o.Gen_Scale(d1_len, d1, pdx, pdxt);
@@ -2070,6 +1922,10 @@ int incircle_indirect_SEEE_exact(const implicitPoint2D_SSI& p1, double pbx, doub
    if (abdet_p != abdet) free(abdet);
    if (abdetb_p != abdetb) free(abdetb);
    if (abdeta_p != abdeta) free(abdeta);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("incircle_indirect_SEEE_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("incircle_indirect_SEEE_exact: Overflow!\n");
+#endif
  }
 
 
@@ -2213,6 +2069,9 @@ int incircle_indirect_SSEE_exact(const implicitPoint2D_SSI& p1, const implicitPo
  p2.getExactLambda(l2x, l2x_len, l2y, l2y_len, d2, d2_len);
  if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double pdx1[32];
    int pdx1_len = o.Gen_Scale(d1_len, d1, pdx, pdx1);
@@ -2315,6 +2174,10 @@ int incircle_indirect_SSEE_exact(const implicitPoint2D_SSI& p1, const implicitPo
    if (bdx_p != bdx) free(bdx);
    if (ady_p != ady) free(ady);
    if (adx_p != adx) free(adx);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("incircle_indirect_SSEE_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("incircle_indirect_SSEE_exact: Overflow!\n");
+#endif
  }
 
 
@@ -2464,6 +2327,9 @@ int incircle_indirect_SSSE_exact(const implicitPoint2D_SSI& p1, const implicitPo
  p3.getExactLambda(l3x, l3x_len, l3y, l3y_len, d3, d3_len);
  if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0) && (d3[d3_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double pdx1[32];
    int pdx1_len = o.Gen_Scale(d1_len, d1, pdx, pdx1);
@@ -2581,6 +2447,10 @@ int incircle_indirect_SSSE_exact(const implicitPoint2D_SSI& p1, const implicitPo
    if (bdx_p != bdx) free(bdx);
    if (ady_p != ady) free(ady);
    if (adx_p != adx) free(adx);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("incircle_indirect_SSSE_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("incircle_indirect_SSSE_exact: Overflow!\n");
+#endif
  }
 
 
@@ -2749,6 +2619,9 @@ int incircle_indirect_SSSS_exact(const implicitPoint2D_SSI& p1, const implicitPo
  p4.getExactLambda(l4x, l4x_len, l4y, l4y_len, d4, d4_len);
  if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0) && (d3[d3_len - 1] != 0) && (d4[d4_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double l1xt_p[32], *l1xt = l1xt_p;
    int l1xt_len = o.Gen_Product_With_PreAlloc(l1x_len, l1x, d4_len, d4, &l1xt, 32);
@@ -2890,6 +2763,10 @@ int incircle_indirect_SSSS_exact(const implicitPoint2D_SSI& p1, const implicitPo
    if (l2xt_p != l2xt) free(l2xt);
    if (l1yt_p != l1yt) free(l1yt);
    if (l1xt_p != l1xt) free(l1xt);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("incircle_indirect_SSSS_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("incircle_indirect_SSSS_exact: Overflow!\n");
+#endif
  }
 
 
@@ -2946,7 +2823,7 @@ bool lambda2d_SSI_filtered(double ea1x, double ea1y, double ea2x, double ea2y, d
    if ((_tmp_fabs = fabs(ty4)) > max_var) max_var = _tmp_fabs;
    double lambda_det_eps = max_var;
    lambda_det_eps *= lambda_det_eps;
-   lambda_det_eps *= 8.881784197001252e-16;
+   lambda_det_eps *= 8.881784197001253e-16;
 
    return ( (lambda_det > lambda_det_eps || lambda_det < -lambda_det_eps) );
 }
@@ -3814,6 +3691,9 @@ int lessThanOnX_LE_exact(const implicitPoint3D_LPI& p1, double bx)
  p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, l1z, l1z_len, d1, d1_len);
  if ((d1[d1_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double dbx_p[128], *dbx = dbx_p;
    int dbx_len = o.Gen_Scale_With_PreAlloc(d1_len, d1, bx, &dbx, 128);
@@ -3823,6 +3703,10 @@ int lessThanOnX_LE_exact(const implicitPoint3D_LPI& p1, double bx)
    return_value = kx[kx_len - 1];
    if (kx_p != kx) free(kx);
    if (dbx_p != dbx) free(dbx);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("lessThanOnX_LE_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("lessThanOnX_LE_exact: Overflow!\n");
+#endif
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -3863,7 +3747,7 @@ int lessThanOnX_LL_filtered(const implicitPoint3D_LPI& p1, const implicitPoint3D
    epsilon *= max_var;
    epsilon *= max_var;
    epsilon *= max_var;
-   epsilon *= 2.922887626377606e-13;
+   epsilon *= 2.922887626377607e-13;
    if (kx > epsilon) return IP_Sign::POSITIVE;
    if (-kx > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -3896,6 +3780,9 @@ int lessThanOnX_LL_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_LP
  p2.getExactLambda(l2x, l2x_len, l2y, l2y_len, l2z, l2z_len, d2, d2_len);
  if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double k1_p[128], *k1 = k1_p;
    int k1_len = o.Gen_Product_With_PreAlloc(d2_len, d2, l1x_len, l1x, &k1, 128);
@@ -3908,6 +3795,10 @@ int lessThanOnX_LL_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_LP
    if (kx_p != kx) free(kx);
    if (k2_p != k2) free(k2);
    if (k1_p != k1) free(k1);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("lessThanOnX_LL_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("lessThanOnX_LL_exact: Overflow!\n");
+#endif
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -3985,6 +3876,9 @@ int lessThanOnX_LT_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_TP
  p2.getExactLambda(l2x, l2x_len, l2y, l2y_len, l2z, l2z_len, d2, d2_len);
  if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double k1_p[128], *k1 = k1_p;
    int k1_len = o.Gen_Product_With_PreAlloc(d2_len, d2, l1x_len, l1x, &k1, 128);
@@ -3997,6 +3891,10 @@ int lessThanOnX_LT_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_TP
    if (kx_p != kx) free(kx);
    if (k2_p != k2) free(k2);
    if (k1_p != k1) free(k1);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("lessThanOnX_LT_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("lessThanOnX_LT_exact: Overflow!\n");
+#endif
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -4072,6 +3970,9 @@ int lessThanOnX_TE_exact(const implicitPoint3D_TPI& p1, double bx)
  p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, l1z, l1z_len, d1, d1_len);
  if ((d1[d1_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double dbx_p[128], *dbx = dbx_p;
    int dbx_len = o.Gen_Scale_With_PreAlloc(d1_len, d1, bx, &dbx, 128);
@@ -4081,6 +3982,10 @@ int lessThanOnX_TE_exact(const implicitPoint3D_TPI& p1, double bx)
    return_value = kx[kx_len - 1];
    if (kx_p != kx) free(kx);
    if (dbx_p != dbx) free(dbx);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("lessThanOnX_TE_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("lessThanOnX_TE_exact: Overflow!\n");
+#endif
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -4157,6 +4062,9 @@ int lessThanOnX_TT_exact(const implicitPoint3D_TPI& p1, const implicitPoint3D_TP
  p2.getExactLambda(l2x, l2x_len, l2y, l2y_len, l2z, l2z_len, d2, d2_len);
  if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double k1_p[128], *k1 = k1_p;
    int k1_len = o.Gen_Product_With_PreAlloc(d2_len, d2, l1x_len, l1x, &k1, 128);
@@ -4169,6 +4077,10 @@ int lessThanOnX_TT_exact(const implicitPoint3D_TPI& p1, const implicitPoint3D_TP
    if (kx_p != kx) free(kx);
    if (k2_p != k2) free(k2);
    if (k1_p != k1) free(k1);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("lessThanOnX_TT_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("lessThanOnX_TT_exact: Overflow!\n");
+#endif
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -4241,6 +4153,9 @@ int lessThanOnY_LE_exact(const implicitPoint3D_LPI& p1, double by)
  p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, l1z, l1z_len, d1, d1_len);
  if ((d1[d1_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double dby_p[128], *dby = dby_p;
    int dby_len = o.Gen_Scale_With_PreAlloc(d1_len, d1, by, &dby, 128);
@@ -4250,6 +4165,10 @@ int lessThanOnY_LE_exact(const implicitPoint3D_LPI& p1, double by)
    return_value = ky[ky_len - 1];
    if (ky_p != ky) free(ky);
    if (dby_p != dby) free(dby);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("lessThanOnY_LE_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("lessThanOnY_LE_exact: Overflow!\n");
+#endif
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -4290,7 +4209,7 @@ int lessThanOnY_LL_filtered(const implicitPoint3D_LPI& p1, const implicitPoint3D
    epsilon *= max_var;
    epsilon *= max_var;
    epsilon *= max_var;
-   epsilon *= 2.922887626377606e-13;
+   epsilon *= 2.922887626377607e-13;
    if (ky > epsilon) return IP_Sign::POSITIVE;
    if (-ky > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -4323,6 +4242,9 @@ int lessThanOnY_LL_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_LP
  p2.getExactLambda(l2x, l2x_len, l2y, l2y_len, l2z, l2z_len, d2, d2_len);
  if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double k1_p[128], *k1 = k1_p;
    int k1_len = o.Gen_Product_With_PreAlloc(d2_len, d2, l1y_len, l1y, &k1, 128);
@@ -4335,6 +4257,10 @@ int lessThanOnY_LL_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_LP
    if (ky_p != ky) free(ky);
    if (k2_p != k2) free(k2);
    if (k1_p != k1) free(k1);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("lessThanOnY_LL_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("lessThanOnY_LL_exact: Overflow!\n");
+#endif
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -4412,6 +4338,9 @@ int lessThanOnY_LT_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_TP
  p2.getExactLambda(l2x, l2x_len, l2y, l2y_len, l2z, l2z_len, d2, d2_len);
  if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double k1_p[128], *k1 = k1_p;
    int k1_len = o.Gen_Product_With_PreAlloc(d2_len, d2, l1y_len, l1y, &k1, 128);
@@ -4424,6 +4353,10 @@ int lessThanOnY_LT_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_TP
    if (ky_p != ky) free(ky);
    if (k2_p != k2) free(k2);
    if (k1_p != k1) free(k1);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("lessThanOnY_LT_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("lessThanOnY_LT_exact: Overflow!\n");
+#endif
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -4499,6 +4432,9 @@ int lessThanOnY_TE_exact(const implicitPoint3D_TPI& p1, double by)
  p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, l1z, l1z_len, d1, d1_len);
  if ((d1[d1_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double dby_p[128], *dby = dby_p;
    int dby_len = o.Gen_Scale_With_PreAlloc(d1_len, d1, by, &dby, 128);
@@ -4508,6 +4444,10 @@ int lessThanOnY_TE_exact(const implicitPoint3D_TPI& p1, double by)
    return_value = ky[ky_len - 1];
    if (ky_p != ky) free(ky);
    if (dby_p != dby) free(dby);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("lessThanOnY_TE_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("lessThanOnY_TE_exact: Overflow!\n");
+#endif
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -4584,6 +4524,9 @@ int lessThanOnY_TT_exact(const implicitPoint3D_TPI& p1, const implicitPoint3D_TP
  p2.getExactLambda(l2x, l2x_len, l2y, l2y_len, l2z, l2z_len, d2, d2_len);
  if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double k1_p[128], *k1 = k1_p;
    int k1_len = o.Gen_Product_With_PreAlloc(d2_len, d2, l1y_len, l1y, &k1, 128);
@@ -4596,6 +4539,10 @@ int lessThanOnY_TT_exact(const implicitPoint3D_TPI& p1, const implicitPoint3D_TP
    if (ky_p != ky) free(ky);
    if (k2_p != k2) free(k2);
    if (k1_p != k1) free(k1);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("lessThanOnY_TT_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("lessThanOnY_TT_exact: Overflow!\n");
+#endif
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -4668,6 +4615,9 @@ int lessThanOnZ_LE_exact(const implicitPoint3D_LPI& p1, double bz)
  p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, l1z, l1z_len, d1, d1_len);
  if ((d1[d1_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double dbz_p[128], *dbz = dbz_p;
    int dbz_len = o.Gen_Scale_With_PreAlloc(d1_len, d1, bz, &dbz, 128);
@@ -4677,6 +4627,10 @@ int lessThanOnZ_LE_exact(const implicitPoint3D_LPI& p1, double bz)
    return_value = kz[kz_len - 1];
    if (kz_p != kz) free(kz);
    if (dbz_p != dbz) free(dbz);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("lessThanOnZ_LE_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("lessThanOnZ_LE_exact: Overflow!\n");
+#endif
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -4717,7 +4671,7 @@ int lessThanOnZ_LL_filtered(const implicitPoint3D_LPI& p1, const implicitPoint3D
    epsilon *= max_var;
    epsilon *= max_var;
    epsilon *= max_var;
-   epsilon *= 2.922887626377606e-13;
+   epsilon *= 2.922887626377607e-13;
    if (kz > epsilon) return IP_Sign::POSITIVE;
    if (-kz > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -4750,6 +4704,9 @@ int lessThanOnZ_LL_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_LP
  p2.getExactLambda(l2x, l2x_len, l2y, l2y_len, l2z, l2z_len, d2, d2_len);
  if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double k1_p[128], *k1 = k1_p;
    int k1_len = o.Gen_Product_With_PreAlloc(d2_len, d2, l1z_len, l1z, &k1, 128);
@@ -4762,6 +4719,10 @@ int lessThanOnZ_LL_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_LP
    if (kz_p != kz) free(kz);
    if (k2_p != k2) free(k2);
    if (k1_p != k1) free(k1);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("lessThanOnZ_LL_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("lessThanOnZ_LL_exact: Overflow!\n");
+#endif
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -4839,6 +4800,9 @@ int lessThanOnZ_LT_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_TP
  p2.getExactLambda(l2x, l2x_len, l2y, l2y_len, l2z, l2z_len, d2, d2_len);
  if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double k1_p[128], *k1 = k1_p;
    int k1_len = o.Gen_Product_With_PreAlloc(d2_len, d2, l1z_len, l1z, &k1, 128);
@@ -4851,6 +4815,10 @@ int lessThanOnZ_LT_exact(const implicitPoint3D_LPI& p1, const implicitPoint3D_TP
    if (kz_p != kz) free(kz);
    if (k2_p != k2) free(k2);
    if (k1_p != k1) free(k1);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("lessThanOnZ_LT_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("lessThanOnZ_LT_exact: Overflow!\n");
+#endif
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -4926,6 +4894,9 @@ int lessThanOnZ_TE_exact(const implicitPoint3D_TPI& p1, double bz)
  p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, l1z, l1z_len, d1, d1_len);
  if ((d1[d1_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double dbz_p[128], *dbz = dbz_p;
    int dbz_len = o.Gen_Scale_With_PreAlloc(d1_len, d1, bz, &dbz, 128);
@@ -4935,6 +4906,10 @@ int lessThanOnZ_TE_exact(const implicitPoint3D_TPI& p1, double bz)
    return_value = kz[kz_len - 1];
    if (kz_p != kz) free(kz);
    if (dbz_p != dbz) free(dbz);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("lessThanOnZ_TE_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("lessThanOnZ_TE_exact: Overflow!\n");
+#endif
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -5011,6 +4986,9 @@ int lessThanOnZ_TT_exact(const implicitPoint3D_TPI& p1, const implicitPoint3D_TP
  p2.getExactLambda(l2x, l2x_len, l2y, l2y_len, l2z, l2z_len, d2, d2_len);
  if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double k1_p[128], *k1 = k1_p;
    int k1_len = o.Gen_Product_With_PreAlloc(d2_len, d2, l1z_len, l1z, &k1, 128);
@@ -5023,6 +5001,10 @@ int lessThanOnZ_TT_exact(const implicitPoint3D_TPI& p1, const implicitPoint3D_TP
    if (kz_p != kz) free(kz);
    if (k2_p != k2) free(k2);
    if (k1_p != k1) free(k1);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("lessThanOnZ_TT_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("lessThanOnZ_TT_exact: Overflow!\n");
+#endif
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -5079,7 +5061,7 @@ int orient2dxy_indirect_LEE_filtered(const implicitPoint3D_LPI& p1, double p2x, 
    epsilon *= epsilon;
    epsilon *= epsilon;
    epsilon *= max_var;
-   epsilon *= 4.75277369543781e-14;
+   epsilon *= 4.752773695437811e-14;
    if (det > epsilon) return IP_Sign::POSITIVE;
    if (-det > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -5115,9 +5097,11 @@ int orient2dxy_indirect_LEE_exact(const implicitPoint3D_LPI& p1, double p2x, dou
  double l1x_p[128], *l1x = l1x_p, l1y_p[128], *l1y = l1y_p, l1z_p[128], *l1z = l1z_p, d1_p[128], *d1 = d1_p;
  int l1x_len, l1y_len, l1z_len, d1_len;
  p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, l1z, l1z_len, d1, d1_len);
-
  if ((d1[d1_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double t1x[2];
    o.two_Diff(p2y, p3y, t1x);
@@ -5146,6 +5130,10 @@ int orient2dxy_indirect_LEE_exact(const implicitPoint3D_LPI& p1, double p2x, dou
    if (e_p != e) free(e);
    if (e3_p != e3) free(e3);
    if (e2_p != e2) free(e2);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("orient2dxy_indirect_LEE_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("orient2dxy_indirect_LEE_exact: Overflow!\n");
+#endif
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -5244,6 +5232,9 @@ int orient2dxy_indirect_LLE_exact(const implicitPoint3D_LPI& p1, const implicitP
  p2.getExactLambda(l2x, l2x_len, l2y, l2y_len, l2z, l2z_len, d2, d2_len);
  if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double a_p[64], *a = a_p;
    int a_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l2x_len, l2x, &a, 64);
@@ -5286,6 +5277,10 @@ int orient2dxy_indirect_LLE_exact(const implicitPoint3D_LPI& p1, const implicitP
    if (c_p != c) free(c);
    if (b_p != b) free(b);
    if (a_p != a) free(a);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("orient2dxy_indirect_LLE_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("orient2dxy_indirect_LLE_exact: Overflow!\n");
+#endif
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -5394,6 +5389,9 @@ int orient2dxy_indirect_LLL_exact(const implicitPoint3D_LPI& p1, const implicitP
  p3.getExactLambda(l3x, l3x_len, l3y, l3y_len, l3z, l3z_len, d3, d3_len);
  if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0) && (d3[d3_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double a_p[64], *a = a_p;
    int a_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l2x_len, l2x, &a, 64);
@@ -5442,6 +5440,10 @@ int orient2dxy_indirect_LLL_exact(const implicitPoint3D_LPI& p1, const implicitP
    if (c_p != c) free(c);
    if (b_p != b) free(b);
    if (a_p != a) free(a);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("orient2dxy_indirect_LLL_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("orient2dxy_indirect_LLL_exact: Overflow!\n");
+#endif
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -5550,6 +5552,9 @@ int orient2dxy_indirect_LLT_exact(const implicitPoint3D_LPI& p1, const implicitP
  p3.getExactLambda(l3x, l3x_len, l3y, l3y_len, l3z, l3z_len, d3, d3_len);
  if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0) && (d3[d3_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double a_p[64], *a = a_p;
    int a_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l2x_len, l2x, &a, 64);
@@ -5598,6 +5603,10 @@ int orient2dxy_indirect_LLT_exact(const implicitPoint3D_LPI& p1, const implicitP
    if (c_p != c) free(c);
    if (b_p != b) free(b);
    if (a_p != a) free(a);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("orient2dxy_indirect_LLT_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("orient2dxy_indirect_LLT_exact: Overflow!\n");
+#endif
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -5707,6 +5716,9 @@ int orient2dxy_indirect_LTE_exact(const implicitPoint3D_LPI& p1, const implicitP
  p2.getExactLambda(l2x, l2x_len, l2y, l2y_len, l2z, l2z_len, d2, d2_len);
  if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double a_p[64], *a = a_p;
    int a_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l2x_len, l2x, &a, 64);
@@ -5749,6 +5761,10 @@ int orient2dxy_indirect_LTE_exact(const implicitPoint3D_LPI& p1, const implicitP
    if (c_p != c) free(c);
    if (b_p != b) free(b);
    if (a_p != a) free(a);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("orient2dxy_indirect_LTE_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("orient2dxy_indirect_LTE_exact: Overflow!\n");
+#endif
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -5856,6 +5872,9 @@ int orient2dxy_indirect_LTT_exact(const implicitPoint3D_LPI& p1, const implicitP
  p3.getExactLambda(l3x, l3x_len, l3y, l3y_len, l3z, l3z_len, d3, d3_len);
  if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0) && (d3[d3_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double a_p[64], *a = a_p;
    int a_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l2x_len, l2x, &a, 64);
@@ -5904,6 +5923,10 @@ int orient2dxy_indirect_LTT_exact(const implicitPoint3D_LPI& p1, const implicitP
    if (c_p != c) free(c);
    if (b_p != b) free(b);
    if (a_p != a) free(a);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("orient2dxy_indirect_LTT_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("orient2dxy_indirect_LTT_exact: Overflow!\n");
+#endif
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -6002,6 +6025,9 @@ int orient2dxy_indirect_TEE_exact(const implicitPoint3D_TPI& p1, double p2x, dou
  p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, l1z, l1z_len, d1, d1_len);
  if ((d1[d1_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double t1x[2];
    o.two_Diff(p2y, p3y, t1x);
@@ -6030,6 +6056,10 @@ int orient2dxy_indirect_TEE_exact(const implicitPoint3D_TPI& p1, double p2x, dou
    if (e_p != e) free(e);
    if (e3_p != e3) free(e3);
    if (e2_p != e2) free(e2);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("orient2dxy_indirect_TEE_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("orient2dxy_indirect_TEE_exact: Overflow!\n");
+#endif
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -6087,7 +6117,7 @@ int orient2dxy_indirect_TTE_filtered(const implicitPoint3D_TPI& p1, const implic
    epsilon *= max_var;
    epsilon *= max_var;
    epsilon *= max_var;
-   epsilon *= 3.307187945722513e-08;
+   epsilon *= 3.307187945722514e-08;
    if (L > epsilon) return IP_Sign::POSITIVE;
    if (-L > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -6130,6 +6160,9 @@ int orient2dxy_indirect_TTE_exact(const implicitPoint3D_TPI& p1, const implicitP
  p2.getExactLambda(l2x, l2x_len, l2y, l2y_len, l2z, l2z_len, d2, d2_len);
  if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double a_p[64], *a = a_p;
    int a_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l2x_len, l2x, &a, 64);
@@ -6172,6 +6205,10 @@ int orient2dxy_indirect_TTE_exact(const implicitPoint3D_TPI& p1, const implicitP
    if (c_p != c) free(c);
    if (b_p != b) free(b);
    if (a_p != a) free(a);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("orient2dxy_indirect_TTE_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("orient2dxy_indirect_TTE_exact: Overflow!\n");
+#endif
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -6238,7 +6275,7 @@ int orient2dxy_indirect_TTT_filtered(const implicitPoint3D_TPI& p1, const implic
    epsilon *= max_var;
    epsilon *= max_var;
    epsilon *= max_var;
-   epsilon *= 3.103174776697444e-06;
+   epsilon *= 3.103174776697445e-06;
    if (L > epsilon) return IP_Sign::POSITIVE;
    if (-L > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -6285,6 +6322,9 @@ int orient2dxy_indirect_TTT_exact(const implicitPoint3D_TPI& p1, const implicitP
  p3.getExactLambda(l3x, l3x_len, l3y, l3y_len, l3z, l3z_len, d3, d3_len);
  if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0) && (d3[d3_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double a_p[64], *a = a_p;
    int a_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l2x_len, l2x, &a, 64);
@@ -6333,6 +6373,10 @@ int orient2dxy_indirect_TTT_exact(const implicitPoint3D_TPI& p1, const implicitP
    if (c_p != c) free(c);
    if (b_p != b) free(b);
    if (a_p != a) free(a);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("orient2dxy_indirect_TTT_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("orient2dxy_indirect_TTT_exact: Overflow!\n");
+#endif
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -6393,7 +6437,7 @@ int orient2dyz_indirect_LEE_filtered(const implicitPoint3D_LPI& p1, double p2x, 
    epsilon *= epsilon;
    epsilon *= epsilon;
    epsilon *= max_var;
-   epsilon *= 4.75277369543781e-14;
+   epsilon *= 4.752773695437811e-14;
    if (det > epsilon) return IP_Sign::POSITIVE;
    if (-det > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -6431,6 +6475,9 @@ int orient2dyz_indirect_LEE_exact(const implicitPoint3D_LPI& p1, double p2x, dou
  p1.getExactLambda(l1z, l1z_len, l1x, l1x_len, l1y, l1y_len, d1, d1_len);
  if ((d1[d1_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double t1x[2];
    o.two_Diff(p2y, p3y, t1x);
@@ -6459,6 +6506,10 @@ int orient2dyz_indirect_LEE_exact(const implicitPoint3D_LPI& p1, double p2x, dou
    if (e_p != e) free(e);
    if (e3_p != e3) free(e3);
    if (e2_p != e2) free(e2);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("orient2dyz_indirect_LEE_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("orient2dyz_indirect_LEE_exact: Overflow!\n");
+#endif
  }
 
  if (l1z_p != l1z) free(l1z);
@@ -6557,6 +6608,9 @@ int orient2dyz_indirect_LLE_exact(const implicitPoint3D_LPI& p1, const implicitP
  p2.getExactLambda(l2z, l2z_len, l2x, l2x_len, l2y, l2y_len, d2, d2_len);
  if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double a_p[64], *a = a_p;
    int a_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l2x_len, l2x, &a, 64);
@@ -6599,6 +6653,10 @@ int orient2dyz_indirect_LLE_exact(const implicitPoint3D_LPI& p1, const implicitP
    if (c_p != c) free(c);
    if (b_p != b) free(b);
    if (a_p != a) free(a);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("orient2dyz_indirect_LLE_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("orient2dyz_indirect_LLE_exact: Overflow!\n");
+#endif
  }
 
  if (l1z_p != l1z) free(l1z);
@@ -6707,6 +6765,9 @@ int orient2dyz_indirect_LLL_exact(const implicitPoint3D_LPI& p1, const implicitP
  p3.getExactLambda(l3z, l3z_len, l3x, l3x_len, l3y, l3y_len, d3, d3_len);
  if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0) && (d3[d3_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double a_p[64], *a = a_p;
    int a_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l2x_len, l2x, &a, 64);
@@ -6755,6 +6816,10 @@ int orient2dyz_indirect_LLL_exact(const implicitPoint3D_LPI& p1, const implicitP
    if (c_p != c) free(c);
    if (b_p != b) free(b);
    if (a_p != a) free(a);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("orient2dyz_indirect_LLL_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("orient2dyz_indirect_LLL_exact: Overflow!\n");
+#endif
  }
 
  if (l1z_p != l1z) free(l1z);
@@ -6863,6 +6928,9 @@ int orient2dyz_indirect_LLT_exact(const implicitPoint3D_LPI& p1, const implicitP
  p3.getExactLambda(l3z, l3z_len, l3x, l3x_len, l3y, l3y_len, d3, d3_len);
  if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0) && (d3[d3_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double a_p[64], *a = a_p;
    int a_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l2x_len, l2x, &a, 64);
@@ -6911,6 +6979,10 @@ int orient2dyz_indirect_LLT_exact(const implicitPoint3D_LPI& p1, const implicitP
    if (c_p != c) free(c);
    if (b_p != b) free(b);
    if (a_p != a) free(a);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("orient2dyz_indirect_LLT_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("orient2dyz_indirect_LLT_exact: Overflow!\n");
+#endif
  }
 
  if (l1z_p != l1z) free(l1z);
@@ -7020,6 +7092,9 @@ int orient2dyz_indirect_LTE_exact(const implicitPoint3D_LPI& p1, const implicitP
  p2.getExactLambda(l2z, l2z_len, l2x, l2x_len, l2y, l2y_len, d2, d2_len);
  if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double a_p[64], *a = a_p;
    int a_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l2x_len, l2x, &a, 64);
@@ -7062,6 +7137,10 @@ int orient2dyz_indirect_LTE_exact(const implicitPoint3D_LPI& p1, const implicitP
    if (c_p != c) free(c);
    if (b_p != b) free(b);
    if (a_p != a) free(a);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("orient2dyz_indirect_LTE_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("orient2dyz_indirect_LTE_exact: Overflow!\n");
+#endif
  }
 
  if (l1z_p != l1z) free(l1z);
@@ -7169,6 +7248,9 @@ int orient2dyz_indirect_LTT_exact(const implicitPoint3D_LPI& p1, const implicitP
  p3.getExactLambda(l3z, l3z_len, l3x, l3x_len, l3y, l3y_len, d3, d3_len);
  if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0) && (d3[d3_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double a_p[64], *a = a_p;
    int a_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l2x_len, l2x, &a, 64);
@@ -7217,6 +7299,10 @@ int orient2dyz_indirect_LTT_exact(const implicitPoint3D_LPI& p1, const implicitP
    if (c_p != c) free(c);
    if (b_p != b) free(b);
    if (a_p != a) free(a);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("orient2dyz_indirect_LTT_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("orient2dyz_indirect_LTT_exact: Overflow!\n");
+#endif
  }
 
  if (l1z_p != l1z) free(l1z);
@@ -7315,6 +7401,9 @@ int orient2dyz_indirect_TEE_exact(const implicitPoint3D_TPI& p1, double p2x, dou
  p1.getExactLambda(l1z, l1z_len, l1x, l1x_len, l1y, l1y_len, d1, d1_len);
  if ((d1[d1_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double t1x[2];
    o.two_Diff(p2y, p3y, t1x);
@@ -7343,6 +7432,10 @@ int orient2dyz_indirect_TEE_exact(const implicitPoint3D_TPI& p1, double p2x, dou
    if (e_p != e) free(e);
    if (e3_p != e3) free(e3);
    if (e2_p != e2) free(e2);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("orient2dyz_indirect_TEE_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("orient2dyz_indirect_TEE_exact: Overflow!\n");
+#endif
  }
 
  if (l1z_p != l1z) free(l1z);
@@ -7400,7 +7493,7 @@ int orient2dyz_indirect_TTE_filtered(const implicitPoint3D_TPI& p1, const implic
    epsilon *= max_var;
    epsilon *= max_var;
    epsilon *= max_var;
-   epsilon *= 3.307187945722513e-08;
+   epsilon *= 3.307187945722514e-08;
    if (L > epsilon) return IP_Sign::POSITIVE;
    if (-L > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -7443,6 +7536,9 @@ int orient2dyz_indirect_TTE_exact(const implicitPoint3D_TPI& p1, const implicitP
  p2.getExactLambda(l2z, l2z_len, l2x, l2x_len, l2y, l2y_len, d2, d2_len);
  if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double a_p[64], *a = a_p;
    int a_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l2x_len, l2x, &a, 64);
@@ -7485,6 +7581,10 @@ int orient2dyz_indirect_TTE_exact(const implicitPoint3D_TPI& p1, const implicitP
    if (c_p != c) free(c);
    if (b_p != b) free(b);
    if (a_p != a) free(a);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("orient2dyz_indirect_TTE_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("orient2dyz_indirect_TTE_exact: Overflow!\n");
+#endif
  }
 
  if (l1z_p != l1z) free(l1z);
@@ -7551,7 +7651,7 @@ int orient2dyz_indirect_TTT_filtered(const implicitPoint3D_TPI& p1, const implic
    epsilon *= max_var;
    epsilon *= max_var;
    epsilon *= max_var;
-   epsilon *= 3.103174776697444e-06;
+   epsilon *= 3.103174776697445e-06;
    if (L > epsilon) return IP_Sign::POSITIVE;
    if (-L > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -7598,6 +7698,9 @@ int orient2dyz_indirect_TTT_exact(const implicitPoint3D_TPI& p1, const implicitP
  p3.getExactLambda(l3z, l3z_len, l3x, l3x_len, l3y, l3y_len, d3, d3_len);
  if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0) && (d3[d3_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double a_p[64], *a = a_p;
    int a_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l2x_len, l2x, &a, 64);
@@ -7646,6 +7749,10 @@ int orient2dyz_indirect_TTT_exact(const implicitPoint3D_TPI& p1, const implicitP
    if (c_p != c) free(c);
    if (b_p != b) free(b);
    if (a_p != a) free(a);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("orient2dyz_indirect_TTT_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("orient2dyz_indirect_TTT_exact: Overflow!\n");
+#endif
  }
 
  if (l1z_p != l1z) free(l1z);
@@ -7706,7 +7813,7 @@ int orient2dzx_indirect_LEE_filtered(const implicitPoint3D_LPI& p1, double p2x, 
    epsilon *= epsilon;
    epsilon *= epsilon;
    epsilon *= max_var;
-   epsilon *= 4.75277369543781e-14;
+   epsilon *= 4.752773695437811e-14;
    if (det > epsilon) return IP_Sign::POSITIVE;
    if (-det > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -7744,6 +7851,9 @@ int orient2dzx_indirect_LEE_exact(const implicitPoint3D_LPI& p1, double p2x, dou
  p1.getExactLambda(l1y, l1y_len, l1z, l1z_len, l1x, l1x_len, d1, d1_len);
  if ((d1[d1_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double t1x[2];
    o.two_Diff(p2y, p3y, t1x);
@@ -7772,6 +7882,10 @@ int orient2dzx_indirect_LEE_exact(const implicitPoint3D_LPI& p1, double p2x, dou
    if (e_p != e) free(e);
    if (e3_p != e3) free(e3);
    if (e2_p != e2) free(e2);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("orient2dzx_indirect_LEE_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("orient2dzx_indirect_LEE_exact: Overflow!\n");
+#endif
  }
 
  if (l1y_p != l1y) free(l1y);
@@ -7870,6 +7984,9 @@ int orient2dzx_indirect_LLE_exact(const implicitPoint3D_LPI& p1, const implicitP
  p2.getExactLambda(l2y, l2y_len, l2z, l2z_len, l2x, l2x_len, d2, d2_len);
  if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double a_p[64], *a = a_p;
    int a_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l2x_len, l2x, &a, 64);
@@ -7912,6 +8029,10 @@ int orient2dzx_indirect_LLE_exact(const implicitPoint3D_LPI& p1, const implicitP
    if (c_p != c) free(c);
    if (b_p != b) free(b);
    if (a_p != a) free(a);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("orient2dzx_indirect_LLE_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("orient2dzx_indirect_LLE_exact: Overflow!\n");
+#endif
  }
 
  if (l1y_p != l1y) free(l1y);
@@ -8020,6 +8141,9 @@ int orient2dzx_indirect_LLL_exact(const implicitPoint3D_LPI& p1, const implicitP
  p3.getExactLambda(l3y, l3y_len, l3z, l3z_len, l3x, l3x_len, d3, d3_len);
  if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0) && (d3[d3_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double a_p[64], *a = a_p;
    int a_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l2x_len, l2x, &a, 64);
@@ -8068,6 +8192,10 @@ int orient2dzx_indirect_LLL_exact(const implicitPoint3D_LPI& p1, const implicitP
    if (c_p != c) free(c);
    if (b_p != b) free(b);
    if (a_p != a) free(a);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("orient2dzx_indirect_LLL_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("orient2dzx_indirect_LLL_exact: Overflow!\n");
+#endif
  }
 
  if (l1y_p != l1y) free(l1y);
@@ -8176,6 +8304,9 @@ int orient2dzx_indirect_LLT_exact(const implicitPoint3D_LPI& p1, const implicitP
  p3.getExactLambda(l3y, l3y_len, l3z, l3z_len, l3x, l3x_len, d3, d3_len);
  if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0) && (d3[d3_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double a_p[64], *a = a_p;
    int a_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l2x_len, l2x, &a, 64);
@@ -8224,6 +8355,10 @@ int orient2dzx_indirect_LLT_exact(const implicitPoint3D_LPI& p1, const implicitP
    if (c_p != c) free(c);
    if (b_p != b) free(b);
    if (a_p != a) free(a);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("orient2dzx_indirect_LLT_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("orient2dzx_indirect_LLT_exact: Overflow!\n");
+#endif
  }
 
  if (l1y_p != l1y) free(l1y);
@@ -8333,6 +8468,9 @@ int orient2dzx_indirect_LTE_exact(const implicitPoint3D_LPI& p1, const implicitP
  p2.getExactLambda(l2y, l2y_len, l2z, l2z_len, l2x, l2x_len, d2, d2_len);
  if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double a_p[64], *a = a_p;
    int a_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l2x_len, l2x, &a, 64);
@@ -8375,6 +8513,10 @@ int orient2dzx_indirect_LTE_exact(const implicitPoint3D_LPI& p1, const implicitP
    if (c_p != c) free(c);
    if (b_p != b) free(b);
    if (a_p != a) free(a);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("orient2dzx_indirect_LTE_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("orient2dzx_indirect_LTE_exact: Overflow!\n");
+#endif
  }
 
  if (l1y_p != l1y) free(l1y);
@@ -8482,6 +8624,9 @@ int orient2dzx_indirect_LTT_exact(const implicitPoint3D_LPI& p1, const implicitP
  p3.getExactLambda(l3y, l3y_len, l3z, l3z_len, l3x, l3x_len, d3, d3_len);
  if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0) && (d3[d3_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double a_p[64], *a = a_p;
    int a_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l2x_len, l2x, &a, 64);
@@ -8530,6 +8675,10 @@ int orient2dzx_indirect_LTT_exact(const implicitPoint3D_LPI& p1, const implicitP
    if (c_p != c) free(c);
    if (b_p != b) free(b);
    if (a_p != a) free(a);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("orient2dzx_indirect_LTT_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("orient2dzx_indirect_LTT_exact: Overflow!\n");
+#endif
  }
 
  if (l1y_p != l1y) free(l1y);
@@ -8628,6 +8777,9 @@ int orient2dzx_indirect_TEE_exact(const implicitPoint3D_TPI& p1, double p2x, dou
  p1.getExactLambda(l1y, l1y_len, l1z, l1z_len, l1x, l1x_len, d1, d1_len);
  if ((d1[d1_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double t1x[2];
    o.two_Diff(p2y, p3y, t1x);
@@ -8656,6 +8808,10 @@ int orient2dzx_indirect_TEE_exact(const implicitPoint3D_TPI& p1, double p2x, dou
    if (e_p != e) free(e);
    if (e3_p != e3) free(e3);
    if (e2_p != e2) free(e2);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("orient2dzx_indirect_TEE_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("orient2dzx_indirect_TEE_exact: Overflow!\n");
+#endif
  }
 
  if (l1y_p != l1y) free(l1y);
@@ -8713,7 +8869,7 @@ int orient2dzx_indirect_TTE_filtered(const implicitPoint3D_TPI& p1, const implic
    epsilon *= max_var;
    epsilon *= max_var;
    epsilon *= max_var;
-   epsilon *= 3.307187945722513e-08;
+   epsilon *= 3.307187945722514e-08;
    if (L > epsilon) return IP_Sign::POSITIVE;
    if (-L > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -8756,6 +8912,9 @@ int orient2dzx_indirect_TTE_exact(const implicitPoint3D_TPI& p1, const implicitP
  p2.getExactLambda(l2y, l2y_len, l2z, l2z_len, l2x, l2x_len, d2, d2_len);
  if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double a_p[64], *a = a_p;
    int a_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l2x_len, l2x, &a, 64);
@@ -8798,6 +8957,10 @@ int orient2dzx_indirect_TTE_exact(const implicitPoint3D_TPI& p1, const implicitP
    if (c_p != c) free(c);
    if (b_p != b) free(b);
    if (a_p != a) free(a);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("orient2dzx_indirect_TTE_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("orient2dzx_indirect_TTE_exact: Overflow!\n");
+#endif
  }
 
  if (l1y_p != l1y) free(l1y);
@@ -8864,7 +9027,7 @@ int orient2dzx_indirect_TTT_filtered(const implicitPoint3D_TPI& p1, const implic
    epsilon *= max_var;
    epsilon *= max_var;
    epsilon *= max_var;
-   epsilon *= 3.103174776697444e-06;
+   epsilon *= 3.103174776697445e-06;
    if (L > epsilon) return IP_Sign::POSITIVE;
    if (-L > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -8911,6 +9074,9 @@ int orient2dzx_indirect_TTT_exact(const implicitPoint3D_TPI& p1, const implicitP
  p3.getExactLambda(l3y, l3y_len, l3z, l3z_len, l3x, l3x_len, d3, d3_len);
  if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0) && (d3[d3_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double a_p[64], *a = a_p;
    int a_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l2x_len, l2x, &a, 64);
@@ -8959,6 +9125,10 @@ int orient2dzx_indirect_TTT_exact(const implicitPoint3D_TPI& p1, const implicitP
    if (c_p != c) free(c);
    if (b_p != b) free(b);
    if (a_p != a) free(a);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("orient2dzx_indirect_TTT_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("orient2dzx_indirect_TTT_exact: Overflow!\n");
+#endif
  }
 
  if (l1y_p != l1y) free(l1y);
@@ -9018,7 +9188,7 @@ int orient2d_indirect_SEE_filtered(const implicitPoint2D_SSI& p1, double p2x, do
    double epsilon = max_var;
    epsilon *= epsilon;
    epsilon *= epsilon;
-   epsilon *= 1.110439865059654e-14;
+   epsilon *= 1.110439865059655e-14;
    if (det > epsilon) return IP_Sign::POSITIVE;
    if (-det > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -9056,6 +9226,9 @@ int orient2d_indirect_SEE_exact(const implicitPoint2D_SSI& p1, double p2x, doubl
  p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, d1, d1_len);
  if ((d1[d1_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double t1x[2];
    o.two_Diff(p2y, p3y, t1x);
@@ -9081,6 +9254,10 @@ int orient2d_indirect_SEE_exact(const implicitPoint2D_SSI& p1, double p2x, doubl
    return_value = det[det_len - 1];
    if (det_p != det) free(det);
    if (e_p != e) free(e);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("orient2d_indirect_SEE_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("orient2d_indirect_SEE_exact: Overflow!\n");
+#endif
  }
 
 
@@ -9172,6 +9349,9 @@ int orient2d_indirect_SSE_exact(const implicitPoint2D_SSI& p1, const implicitPoi
  p2.getExactLambda(l2x, l2x_len, l2y, l2y_len, d2, d2_len);
  if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double a_p[128], *a = a_p;
    int a_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l2x_len, l2x, &a, 128);
@@ -9210,6 +9390,10 @@ int orient2d_indirect_SSE_exact(const implicitPoint2D_SSI& p1, const implicitPoi
    if (e_p != e) free(e);
    if (b_p != b) free(b);
    if (a_p != a) free(a);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("orient2d_indirect_SSE_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("orient2d_indirect_SSE_exact: Overflow!\n");
+#endif
  }
 
 
@@ -9306,6 +9490,9 @@ int orient2d_indirect_SSS_exact(const implicitPoint2D_SSI& p1, const implicitPoi
  p3.getExactLambda(l3x, l3x_len, l3y, l3y_len, d3, d3_len);
  if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0) && (d3[d3_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double a_p[64], *a = a_p;
    int a_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l2x_len, l2x, &a, 64);
@@ -9354,6 +9541,10 @@ int orient2d_indirect_SSS_exact(const implicitPoint2D_SSI& p1, const implicitPoi
    if (c_p != c) free(c);
    if (b_p != b) free(b);
    if (a_p != a) free(a);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("orient2d_indirect_SSS_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("orient2d_indirect_SSS_exact: Overflow!\n");
+#endif
  }
 
 
@@ -9476,6 +9667,9 @@ int orient3d_indirect_LEEE_exact(const implicitPoint3D_LPI& p1, double ax, doubl
  p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, l1z, l1z_len, d1, d1_len);
  if ((d1[d1_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double dcx_p[64], *dcx = dcx_p;
    int dcx_len = o.Gen_Scale_With_PreAlloc(d1_len, d1, cx, &dcx, 64);
@@ -9551,6 +9745,10 @@ int orient3d_indirect_LEEE_exact(const implicitPoint3D_LPI& p1, double ax, doubl
    if (dcz_p != dcz) free(dcz);
    if (dcy_p != dcy) free(dcy);
    if (dcx_p != dcx) free(dcx);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("orient3d_indirect_LEEE_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("orient3d_indirect_LEEE_exact: Overflow!\n");
+#endif
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -9683,6 +9881,9 @@ int orient3d_indirect_LLEE_exact(const implicitPoint3D_LPI& p1, const implicitPo
  p2.getExactLambda(l2x, l2x_len, l2y, l2y_len, l2z, l2z_len, d2, d2_len);
  if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double d1p4x_p[32], *d1p4x = d1p4x_p;
    int d1p4x_len = o.Gen_Scale_With_PreAlloc(d1_len, d1, p4x, &d1p4x, 32);
@@ -9770,6 +9971,10 @@ int orient3d_indirect_LLEE_exact(const implicitPoint3D_LPI& p1, const implicitPo
    if (d1p4z_p != d1p4z) free(d1p4z);
    if (d1p4y_p != d1p4y) free(d1p4y);
    if (d1p4x_p != d1p4x) free(d1p4x);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("orient3d_indirect_LLEE_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("orient3d_indirect_LLEE_exact: Overflow!\n");
+#endif
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -9851,7 +10056,7 @@ int orient3d_indirect_LLLE_filtered(const implicitPoint3D_LPI& p1, const implici
    epsilon *= max_var;
    epsilon *= max_var;
    epsilon *= max_var;
-   epsilon *= 1.270161397934348e-10;
+   epsilon *= 1.270161397934349e-10;
    if (m012 > epsilon) return IP_Sign::POSITIVE;
    if (-m012 > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -9915,6 +10120,9 @@ int orient3d_indirect_LLLE_exact(const implicitPoint3D_LPI& p1, const implicitPo
  p3.getExactLambda(l3x, l3x_len, l3y, l3y_len, l3z, l3z_len, d3, d3_len);
  if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0) && (d3[d3_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double d1p4x_p[32], *d1p4x = d1p4x_p;
    int d1p4x_len = o.Gen_Scale_With_PreAlloc(d1_len, d1, p4x, &d1p4x, 32);
@@ -10014,6 +10222,10 @@ int orient3d_indirect_LLLE_exact(const implicitPoint3D_LPI& p1, const implicitPo
    if (d1p4z_p != d1p4z) free(d1p4z);
    if (d1p4y_p != d1p4y) free(d1p4y);
    if (d1p4x_p != d1p4x) free(d1p4x);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("orient3d_indirect_LLLE_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("orient3d_indirect_LLLE_exact: Overflow!\n");
+#endif
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -10106,7 +10318,7 @@ int orient3d_indirect_LLLL_filtered(const implicitPoint3D_LPI& p1, const implici
    epsilon *= max_var;
    epsilon *= max_var;
    epsilon *= max_var;
-   epsilon *= 1.164303613521163e-07;
+   epsilon *= 1.164303613521164e-07;
    if (m012 > epsilon) return IP_Sign::POSITIVE;
    if (-m012 > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -10181,6 +10393,9 @@ int orient3d_indirect_LLLL_exact(const implicitPoint3D_LPI& p1, const implicitPo
  p4.getExactLambda(l4x, l4x_len, l4y, l4y_len, l4z, l4z_len, d4, d4_len);
  if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0) && (d3[d3_len - 1] != 0) && (d4[d4_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double d1p4x_p[32], *d1p4x = d1p4x_p;
    int d1p4x_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l4x_len, l4x, &d1p4x, 32);
@@ -10307,6 +10522,10 @@ int orient3d_indirect_LLLL_exact(const implicitPoint3D_LPI& p1, const implicitPo
    if (d1p4z_p != d1p4z) free(d1p4z);
    if (d1p4y_p != d1p4y) free(d1p4y);
    if (d1p4x_p != d1p4x) free(d1p4x);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("orient3d_indirect_LLLL_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("orient3d_indirect_LLLL_exact: Overflow!\n");
+#endif
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -10487,6 +10706,9 @@ int orient3d_indirect_LLLT_exact(const implicitPoint3D_LPI& p1, const implicitPo
  p4.getExactLambda(l4x, l4x_len, l4y, l4y_len, l4z, l4z_len, d4, d4_len);
  if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0) && (d3[d3_len - 1] != 0) && (d4[d4_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double d1p4x_p[32], *d1p4x = d1p4x_p;
    int d1p4x_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l4x_len, l4x, &d1p4x, 32);
@@ -10613,6 +10835,10 @@ int orient3d_indirect_LLLT_exact(const implicitPoint3D_LPI& p1, const implicitPo
    if (d1p4z_p != d1p4z) free(d1p4z);
    if (d1p4y_p != d1p4y) free(d1p4y);
    if (d1p4x_p != d1p4x) free(d1p4x);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("orient3d_indirect_LLLT_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("orient3d_indirect_LLLT_exact: Overflow!\n");
+#endif
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -10705,7 +10931,7 @@ int orient3d_indirect_LLTE_filtered(const implicitPoint3D_LPI& p1, const implici
    epsilon *= max_var;
    epsilon *= max_var;
    epsilon *= max_var;
-   epsilon *= 1.706094390763199e-09;
+   epsilon *= 1.7060943907632e-09;
    if (m012 > epsilon) return IP_Sign::POSITIVE;
    if (-m012 > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -10769,6 +10995,9 @@ int orient3d_indirect_LLTE_exact(const implicitPoint3D_LPI& p1, const implicitPo
  p3.getExactLambda(l3x, l3x_len, l3y, l3y_len, l3z, l3z_len, d3, d3_len);
  if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0) && (d3[d3_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double d1p4x_p[32], *d1p4x = d1p4x_p;
    int d1p4x_len = o.Gen_Scale_With_PreAlloc(d1_len, d1, p4x, &d1p4x, 32);
@@ -10868,6 +11097,10 @@ int orient3d_indirect_LLTE_exact(const implicitPoint3D_LPI& p1, const implicitPo
    if (d1p4z_p != d1p4z) free(d1p4z);
    if (d1p4y_p != d1p4y) free(d1p4y);
    if (d1p4x_p != d1p4x) free(d1p4x);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("orient3d_indirect_LLTE_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("orient3d_indirect_LLTE_exact: Overflow!\n");
+#endif
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -11032,6 +11265,9 @@ int orient3d_indirect_LLTT_exact(const implicitPoint3D_LPI& p1, const implicitPo
  p4.getExactLambda(l4x, l4x_len, l4y, l4y_len, l4z, l4z_len, d4, d4_len);
  if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0) && (d3[d3_len - 1] != 0) && (d4[d4_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double d1p4x_p[32], *d1p4x = d1p4x_p;
    int d1p4x_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l4x_len, l4x, &d1p4x, 32);
@@ -11158,6 +11394,10 @@ int orient3d_indirect_LLTT_exact(const implicitPoint3D_LPI& p1, const implicitPo
    if (d1p4z_p != d1p4z) free(d1p4z);
    if (d1p4y_p != d1p4y) free(d1p4y);
    if (d1p4x_p != d1p4x) free(d1p4x);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("orient3d_indirect_LLTT_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("orient3d_indirect_LLTT_exact: Overflow!\n");
+#endif
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -11305,6 +11545,9 @@ int orient3d_indirect_LTEE_exact(const implicitPoint3D_LPI& p1, const implicitPo
  p2.getExactLambda(l2x, l2x_len, l2y, l2y_len, l2z, l2z_len, d2, d2_len);
  if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double d1p4x_p[32], *d1p4x = d1p4x_p;
    int d1p4x_len = o.Gen_Scale_With_PreAlloc(d1_len, d1, p4x, &d1p4x, 32);
@@ -11392,6 +11635,10 @@ int orient3d_indirect_LTEE_exact(const implicitPoint3D_LPI& p1, const implicitPo
    if (d1p4z_p != d1p4z) free(d1p4z);
    if (d1p4y_p != d1p4y) free(d1p4y);
    if (d1p4x_p != d1p4x) free(d1p4x);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("orient3d_indirect_LTEE_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("orient3d_indirect_LTEE_exact: Overflow!\n");
+#endif
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -11472,7 +11719,7 @@ int orient3d_indirect_LTTE_filtered(const implicitPoint3D_LPI& p1, const implici
    epsilon *= epsilon;
    epsilon *= max_var;
    epsilon *= max_var;
-   epsilon *= 2.211968919141341e-08;
+   epsilon *= 2.211968919141342e-08;
    if (m012 > epsilon) return IP_Sign::POSITIVE;
    if (-m012 > epsilon) return IP_Sign::NEGATIVE;
    return Filtered_Sign::UNCERTAIN;
@@ -11536,6 +11783,9 @@ int orient3d_indirect_LTTE_exact(const implicitPoint3D_LPI& p1, const implicitPo
  p3.getExactLambda(l3x, l3x_len, l3y, l3y_len, l3z, l3z_len, d3, d3_len);
  if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0) && (d3[d3_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double d1p4x_p[32], *d1p4x = d1p4x_p;
    int d1p4x_len = o.Gen_Scale_With_PreAlloc(d1_len, d1, p4x, &d1p4x, 32);
@@ -11635,6 +11885,10 @@ int orient3d_indirect_LTTE_exact(const implicitPoint3D_LPI& p1, const implicitPo
    if (d1p4z_p != d1p4z) free(d1p4z);
    if (d1p4y_p != d1p4y) free(d1p4y);
    if (d1p4x_p != d1p4x) free(d1p4x);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("orient3d_indirect_LTTE_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("orient3d_indirect_LTTE_exact: Overflow!\n");
+#endif
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -11802,6 +12056,9 @@ int orient3d_indirect_LTTT_exact(const implicitPoint3D_LPI& p1, const implicitPo
  p4.getExactLambda(l4x, l4x_len, l4y, l4y_len, l4z, l4z_len, d4, d4_len);
  if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0) && (d3[d3_len - 1] != 0) && (d4[d4_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double d1p4x_p[32], *d1p4x = d1p4x_p;
    int d1p4x_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l4x_len, l4x, &d1p4x, 32);
@@ -11928,6 +12185,10 @@ int orient3d_indirect_LTTT_exact(const implicitPoint3D_LPI& p1, const implicitPo
    if (d1p4z_p != d1p4z) free(d1p4z);
    if (d1p4y_p != d1p4y) free(d1p4y);
    if (d1p4x_p != d1p4x) free(d1p4x);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("orient3d_indirect_LTTT_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("orient3d_indirect_LTTT_exact: Overflow!\n");
+#endif
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -12066,6 +12327,9 @@ int orient3d_indirect_TEEE_exact(const implicitPoint3D_TPI& p1, double ax, doubl
  p1.getExactLambda(l1x, l1x_len, l1y, l1y_len, l1z, l1z_len, d1, d1_len);
  if ((d1[d1_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double dcx_p[64], *dcx = dcx_p;
    int dcx_len = o.Gen_Scale_With_PreAlloc(d1_len, d1, cx, &dcx, 64);
@@ -12141,6 +12405,10 @@ int orient3d_indirect_TEEE_exact(const implicitPoint3D_TPI& p1, double ax, doubl
    if (dcz_p != dcz) free(dcz);
    if (dcy_p != dcy) free(dcy);
    if (dcx_p != dcx) free(dcx);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("orient3d_indirect_TEEE_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("orient3d_indirect_TEEE_exact: Overflow!\n");
+#endif
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -12279,6 +12547,9 @@ int orient3d_indirect_TTEE_exact(const implicitPoint3D_TPI& p1, const implicitPo
  p2.getExactLambda(l2x, l2x_len, l2y, l2y_len, l2z, l2z_len, d2, d2_len);
  if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double d1p4x_p[32], *d1p4x = d1p4x_p;
    int d1p4x_len = o.Gen_Scale_With_PreAlloc(d1_len, d1, p4x, &d1p4x, 32);
@@ -12366,6 +12637,10 @@ int orient3d_indirect_TTEE_exact(const implicitPoint3D_TPI& p1, const implicitPo
    if (d1p4z_p != d1p4z) free(d1p4z);
    if (d1p4y_p != d1p4y) free(d1p4y);
    if (d1p4x_p != d1p4x) free(d1p4x);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("orient3d_indirect_TTEE_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("orient3d_indirect_TTEE_exact: Overflow!\n");
+#endif
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -12513,6 +12788,9 @@ int orient3d_indirect_TTTE_exact(const implicitPoint3D_TPI& p1, const implicitPo
  p3.getExactLambda(l3x, l3x_len, l3y, l3y_len, l3z, l3z_len, d3, d3_len);
  if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0) && (d3[d3_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double d1p4x_p[32], *d1p4x = d1p4x_p;
    int d1p4x_len = o.Gen_Scale_With_PreAlloc(d1_len, d1, p4x, &d1p4x, 32);
@@ -12612,6 +12890,10 @@ int orient3d_indirect_TTTE_exact(const implicitPoint3D_TPI& p1, const implicitPo
    if (d1p4z_p != d1p4z) free(d1p4z);
    if (d1p4y_p != d1p4y) free(d1p4y);
    if (d1p4x_p != d1p4x) free(d1p4x);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("orient3d_indirect_TTTE_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("orient3d_indirect_TTTE_exact: Overflow!\n");
+#endif
  }
 
  if (l1x_p != l1x) free(l1x);
@@ -12782,6 +13064,9 @@ int orient3d_indirect_TTTT_exact(const implicitPoint3D_TPI& p1, const implicitPo
  p4.getExactLambda(l4x, l4x_len, l4y, l4y_len, l4z, l4z_len, d4, d4_len);
  if ((d1[d1_len - 1] != 0) && (d2[d2_len - 1] != 0) && (d3[d3_len - 1] != 0) && (d4[d4_len - 1] != 0))
  {
+#ifdef CHECK_FOR_XYZERFLOWS
+   feclearexcept(FE_ALL_EXCEPT);
+#endif
    expansionObject o;
    double d1p4x_p[32], *d1p4x = d1p4x_p;
    int d1p4x_len = o.Gen_Product_With_PreAlloc(d1_len, d1, l4x_len, l4x, &d1p4x, 32);
@@ -12908,6 +13193,10 @@ int orient3d_indirect_TTTT_exact(const implicitPoint3D_TPI& p1, const implicitPo
    if (d1p4z_p != d1p4z) free(d1p4z);
    if (d1p4y_p != d1p4y) free(d1p4y);
    if (d1p4x_p != d1p4x) free(d1p4x);
+#ifdef CHECK_FOR_XYZERFLOWS
+   if (fetestexcept(FE_UNDERFLOW)) ip_error("orient3d_indirect_TTTT_exact: Underflow!\n");
+   if (fetestexcept(FE_OVERFLOW)) ip_error("orient3d_indirect_TTTT_exact: Overflow!\n");
+#endif
  }
 
  if (l1x_p != l1x) free(l1x);

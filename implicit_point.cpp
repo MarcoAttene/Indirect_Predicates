@@ -479,22 +479,22 @@ int genericPoint::orient3D(const genericPoint& a, const genericPoint& b, const g
 
 	if (i == 0)
 	{
-		if (a.isLPI() && b.isLPI() && c.isLPI() && d.isLPI()) return orient3d_LLLL(a, b, c, d);
-		if (a.isLPI() && b.isLPI() && c.isLPI() && d.isTPI()) return orient3d_LLLT(a, b, c, d);
-		if (a.isLPI() && b.isLPI() && c.isTPI() && d.isTPI()) return orient3d_LLTT(a, b, c, d);
-		if (a.isLPI() && b.isTPI() && c.isTPI() && d.isTPI()) return orient3d_LTTT(a, b, c, d);
-		if (a.isTPI() && b.isTPI() && c.isTPI() && d.isTPI()) return orient3d_TTTT(a, b, c, d);
-                if (a.isLPI() && b.isLPI() && c.isTPI() && d.isLPI()) return orient3d_LLLT(b, a, d, c);
-		if (a.isLPI() && b.isTPI() && c.isLPI() && d.isLPI()) return orient3d_LLLT(c, d, a, b);
-                if (a.isTPI() && b.isLPI() && c.isLPI() && d.isLPI()) return orient3d_LLLT(d, c, b, a);
-		if (a.isLPI() && b.isTPI() && c.isLPI() && d.isTPI()) return orient3d_LLTT(c, a, b, d);
-                if (a.isTPI() && b.isLPI() && c.isLPI() && d.isTPI()) return orient3d_LLTT(b, c, a, d);
-                if (a.isTPI() && b.isLPI() && c.isTPI() && d.isLPI()) return orient3d_LLTT(b, d, c, a);
-		if (a.isTPI() && b.isTPI() && c.isLPI() && d.isLPI()) return orient3d_LLTT(c, d, a, b);
-                if (a.isLPI() && b.isTPI() && c.isTPI() && d.isLPI()) return orient3d_LLTT(a, d, b, c);
-                if (a.isTPI() && b.isLPI() && c.isTPI() && d.isTPI()) return orient3d_LTTT(b, a, d, c);
-		if (a.isTPI() && b.isTPI() && c.isLPI() && d.isTPI()) return orient3d_LTTT(c, d, a, b);
-                if (a.isTPI() && b.isTPI() && c.isTPI() && d.isLPI()) return orient3d_LTTT(d, c, b, a);
+		if (a.isLPI() && b.isLPI() && c.isLPI() && d.isLPI()) return orient3d_LLLL(a, b, c, d); // LLLL
+		if (a.isLPI() && b.isLPI() && c.isLPI() && d.isTPI()) return orient3d_LLLT(a, b, c, d); // LLLT
+		if (a.isLPI() && b.isLPI() && c.isTPI() && d.isTPI()) return orient3d_LLTT(a, b, c, d); // LLTT
+		if (a.isLPI() && b.isTPI() && c.isTPI() && d.isTPI()) return orient3d_LTTT(a, b, c, d); // LTTT
+		if (a.isTPI() && b.isTPI() && c.isTPI() && d.isTPI()) return orient3d_TTTT(a, b, c, d); // TTTT
+        if (a.isLPI() && b.isLPI() && c.isTPI() && d.isLPI()) return orient3d_LLLT(b, a, d, c); // LLTL
+		if (a.isLPI() && b.isTPI() && c.isLPI() && d.isLPI()) return orient3d_LLLT(c, d, a, b); // LTLL
+        if (a.isTPI() && b.isLPI() && c.isLPI() && d.isLPI()) return orient3d_LLLT(d, c, b, a); // TLLL
+		if (a.isLPI() && b.isTPI() && c.isLPI() && d.isTPI()) return orient3d_LLTT(c, a, b, d); // LTLT
+        if (a.isTPI() && b.isLPI() && c.isLPI() && d.isTPI()) return orient3d_LLTT(b, c, a, d); // TLLT
+        if (a.isTPI() && b.isLPI() && c.isTPI() && d.isLPI()) return orient3d_LLTT(b, d, c, a); // TLTL
+		if (a.isTPI() && b.isTPI() && c.isLPI() && d.isLPI()) return orient3d_LLTT(c, d, a, b); // TTLL
+        if (a.isLPI() && b.isTPI() && c.isTPI() && d.isLPI()) return orient3d_LLTT(a, d, b, c); // LTTL
+        if (a.isTPI() && b.isLPI() && c.isTPI() && d.isTPI()) return orient3d_LTTT(b, a, d, c); // TLTT
+		if (a.isTPI() && b.isTPI() && c.isLPI() && d.isTPI()) return orient3d_LTTT(c, d, a, b); // TTLT
+        if (a.isTPI() && b.isTPI() && c.isTPI() && d.isLPI()) return orient3d_LTTT(d, c, b, a); // TTTL
 
 		ip_error("genericPoint::orient3d - should not happen (0)\n");
 	}
@@ -854,6 +854,25 @@ void implicitPoint2D_SSI::getExactLambda(double *lx, int& lxl, double *ly, int& 
 	}
 }
 
+// Keeps lambda/d pairs as close to one as possible to avoid under/overflows
+void normalizeLambda3D(double* lx, int& lxl, double* ly, int& lyl, double* lz, int& lzl, double* d, int& dl)
+{
+	double maxd = -DBL_MAX, maxsd, ad, aad;
+	if ((aad = fabs((ad = expansionObject::To_Double(lxl, lx)))) > maxd) { maxd = aad; maxsd = ad; }
+	if ((aad = fabs((ad = expansionObject::To_Double(lyl, ly)))) > maxd) { maxd = aad; maxsd = ad; }
+	if ((aad = fabs((ad = expansionObject::To_Double(lzl, lz)))) > maxd) { maxd = aad; maxsd = ad; }
+	if ((aad = fabs((ad = expansionObject::To_Double(dl, d)))) > maxd) { maxd = aad; maxsd = ad; }
+
+	int e;
+	frexp(maxsd, &e);
+	double m = ldexp(2, -e);
+
+	expansionObject::ExactScale(lxl, lx, m);
+	expansionObject::ExactScale(lyl, ly, m);
+	expansionObject::ExactScale(lzl, lz, m);
+	expansionObject::ExactScale(dl, d, m);
+}
+
 void implicitPoint3D_LPI::getExactLambda(double *lx, int& lxl, double *ly, int& lyl, double *lz, int& lzl, double *d, int& dl) const
 {
 	lambda3d_LPI_exact(P().X(), P().Y(), P().Z(), Q().X(), Q().Y(), Q().Z(), R().X(), R().Y(), R().Z(), S().X(), S().Y(), S().Z(), T().X(), T().Y(), T().Z(), d, dl, lx, lxl, ly, lyl, lz, lzl);
@@ -864,6 +883,7 @@ void implicitPoint3D_LPI::getExactLambda(double *lx, int& lxl, double *ly, int& 
 		expansionObject::Gen_Invert(lzl, lz);
 		expansionObject::Gen_Invert(dl, d);
 	}
+	normalizeLambda3D(lx, lxl, ly, lyl, lz, lzl, d, dl);
 }
 
 void implicitPoint3D_TPI::getExactLambda(double *lx, int& lxl, double *ly, int& lyl, double *lz, int& lzl, double *d, int& dl) const
@@ -878,6 +898,7 @@ void implicitPoint3D_TPI::getExactLambda(double *lx, int& lxl, double *ly, int& 
 		expansionObject::Gen_Invert(lzl, lz);
 		expansionObject::Gen_Invert(dl, d);
 	}
+	normalizeLambda3D(lx, lxl, ly, lyl, lz, lzl, d, dl);
 }
 
 
