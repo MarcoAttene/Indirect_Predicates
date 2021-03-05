@@ -942,7 +942,7 @@ bool implicitPoint3D_LPI::approxExplicit(explicitPoint3D& e) const
 		{
 			double l1z_p[128], * l1z = l1z_p, l1x_p[128], * l1x = l1x_p, l1y_p[128], * l1y = l1y_p, d1_p[128], * d1 = d1_p;
 			int l1z_len, l1x_len, l1y_len, d1_len;
-			getExactLambda(l1z, l1z_len, l1x, l1x_len, l1y, l1y_len, d1, d1_len);
+			getExactLambda(l1x, l1x_len, l1y, l1y_len, l1z, l1z_len, d1, d1_len);
 			lambda_x = l1x[l1x_len - 1];
 			lambda_y = l1y[l1y_len - 1];
 			lambda_z = l1z[l1z_len - 1];
@@ -975,7 +975,7 @@ bool implicitPoint3D_TPI::approxExplicit(explicitPoint3D& e) const
 		{
 			double l1z_p[128], * l1z = l1z_p, l1x_p[128], * l1x = l1x_p, l1y_p[128], * l1y = l1y_p, d1_p[128], * d1 = d1_p;
 			int l1z_len, l1x_len, l1y_len, d1_len;
-			getExactLambda(l1z, l1z_len, l1x, l1x_len, l1y, l1y_len, d1, d1_len);
+			getExactLambda(l1x, l1x_len, l1y, l1y_len, l1z, l1z_len, d1, d1_len);
 			lambda_x = l1x[l1x_len - 1];
 			lambda_y = l1y[l1y_len - 1];
 			lambda_z = l1z[l1z_len - 1];
