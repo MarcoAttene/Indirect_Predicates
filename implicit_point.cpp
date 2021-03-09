@@ -902,35 +902,59 @@ void implicitPoint3D_TPI::getExactLambda(double *lx, int& lxl, double *ly, int& 
 }
 
 
+bool implicitPoint2D_SSI::apapExplicit(explicitPoint2D& e) const
+{
+	double l1x_p[128], * l1x = l1x_p, l1y_p[128], * l1y = l1y_p, d1_p[128], * d1 = d1_p;
+	int l1x_len, l1y_len, d1_len;
+	getExactLambda(l1x, l1x_len, l1y, l1y_len, d1, d1_len);
+	const double lambda_x = expansionObject::To_Double(l1x_len, l1x);
+	const double lambda_y = expansionObject::To_Double(l1y_len, l1y);
+	const double lambda_d = expansionObject::To_Double(d1_len, d1);
+	if (l1x_p != l1x) free(l1x);
+	if (l1y_p != l1y) free(l1y);
+	if (d1_p != d1) free(d1);
+	if (lambda_d == 0) return false;
+
+	e = explicitPoint2D(lambda_x / lambda_d, lambda_y / lambda_d);
+	return true;
+}
+
 bool implicitPoint2D_SSI::approxExplicit(explicitPoint2D& e) const
 {
 	double lambda_x, lambda_y, lambda_d, max_var = 0;
 	if (!getFilteredLambda(lambda_x, lambda_y, lambda_d, max_var))
 	{
 		interval_number ilx, ily, id;
-		if (!getIntervalLambda(ilx, ily, id))
-		{
-			double l1x_p[128], * l1x = l1x_p, l1y_p[128], * l1y = l1y_p, d1_p[128], * d1 = d1_p;
-			int l1x_len, l1y_len, d1_len;
-			getExactLambda(l1x, l1x_len, l1y, l1y_len, d1, d1_len);
-			lambda_x = l1x[l1x_len - 1];
-			lambda_y = l1y[l1y_len - 1];
-			lambda_d = d1[d1_len - 1];
-			if (l1x_p != l1x) free(l1x);
-			if (l1y_p != l1y) free(l1y);
-			if (d1_p != d1) free(d1);
-			if (lambda_d == 0) return false;
-		}
+		if (!getIntervalLambda(ilx, ily, id)) return apapExplicit(e);
 		else
 		{
-			lambda_x = ilx.sup();
-			lambda_y = ily.sup();
-			lambda_d = id.sup();
+			lambda_x = ilx.sup() + ilx.inf();
+			lambda_y = ily.sup() + ily.inf();
+			lambda_d = id.sup() + id.inf();
 		}
 	}
 	e = explicitPoint2D(lambda_x / lambda_d, lambda_y / lambda_d);
 	return true;
 }
+
+bool implicitPoint3D_LPI::apapExplicit(explicitPoint3D& e) const
+{
+	double l1z_p[128], * l1z = l1z_p, l1x_p[128], * l1x = l1x_p, l1y_p[128], * l1y = l1y_p, d1_p[128], * d1 = d1_p;
+	int l1z_len, l1x_len, l1y_len, d1_len;
+	getExactLambda(l1x, l1x_len, l1y, l1y_len, l1z, l1z_len, d1, d1_len);
+	const double lambda_x = expansionObject::To_Double(l1x_len, l1x);
+	const double lambda_y = expansionObject::To_Double(l1y_len, l1y);
+	const double lambda_z = expansionObject::To_Double(l1z_len, l1z);
+	const double lambda_d = expansionObject::To_Double(d1_len, d1);
+	if (l1z_p != l1z) free(l1z);
+	if (l1x_p != l1x) free(l1x);
+	if (l1y_p != l1y) free(l1y);
+	if (d1_p != d1) free(d1);
+	if (lambda_d == 0) return false;
+	e = explicitPoint3D(lambda_x / lambda_d, lambda_y / lambda_d, lambda_z / lambda_d);
+	return true;
+}
+
 
 bool implicitPoint3D_LPI::approxExplicit(explicitPoint3D& e) const
 {
@@ -938,29 +962,33 @@ bool implicitPoint3D_LPI::approxExplicit(explicitPoint3D& e) const
 	if (!getFilteredLambda(lambda_x, lambda_y, lambda_z, lambda_d, max_var))
 	{
 		interval_number ilx, ily, ilz, id;
-		if (!getIntervalLambda(ilx, ily, ilz, id))
-		{
-			double l1z_p[128], * l1z = l1z_p, l1x_p[128], * l1x = l1x_p, l1y_p[128], * l1y = l1y_p, d1_p[128], * d1 = d1_p;
-			int l1z_len, l1x_len, l1y_len, d1_len;
-			getExactLambda(l1x, l1x_len, l1y, l1y_len, l1z, l1z_len, d1, d1_len);
-			lambda_x = l1x[l1x_len - 1];
-			lambda_y = l1y[l1y_len - 1];
-			lambda_z = l1z[l1z_len - 1];
-			lambda_d = d1[d1_len - 1];
-			if (l1z_p != l1z) free(l1z);
-			if (l1x_p != l1x) free(l1x);
-			if (l1y_p != l1y) free(l1y);
-			if (d1_p != d1) free(d1);
-			if (lambda_d == 0) return false;
-		}
+		if (!getIntervalLambda(ilx, ily, ilz, id)) return apapExplicit(e);
 		else
 		{
-			lambda_x = ilx.sup();
-			lambda_y = ily.sup();
-			lambda_z = ilz.sup();
-			lambda_d = id.sup();
+			lambda_x = ilx.sup() + ilx.inf();
+			lambda_y = ily.sup() + ily.inf();
+			lambda_z = ilz.sup() + ilz.inf();
+			lambda_d = id.sup() + id.inf();
 		}
 	}
+	e = explicitPoint3D(lambda_x / lambda_d, lambda_y / lambda_d, lambda_z / lambda_d);
+	return true;
+}
+
+bool implicitPoint3D_TPI::apapExplicit(explicitPoint3D& e) const
+{
+	double l1z_p[128], * l1z = l1z_p, l1x_p[128], * l1x = l1x_p, l1y_p[128], * l1y = l1y_p, d1_p[128], * d1 = d1_p;
+	int l1z_len, l1x_len, l1y_len, d1_len;
+	getExactLambda(l1x, l1x_len, l1y, l1y_len, l1z, l1z_len, d1, d1_len);
+	const double lambda_x = expansionObject::To_Double(l1x_len, l1x);
+	const double lambda_y = expansionObject::To_Double(l1y_len, l1y);
+	const double lambda_z = expansionObject::To_Double(l1z_len, l1z);
+	const double lambda_d = expansionObject::To_Double(d1_len, d1);
+	if (l1z_p != l1z) free(l1z);
+	if (l1x_p != l1x) free(l1x);
+	if (l1y_p != l1y) free(l1y);
+	if (d1_p != d1) free(d1);
+	if (lambda_d == 0) return false;
 	e = explicitPoint3D(lambda_x / lambda_d, lambda_y / lambda_d, lambda_z / lambda_d);
 	return true;
 }
@@ -971,41 +999,37 @@ bool implicitPoint3D_TPI::approxExplicit(explicitPoint3D& e) const
 	if (!getFilteredLambda(lambda_x, lambda_y, lambda_z, lambda_d, max_var))
 	{
 		interval_number ilx, ily, ilz, id;
-		if (!getIntervalLambda(ilx, ily, ilz, id))
-		{
-			double l1z_p[128], * l1z = l1z_p, l1x_p[128], * l1x = l1x_p, l1y_p[128], * l1y = l1y_p, d1_p[128], * d1 = d1_p;
-			int l1z_len, l1x_len, l1y_len, d1_len;
-			getExactLambda(l1x, l1x_len, l1y, l1y_len, l1z, l1z_len, d1, d1_len);
-			lambda_x = l1x[l1x_len - 1];
-			lambda_y = l1y[l1y_len - 1];
-			lambda_z = l1z[l1z_len - 1];
-			lambda_d = d1[d1_len - 1];
-			if (l1z_p != l1z) free(l1z);
-			if (l1x_p != l1x) free(l1x);
-			if (l1y_p != l1y) free(l1y);
-			if (d1_p != d1) free(d1);
-			if (lambda_d == 0) return false;
-		}
+		if (!getIntervalLambda(ilx, ily, ilz, id)) return apapExplicit(e);
 		else
 		{
-			lambda_x = ilx.sup();
-			lambda_y = ily.sup();
-			lambda_z = ilz.sup();
-			lambda_d = id.sup();
+			lambda_x = ilx.sup() + ilx.inf();
+			lambda_y = ily.sup() + ily.inf();
+			lambda_z = ilz.sup() + ilz.inf();
+			lambda_d = id.sup() + id.inf();
 		}
 	}
 	e = explicitPoint3D(lambda_x / lambda_d, lambda_y / lambda_d, lambda_z / lambda_d);
 	return true;
 }
 
-bool genericPoint::getApproxXYCoordinates(double& x, double& y) const
+bool genericPoint::getApproxXYCoordinates(double& x, double& y, bool apap) const
 {
 	if (is2D())
 	{
 		explicitPoint2D op;
 		const explicitPoint2D* p = &op;
 		if (isExplicit2D()) p = &toExplicit2D();
-		else if (isSSI()) { if (!toSSI().approxExplicit(op)) return false; }
+		else if (isSSI()) 
+		{
+			if (apap)
+			{
+				if (!toSSI().apapExplicit(op)) return false;
+			}
+			else
+			{
+				if (!toSSI().approxExplicit(op)) return false;
+			}
+		}
 		x = p->X(); y = p->Y();
 		return true;
 	}
@@ -1014,8 +1038,28 @@ bool genericPoint::getApproxXYCoordinates(double& x, double& y) const
 		explicitPoint3D op;
 		const explicitPoint3D* p = &op;
 		if (isExplicit3D()) p = &toExplicit3D();
-		else if (isLPI()) { if (!toLPI().approxExplicit(op)) return false; }
-		else if (isTPI()) { if (!toTPI().approxExplicit(op)) return false; }
+		else if (isLPI()) 
+		{
+			if (apap)
+			{
+				if (!toLPI().apapExplicit(op)) return false;
+			}
+			else
+			{
+				if (!toLPI().approxExplicit(op)) return false;
+			}
+		}
+		else if (isTPI()) 
+		{
+			if (apap)
+			{
+				if (!toTPI().apapExplicit(op)) return false;
+			}
+			else
+			{
+				if (!toTPI().approxExplicit(op)) return false;
+			}
+		}
 		x = p->X(); y = p->Y();
 		return true;
 	}
@@ -1023,15 +1067,35 @@ bool genericPoint::getApproxXYCoordinates(double& x, double& y) const
 	return false;
 }
 
-bool genericPoint::getApproxXYZCoordinates(double& x, double& y, double& z) const
+bool genericPoint::getApproxXYZCoordinates(double& x, double& y, double& z, bool apap) const
 {
 	if (is3D())
 	{
 		explicitPoint3D op;
 		const explicitPoint3D* p = &op;
 		if (isExplicit3D()) p = &toExplicit3D();
-		else if (isLPI()) { if (!toLPI().approxExplicit(op)) return false; }
-		else if (isTPI()) { if (!toTPI().approxExplicit(op)) return false; }
+		else if (isLPI())
+		{
+			if (apap)
+			{
+				if (!toLPI().apapExplicit(op)) return false;
+			}
+			else
+			{
+				if (!toLPI().approxExplicit(op)) return false;
+			}
+		}
+		else if (isTPI())
+		{
+			if (apap)
+			{
+				if (!toTPI().apapExplicit(op)) return false;
+			}
+			else
+			{
+				if (!toTPI().approxExplicit(op)) return false;
+			}
+		}
 		x = p->X(); y = p->Y(); z = p->Z();
 		return true;
 	}
