@@ -1331,6 +1331,31 @@ bool genericPoint::pointInTriangle(const genericPoint& P, const genericPoint& A,
 	return ((o1 >= 0 && o2 >= 0 && o3 >= 0) || (o1 <= 0 && o2 <= 0 && o3 <= 0));
 }
 
+bool genericPoint::pointInTriangle(const genericPoint& P, const genericPoint& A, const genericPoint& B, const genericPoint& C, int xyz)
+{
+	int o1, o2, o3;
+	if (xyz == 2)
+	{
+		o1 = genericPoint::orient2Dxy(P, A, B);
+		o2 = genericPoint::orient2Dxy(P, B, C);
+		o3 = genericPoint::orient2Dxy(P, C, A);
+	}
+	else if (xyz == 0)
+	{
+		o1 = genericPoint::orient2Dyz(P, A, B);
+		o2 = genericPoint::orient2Dyz(P, B, C);
+		o3 = genericPoint::orient2Dyz(P, C, A);
+	}
+	else
+	{
+		o1 = genericPoint::orient2Dzx(P, A, B);
+		o2 = genericPoint::orient2Dzx(P, B, C);
+		o3 = genericPoint::orient2Dzx(P, C, A);
+	}
+	return ((o1 >= 0 && o2 >= 0 && o3 >= 0) || (o1 <= 0 && o2 <= 0 && o3 <= 0));
+}
+
+
 bool genericPoint::pointInTriangle(const genericPoint& P, const genericPoint& A, const genericPoint& B, const genericPoint& C, int& o1, int& o2, int& o3)
 {
 	o1 = orient2Dxy(P, A, B);
@@ -1361,5 +1386,29 @@ bool genericPoint::pointInInnerTriangle(const genericPoint& P, const genericPoin
 	o1 = orient2Dzx(P, A, B);
 	o2 = orient2Dzx(P, B, C);
 	o3 = orient2Dzx(P, C, A);
+	return ((o1 > 0 && o2 > 0 && o3 > 0) || (o1 < 0 && o2 < 0 && o3 < 0));
+}
+
+bool genericPoint::pointInInnerTriangle(const genericPoint& P, const genericPoint& A, const genericPoint& B, const genericPoint& C, int xyz)
+{
+	int o1, o2, o3;
+	if (xyz == 2)
+	{
+		o1 = genericPoint::orient2Dxy(P, A, B);
+		o2 = genericPoint::orient2Dxy(P, B, C);
+		o3 = genericPoint::orient2Dxy(P, C, A);
+	}
+	else if (xyz == 0)
+	{
+		o1 = genericPoint::orient2Dyz(P, A, B);
+		o2 = genericPoint::orient2Dyz(P, B, C);
+		o3 = genericPoint::orient2Dyz(P, C, A);
+	}
+	else
+	{
+		o1 = genericPoint::orient2Dzx(P, A, B);
+		o2 = genericPoint::orient2Dzx(P, B, C);
+		o3 = genericPoint::orient2Dzx(P, C, A);
+	}
 	return ((o1 > 0 && o2 > 0 && o3 > 0) || (o1 < 0 && o2 < 0 && o3 < 0));
 }
