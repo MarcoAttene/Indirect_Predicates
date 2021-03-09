@@ -102,13 +102,15 @@ public:
 
 	// Calculates the first two cartesian coordinates. If the point is implicit, these
 	// coordinates are approximated due to floating point roundoff.
+	// If apap==true, the approximation is as precise as possible (slightly slower).
 	// Returns 0 if the implicit point is undefined.
-	bool getApproxXYCoordinates(double& x, double& y) const;
+	bool getApproxXYCoordinates(double& x, double& y, bool apap =false) const;
 
 	// Calculates the three cartesian coordinates. If the point is implicit, these
 	// coordinates are approximated due to floating point roundoff.
+	// If apap==true, the approximation is as precise as possible (slightly slower).
 	// Returns 0 if the point is not 3D or if the implicit point is undefined.
-	bool getApproxXYZCoordinates(double& x, double& y, double& z) const;
+	bool getApproxXYZCoordinates(double& x, double& y, double& z, bool apap = false) const;
 
 	// These are the indirect predicates supported up to now
 
@@ -255,6 +257,10 @@ public:
 	// Returns false if point is undefined
 	bool approxExplicit(explicitPoint2D&) const;
 
+	// Same as above, but the approximation is as precise as possible.
+	// Slightly slower.
+	bool apapExplicit(explicitPoint2D&) const;
+
 #ifdef USE_CACHED_VALUES
 private: // Cached values
 	mutable double ssfilter_lambda_x, ssfilter_lambda_y, ssfilter_denominator, ssfilter_max_val;
@@ -319,6 +325,10 @@ public:
 	// Returns false if point is undefined
 	bool approxExplicit(explicitPoint3D&) const;
 
+	// Same as above, but the approximation is as precise as possible.
+	// Slightly slower.
+	bool apapExplicit(explicitPoint3D&) const;
+
 #ifdef USE_CACHED_VALUES
 private: // Cached values
 	mutable double ssfilter_lambda_x, ssfilter_lambda_y, ssfilter_lambda_z, ssfilter_denominator, ssfilter_max_val;
@@ -365,6 +375,10 @@ public:
 	// Returns false if point is undefined
 	bool approxExplicit(explicitPoint3D&) const;
 
+	// Same as above, but the approximation is as precise as possible.
+	// Slightly slower.
+	bool apapExplicit(explicitPoint3D&) const;
+
 #ifdef USE_CACHED_VALUES
 private: // Cached values
 	mutable double ssfilter_lambda_x, ssfilter_lambda_y, ssfilter_lambda_z, ssfilter_denominator, ssfilter_max_val;
@@ -398,7 +412,7 @@ inline ostream& operator<<(ostream& os, const explicitPoint2D& p)
 inline ostream& operator<<(ostream& os, const implicitPoint2D_SSI& p)
 {
 	explicitPoint2D e;
-	if (p.approxExplicit(e)) return os << e;
+	if (p.apapExplicit(e)) return os << e;
 	else return os << "UNDEF_SSI";
 }
 
@@ -410,14 +424,14 @@ inline ostream& operator<<(ostream& os, const explicitPoint3D& p)
 inline ostream& operator<<(ostream& os, const implicitPoint3D_LPI& p)
 {
 	explicitPoint3D e;
-	if (p.approxExplicit(e)) return os << e;
+	if (p.apapExplicit(e)) return os << e;
 	else return os << "UNDEF_LPI";
 }
 
 inline ostream& operator<<(ostream& os, const implicitPoint3D_TPI& p)
 {
 	explicitPoint3D e;
-	if (p.approxExplicit(e)) return os << e;
+	if (p.apapExplicit(e)) return os << e;
 	else return os << "UNDEF_TPI";
 }
 
