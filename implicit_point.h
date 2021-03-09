@@ -189,12 +189,16 @@ public:
 	// TRUE if P is in the interior of <A,B,C>
 	// Points are assumed to be coplanar. Undetermined otherwise.
 	static bool pointInInnerTriangle(const genericPoint& P, const genericPoint& A, const genericPoint& B, const genericPoint& C);
+	// Faster version to be used if the dominant component n_max of the triangle normal is known (see maxComponentInTriangleNormal())
+	static bool pointInInnerTriangle(const genericPoint& P, const genericPoint& A, const genericPoint& B, const genericPoint& C, int n_max);
 
 	// TRUE if P is in the closure of <A,B,C>
 	// Points are assumed to be coplanar. Undetermined otherwise.
 	static bool pointInTriangle(const genericPoint& P, const genericPoint& A, const genericPoint& B, const genericPoint& C);
 	// Same as above, but this version initializes oAB, oAC and oCA with the orientation of P wrt one of the edges (0 = on edge)
 	static bool pointInTriangle(const genericPoint& P, const genericPoint& A, const genericPoint& B, const genericPoint& C, int& oAB, int& oBC, int& oCA);
+	// Faster version to be used if the dominant component n_max of the triangle normal is known (see maxComponentInTriangleNormal())
+	static bool pointInTriangle(const genericPoint& P, const genericPoint& A, const genericPoint& B, const genericPoint& C, int n_max);
 
 	// TRUE if the interior of A-B intersects the interior of P-Q at a single point
 	// Points are assumed to be coplanar. Undetermined otherwise.
