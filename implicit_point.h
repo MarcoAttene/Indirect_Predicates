@@ -189,16 +189,12 @@ public:
 	// TRUE if P is in the interior of <A,B,C>
 	// Points are assumed to be coplanar. Undetermined otherwise.
 	static bool pointInInnerTriangle(const genericPoint& P, const genericPoint& A, const genericPoint& B, const genericPoint& C);
-	// Faster version to be used if the dominant component n_max of the triangle normal is known (see maxComponentInTriangleNormal())
-	static bool pointInInnerTriangle(const genericPoint& P, const genericPoint& A, const genericPoint& B, const genericPoint& C, int n_max);
 
 	// TRUE if P is in the closure of <A,B,C>
 	// Points are assumed to be coplanar. Undetermined otherwise.
 	static bool pointInTriangle(const genericPoint& P, const genericPoint& A, const genericPoint& B, const genericPoint& C);
 	// Same as above, but this version initializes oAB, oAC and oCA with the orientation of P wrt one of the edges (0 = on edge)
 	static bool pointInTriangle(const genericPoint& P, const genericPoint& A, const genericPoint& B, const genericPoint& C, int& oAB, int& oBC, int& oCA);
-	// Faster version to be used if the dominant component n_max of the triangle normal is known (see maxComponentInTriangleNormal())
-	static bool pointInTriangle(const genericPoint& P, const genericPoint& A, const genericPoint& B, const genericPoint& C, int n_max);
 
 	// TRUE if the interior of A-B intersects the interior of P-Q at a single point
 	// Points are assumed to be coplanar. Undetermined otherwise.
@@ -210,6 +206,29 @@ public:
 
 	// TRUE if interior of s1-s2 intersects interior of <v1,v2,v3> at a single point
 	static bool innerSegmentCrossesInnerTriangle(const genericPoint& s1, const genericPoint& s2, const genericPoint& v1, const genericPoint& v2, const genericPoint& v3);
+
+
+    // The following methods are equivalent to the corresponding functions hereabove,
+	// but faster. They assume that points are coplanar and the dominant normal component 
+	// is n_max (see maxComponentInTriangleNormal()).
+	static int orient2D(const genericPoint& a, const genericPoint& b, const genericPoint& c, int n_max)
+	{
+		if (n_max == 0) return orient2Dyz(a, b, c);
+		else if (n_max == 1) return orient2Dzx(a, b, c);
+		else return orient2Dxy(a, b, c);
+	}
+
+	static bool misaligned(const genericPoint& A, const genericPoint& B, const genericPoint& C, int n_max)
+	{
+		return ((n_max == 2 && orient2Dxy(A, B, C)) || (n_max == 0 && orient2Dyz(A, B, C)) || (n_max == 1 && orient2Dzx(A, B, C)));
+	}
+
+	static bool pointInInnerSegment(const genericPoint& p, const genericPoint& v1, const genericPoint& v2, int n_max);
+	static bool pointInSegment(const genericPoint& p, const genericPoint& v1, const genericPoint& v2, int n_max);
+	static bool pointInInnerTriangle(const genericPoint& P, const genericPoint& A, const genericPoint& B, const genericPoint& C, int n_max);
+	static bool pointInTriangle(const genericPoint& P, const genericPoint& A, const genericPoint& B, const genericPoint& C, int n_max);
+	static bool innerSegmentsCross(const genericPoint& A, const genericPoint& B, const genericPoint& P, const genericPoint& Q, int n_max);
+	static bool segmentsCross(const genericPoint& A, const genericPoint& B, const genericPoint& P, const genericPoint& Q, int n_max);
 };
 
 
