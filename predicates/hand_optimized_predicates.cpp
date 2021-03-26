@@ -25,7 +25,7 @@
 *                                                                           *
 ****************************************************************************/ 
 
-/* Should include incircle and insphere too. */
+/* Should include incircle too. */
 
 
 #include "implicit_point.h"
@@ -35,27 +35,11 @@
 
 inline int orient2d_filtered(double p1x, double p1y, double p2x, double p2y, double p3x, double p3y)
 {
-	double dl = (p2x - p1x) * (p3y - p1y);
-	double dr = (p2y - p1y) * (p3x - p1x);
-	double det = dl - dr;
-	double eb = 3.3306690738754706e-016 * (fabs(dl) + fabs(dr));
+	const double dl = (p2x - p1x) * (p3y - p1y);
+    const double dr = (p2y - p1y) * (p3x - p1x);
+    const double det = dl - dr;
+    const double eb = 3.3306690738754706e-016 * (fabs(dl) + fabs(dr));
 	return ((det >= eb) - (-det >= eb));
-}
-
-int orient2d_interval(interval_number p1x, interval_number p1y, interval_number p2x, interval_number p2y, interval_number p3x, interval_number p3y)
-{
-   setFPUModeToRoundUP();
-   interval_number a11(p2x - p1x);
-   interval_number a12(p2y - p1y);
-   interval_number a21(p3x - p1x);
-   interval_number a22(p3y - p1y);
-   interval_number d1(a11 * a22);
-   interval_number d2(a12 * a21);
-   interval_number d(d1 - d2);
-   setFPUModeToRoundNEAR();
-
-   if (!d.signIsReliable()) return Filtered_Sign::UNCERTAIN;
-   return d.sign();
 }
 
 int orient2d_exact(double p1x, double p1y, double p2x, double p2y, double p3x, double p3y)
@@ -74,7 +58,7 @@ int orient2d_exact(double p1x, double p1y, double p2x, double p2y, double p3x, d
     o.Two_Prod(acy[1], bcx[1], dtr);
     o.Two_Two_Diff(dtl, dtr, B);
 
-    double dsm = (fabs(dtl[1]) + fabs(dtr[1]));
+    const double dsm = (fabs(dtl[1]) + fabs(dtr[1]));
     double det = expansionObject::To_Double(4, B);
     double eb = 2.2204460492503146e-16 * dsm;
     Dl = ((det >= eb) - (-det >= eb));
@@ -113,66 +97,51 @@ int orient2d_exact(double p1x, double p1y, double p2x, double p2y, double p3x, d
 
 int orient2d(double p1x, double p1y, double p2x, double p2y, double p3x, double p3y)
 {
-   int ret = orient2d_filtered(p1x, p1y, p2x, p2y, p3x, p3y);
-   if (ret) return ret;
-   //ret = orient2d_interval(p1x, p1y, p2x, p2y, p3x, p3y);
-   //if (ret != Filtered_Sign::UNCERTAIN) return ret;
-   return orient2d_exact(p1x, p1y, p2x, p2y, p3x, p3y);
+    const int ret = orient2d_filtered(p1x, p1y, p2x, p2y, p3x, p3y);
+    if (ret) return ret;
+    return orient2d_exact(p1x, p1y, p2x, p2y, p3x, p3y);
+}
+
+double orient2d(const double *p1, const double *p2, const double *p3)
+{
+    const int ret = orient2d_filtered(p1[0], p1[1], p2[0], p2[1], p3[0], p3[1]);
+    if (ret) return ret;
+    return orient2d_exact(p1[0], p1[1], p2[0], p2[1], p3[0], p3[1]);
+}
+
+static inline int o3d_subfilt(const double fadx, const double fbdx, const double fcdx,
+    const double fady, const double fbdy, const double fcdy,
+    const double fadz, const double fbdz, const double fcdz)
+{
+    const double fbdxcdy = fbdx * fcdy * fadz; const double fcdxbdy = fcdx * fbdy * fadz;
+    const double fcdxady = fcdx * fady * fbdz; const double fadxcdy = fadx * fcdy * fbdz;
+    const double fadxbdy = fadx * fbdy * fcdz; const double fbdxady = fbdx * fady * fcdz;
+
+    const double det = (fbdxcdy - fcdxbdy) + (fcdxady - fadxcdy) + (fadxbdy - fbdxady);
+    const double eb = 7.7715611723761027e-016 * (fabs(fbdxcdy) + fabs(fcdxbdy) + fabs(fcdxady) + fabs(fadxcdy) + fabs(fadxbdy) + fabs(fbdxady));
+    return ((det >= eb) - (-det >= eb));
 }
 
 int orient3d_filtered(double px, double py, double pz, double qx, double qy, double qz, double rx, double ry, double rz, double sx, double sy, double sz)
 {
-	double fadx, fbdx, fcdx, fady, fbdy, fcdy, fadz, fbdz, fcdz, eb;
-	double fbdxcdy, fcdxbdy, fcdxady, fadxcdy, fadxbdy, fbdxady, det;
+    const double fadx = qx - px, fbdx = rx - px, fcdx = sx - px;
+    const double fady = qy - py, fbdy = ry - py, fcdy = sy - py;
+    const double fadz = qz - pz, fbdz = rz - pz, fcdz = sz - pz;
 
-	fadx = qx - px; fbdx = rx - px; fcdx = sx - px;
-	fady = qy - py; fbdy = ry - py; fcdy = sy - py;
-	fadz = qz - pz; fbdz = rz - pz; fcdz = sz - pz;
-
-	fbdxcdy = fbdx * fcdy * fadz; fcdxbdy = fcdx * fbdy * fadz;
-	fcdxady = fcdx * fady * fbdz; fadxcdy = fadx * fcdy * fbdz;
-	fadxbdy = fadx * fbdy * fcdz; fbdxady = fbdx * fady * fcdz;
-
-	det = (fbdxcdy - fcdxbdy) + (fcdxady - fadxcdy) + (fadxbdy - fbdxady);
-	eb = 7.7715611723761027e-016 * (fabs(fbdxcdy) + fabs(fcdxbdy) + fabs(fcdxady) + fabs(fadxcdy) + fabs(fadxbdy) + fabs(fbdxady));
-	return ((det >= eb) - (-det >= eb));
+    return o3d_subfilt(fadx, fbdx, fcdx, fady, fbdy, fcdy, fadz, fbdz, fcdz);
 }
 
-int orient3d_interval(interval_number px, interval_number py, interval_number pz, interval_number qx, interval_number qy, interval_number qz, interval_number rx, interval_number ry, interval_number rz, interval_number sx, interval_number sy, interval_number sz)
+int orient3d_filtered(const double* p, const double* q, const double* r, const double* s)
 {
-   setFPUModeToRoundUP();
-   interval_number qx_px(qx - px);
-   interval_number qy_py(qy - py);
-   interval_number rx_px(rx - px);
-   interval_number ry_py(ry - py);
-   interval_number rz_pz(rz - pz);
-   interval_number qz_pz(qz - pz);
-   interval_number sx_px(sx - px);
-   interval_number sy_py(sy - py);
-   interval_number sz_pz(sz - pz);
-   interval_number tmp_a(qx_px * ry_py);
-   interval_number tmp_b(qy_py * rx_px);
-   interval_number m01(tmp_a - tmp_b);
-   interval_number tmq_a(qx_px * rz_pz);
-   interval_number tmq_b(qz_pz * rx_px);
-   interval_number m02(tmq_a - tmq_b);
-   interval_number tmr_a(qy_py * rz_pz);
-   interval_number tmr_b(qz_pz * ry_py);
-   interval_number m12(tmr_a - tmr_b);
-   interval_number mt1(m01 * sz_pz);
-   interval_number mt2(m02 * sy_py);
-   interval_number mt3(m12 * sx_px);
-   interval_number mtt(mt1 - mt2);
-   interval_number m012(mtt + mt3);
-   setFPUModeToRoundNEAR();
+    const double fadx = q[0] - p[0], fbdx = r[0] - p[0], fcdx = s[0] - p[0];
+    const double fady = q[1] - p[1], fbdy = r[1] - p[1], fcdy = s[1] - p[1];
+    const double fadz = q[2] - p[2], fbdz = r[2] - p[2], fcdz = s[2] - p[2];
 
-   if (!m012.signIsReliable()) return Filtered_Sign::UNCERTAIN;
-   return m012.sign();
+    return o3d_subfilt(fadx, fbdx, fcdx, fady, fbdy, fcdy, fadz, fbdz, fcdz);
 }
-
 
 inline void supo3d1(expansionObject& o,
-	double* c1, double* c2, double* c3, double* c4, double* c5, double* c6,
+    const double* c1, const double* c2, const double* c3, const double* c4, const double* c5, const double* c6,
 	double* a1, double* a2, double& i, double* k1, double* k2, double* k3,
 	double* k4, int& l1, int& l2)
 {
@@ -208,7 +177,7 @@ inline void supo3d1(expansionObject& o,
 }
 
 inline void supo3d2(expansionObject& o,
-	double* c1, double* c2, double* c3, double* c4, double* u,
+    const double* c1, const double* c2, double* c3, const double* c4, double* u,
 	int& fl, double fin[2][192], int& wh,
 	double* c5, double& i, double* c6, double* c7)
 
@@ -388,12 +357,428 @@ int orient3d_exact(double pdx, double pdy, double pdz, double pax, double pay, d
 	return (det > 0) - (det < 0);
 }
 
+
 int orient3d(double px, double py, double pz, double qx, double qy, double qz, double rx, double ry, double rz, double sx, double sy, double sz)
 {
    int ret;
    ret = orient3d_filtered(px, py, pz, qx, qy, qz, rx, ry, rz, sx, sy, sz);
    if (ret) return ret;
-   //ret = orient3d_interval(px, py, pz, qx, qy, qz, rx, ry, rz, sx, sy, sz);
-   //if (ret != Filtered_Sign::UNCERTAIN) return ret;
    return orient3d_exact(px, py, pz, qx, qy, qz, rx, ry, rz, sx, sy, sz);
+}
+
+double orient3d(const double* p, const double* q, const double* r, const double* s)
+{
+    int ret;
+    ret = orient3d_filtered(p, q, r, s);
+    if (ret) return ret;
+    return orient3d_exact(p[0], p[1], p[2], q[0], q[1], q[2], r[0], r[1], r[2], s[0], s[1], s[2]);
+}
+
+
+static inline int isp_subfilt(const double  aex, const double  bex, const double  cex, const double  dex, 
+    const double  aey, const double  bey, const double  cey, const double  dey, 
+    const double  aez, const double  bez, const double  cez, const double  dez)
+{
+    double aexbey = aex * bey;
+    double bexaey = bex * aey;
+    double ab = aexbey - bexaey;
+    double bexcey = bex * cey;
+    double cexbey = cex * bey;
+    double bc = bexcey - cexbey;
+    double cexdey = cex * dey;
+    double dexcey = dex * cey;
+    double cd = cexdey - dexcey;
+    double dexaey = dex * aey;
+    double aexdey = aex * dey;
+    double da = dexaey - aexdey;
+    double aexcey = aex * cey;
+    double cexaey = cex * aey;
+    double ac = aexcey - cexaey;
+    double bexdey = bex * dey;
+    double dexbey = dex * bey;
+    double bd = bexdey - dexbey;
+    double abc1 = aez * bc;
+    double abc2 = bez * ac;
+    double abc3 = cez * ab;
+    double abc4 = abc1 + abc3;
+    double abc = abc4 - abc2;
+    double bcd1 = bez * cd;
+    double bcd2 = cez * bd;
+    double bcd3 = dez * bc;
+    double bcd4 = bcd1 + bcd3;
+    double bcd = bcd4 - bcd2;
+    double cda1 = cez * da;
+    double cda2 = dez * ac;
+    double cda3 = aez * cd;
+    double cda4 = cda1 + cda3;
+    double cda = cda4 + cda2;
+    double dab1 = dez * ab;
+    double dab2 = aez * bd;
+    double dab3 = bez * da;
+    double dab4 = dab1 + dab3;
+    double dab = dab4 + dab2;
+    double al1 = aex * aex;
+    double al2 = aey * aey;
+    double al3 = aez * aez;
+    double al4 = al1 + al2;
+    double alift = al4 + al3;
+    double bl1 = bex * bex;
+    double bl2 = bey * bey;
+    double bl3 = bez * bez;
+    double bl4 = bl1 + bl2;
+    double blift = bl4 + bl3;
+    double cl1 = cex * cex;
+    double cl2 = cey * cey;
+    double cl3 = cez * cez;
+    double cl4 = cl1 + cl2;
+    double clift = cl4 + cl3;
+    double dl1 = dex * dex;
+    double dl2 = dey * dey;
+    double dl3 = dez * dez;
+    double dl4 = dl1 + dl2;
+    double dlift = dl4 + dl3;
+    double ds1 = dlift * abc;
+    double ds2 = clift * dab;
+    double dl = ds2 - ds1;
+    double dr1 = blift * cda;
+    double dr2 = alift * bcd;
+    double dr = dr2 - dr1;
+    double det = dl + dr;
+
+    double _tmp_fabs;
+
+    double max_var = 0.0;
+    if ((_tmp_fabs = fabs(aex)) > max_var) max_var = _tmp_fabs;
+    if ((_tmp_fabs = fabs(bex)) > max_var) max_var = _tmp_fabs;
+    if ((_tmp_fabs = fabs(cex)) > max_var) max_var = _tmp_fabs;
+    if ((_tmp_fabs = fabs(dex)) > max_var) max_var = _tmp_fabs;
+    if ((_tmp_fabs = fabs(aey)) > max_var) max_var = _tmp_fabs;
+    if ((_tmp_fabs = fabs(bey)) > max_var) max_var = _tmp_fabs;
+    if ((_tmp_fabs = fabs(cey)) > max_var) max_var = _tmp_fabs;
+    if ((_tmp_fabs = fabs(dey)) > max_var) max_var = _tmp_fabs;
+    if ((_tmp_fabs = fabs(aez)) > max_var) max_var = _tmp_fabs;
+    if ((_tmp_fabs = fabs(bez)) > max_var) max_var = _tmp_fabs;
+    if ((_tmp_fabs = fabs(cez)) > max_var) max_var = _tmp_fabs;
+    if ((_tmp_fabs = fabs(dez)) > max_var) max_var = _tmp_fabs;
+    double epsilon = max_var;
+    epsilon *= epsilon;
+    epsilon *= epsilon;
+    epsilon *= max_var;
+    epsilon *= 1.145750161413163e-13;
+    if (det > epsilon) return IP_Sign::POSITIVE;
+    if (-det > epsilon) return IP_Sign::NEGATIVE;
+    return Filtered_Sign::UNCERTAIN;
+}
+
+int insphere_filtered(double pax, double pay, double paz, double pbx, double pby, double pbz, double pcx, double pcy, double pcz, double pdx, double pdy, double pdz, double pex, double pey, double pez)
+{
+    return isp_subfilt(pax - pex, pbx - pex, pcx - pex, pdx - pex,
+        pay - pey, pby - pey, pcy - pey, pdy - pey,
+        paz - pez, pbz - pez, pcz - pez, pdz - pez);
+}
+
+int insphere_filtered(const double* pa, const double* pb, const double* pc, const double* pd, const double* pe)
+{
+    return isp_subfilt(pa[0] - pe[0], pb[0] - pe[0], pc[0] - pe[0], pd[0] - pe[0],
+        pa[1] - pe[1], pb[1] - pe[1], pc[1] - pe[1], pd[1] - pe[1],
+        pa[2] - pe[2], pb[2] - pe[2], pc[2] - pe[2], pd[2] - pe[2]);
+}
+
+int insphere_interval(interval_number pax, interval_number pay, interval_number paz, interval_number pbx, interval_number pby, interval_number pbz, interval_number pcx, interval_number pcy, interval_number pcz, interval_number pdx, interval_number pdy, interval_number pdz, interval_number pex, interval_number pey, interval_number pez)
+{
+    setFPUModeToRoundUP();
+    interval_number aex(pax - pex);
+    interval_number bex(pbx - pex);
+    interval_number cex(pcx - pex);
+    interval_number dex(pdx - pex);
+    interval_number aey(pay - pey);
+    interval_number bey(pby - pey);
+    interval_number cey(pcy - pey);
+    interval_number dey(pdy - pey);
+    interval_number aez(paz - pez);
+    interval_number bez(pbz - pez);
+    interval_number cez(pcz - pez);
+    interval_number dez(pdz - pez);
+    interval_number aexbey(aex * bey);
+    interval_number bexaey(bex * aey);
+    interval_number ab(aexbey - bexaey);
+    interval_number bexcey(bex * cey);
+    interval_number cexbey(cex * bey);
+    interval_number bc(bexcey - cexbey);
+    interval_number cexdey(cex * dey);
+    interval_number dexcey(dex * cey);
+    interval_number cd(cexdey - dexcey);
+    interval_number dexaey(dex * aey);
+    interval_number aexdey(aex * dey);
+    interval_number da(dexaey - aexdey);
+    interval_number aexcey(aex * cey);
+    interval_number cexaey(cex * aey);
+    interval_number ac(aexcey - cexaey);
+    interval_number bexdey(bex * dey);
+    interval_number dexbey(dex * bey);
+    interval_number bd(bexdey - dexbey);
+    interval_number abc1(aez * bc);
+    interval_number abc2(bez * ac);
+    interval_number abc3(cez * ab);
+    interval_number abc4(abc1 + abc3);
+    interval_number abc(abc4 - abc2);
+    interval_number bcd1(bez * cd);
+    interval_number bcd2(cez * bd);
+    interval_number bcd3(dez * bc);
+    interval_number bcd4(bcd1 + bcd3);
+    interval_number bcd(bcd4 - bcd2);
+    interval_number cda1(cez * da);
+    interval_number cda2(dez * ac);
+    interval_number cda3(aez * cd);
+    interval_number cda4(cda1 + cda3);
+    interval_number cda(cda4 + cda2);
+    interval_number dab1(dez * ab);
+    interval_number dab2(aez * bd);
+    interval_number dab3(bez * da);
+    interval_number dab4(dab1 + dab3);
+    interval_number dab(dab4 + dab2);
+    interval_number al1(aex * aex);
+    interval_number al2(aey * aey);
+    interval_number al3(aez * aez);
+    interval_number al4(al1 + al2);
+    interval_number alift(al4 + al3);
+    interval_number bl1(bex * bex);
+    interval_number bl2(bey * bey);
+    interval_number bl3(bez * bez);
+    interval_number bl4(bl1 + bl2);
+    interval_number blift(bl4 + bl3);
+    interval_number cl1(cex * cex);
+    interval_number cl2(cey * cey);
+    interval_number cl3(cez * cez);
+    interval_number cl4(cl1 + cl2);
+    interval_number clift(cl4 + cl3);
+    interval_number dl1(dex * dex);
+    interval_number dl2(dey * dey);
+    interval_number dl3(dez * dez);
+    interval_number dl4(dl1 + dl2);
+    interval_number dlift(dl4 + dl3);
+    interval_number ds1(dlift * abc);
+    interval_number ds2(clift * dab);
+    interval_number dl(ds2 - ds1);
+    interval_number dr1(blift * cda);
+    interval_number dr2(alift * bcd);
+    interval_number dr(dr2 - dr1);
+    interval_number det(dl + dr);
+    setFPUModeToRoundNEAR();
+
+    if (!det.signIsReliable()) return Filtered_Sign::UNCERTAIN;
+    return det.sign();
+}
+
+int insphere_exact(double pax, double pay, double paz, double pbx, double pby, double pbz, double pcx, double pcy, double pcz, double pdx, double pdy, double pdz, double pex, double pey, double pez)
+{
+    expansionObject o;
+    double aex[2];
+    o.two_Diff(pax, pex, aex);
+    double bex[2];
+    o.two_Diff(pbx, pex, bex);
+    double cex[2];
+    o.two_Diff(pcx, pex, cex);
+    double dex[2];
+    o.two_Diff(pdx, pex, dex);
+    double aey[2];
+    o.two_Diff(pay, pey, aey);
+    double bey[2];
+    o.two_Diff(pby, pey, bey);
+    double cey[2];
+    o.two_Diff(pcy, pey, cey);
+    double dey[2];
+    o.two_Diff(pdy, pey, dey);
+    double aez[2];
+    o.two_Diff(paz, pez, aez);
+    double bez[2];
+    o.two_Diff(pbz, pez, bez);
+    double cez[2];
+    o.two_Diff(pcz, pez, cez);
+    double dez[2];
+    o.two_Diff(pdz, pez, dez);
+    double aexbey[8];
+    int aexbey_len = o.Gen_Product(2, aex, 2, bey, aexbey);
+    double bexaey[8];
+    int bexaey_len = o.Gen_Product(2, bex, 2, aey, bexaey);
+    double ab[16];
+    int ab_len = o.Gen_Diff(aexbey_len, aexbey, bexaey_len, bexaey, ab);
+    double bexcey[8];
+    int bexcey_len = o.Gen_Product(2, bex, 2, cey, bexcey);
+    double cexbey[8];
+    int cexbey_len = o.Gen_Product(2, cex, 2, bey, cexbey);
+    double bc[16];
+    int bc_len = o.Gen_Diff(bexcey_len, bexcey, cexbey_len, cexbey, bc);
+    double cexdey[8];
+    int cexdey_len = o.Gen_Product(2, cex, 2, dey, cexdey);
+    double dexcey[8];
+    int dexcey_len = o.Gen_Product(2, dex, 2, cey, dexcey);
+    double cd[16];
+    int cd_len = o.Gen_Diff(cexdey_len, cexdey, dexcey_len, dexcey, cd);
+    double dexaey[8];
+    int dexaey_len = o.Gen_Product(2, dex, 2, aey, dexaey);
+    double aexdey[8];
+    int aexdey_len = o.Gen_Product(2, aex, 2, dey, aexdey);
+    double da[16];
+    int da_len = o.Gen_Diff(dexaey_len, dexaey, aexdey_len, aexdey, da);
+    double aexcey[8];
+    int aexcey_len = o.Gen_Product(2, aex, 2, cey, aexcey);
+    double cexaey[8];
+    int cexaey_len = o.Gen_Product(2, cex, 2, aey, cexaey);
+    double ac[16];
+    int ac_len = o.Gen_Diff(aexcey_len, aexcey, cexaey_len, cexaey, ac);
+    double bexdey[8];
+    int bexdey_len = o.Gen_Product(2, bex, 2, dey, bexdey);
+    double dexbey[8];
+    int dexbey_len = o.Gen_Product(2, dex, 2, bey, dexbey);
+    double bd[16];
+    int bd_len = o.Gen_Diff(bexdey_len, bexdey, dexbey_len, dexbey, bd);
+    double abc1_p[32], * abc1 = abc1_p;
+    int abc1_len = o.Gen_Product_With_PreAlloc(2, aez, bc_len, bc, &abc1, 32);
+    double abc2_p[32], * abc2 = abc2_p;
+    int abc2_len = o.Gen_Product_With_PreAlloc(2, bez, ac_len, ac, &abc2, 32);
+    double abc3_p[32], * abc3 = abc3_p;
+    int abc3_len = o.Gen_Product_With_PreAlloc(2, cez, ab_len, ab, &abc3, 32);
+    double abc4_p[32], * abc4 = abc4_p;
+    int abc4_len = o.Gen_Sum_With_PreAlloc(abc1_len, abc1, abc3_len, abc3, &abc4, 32);
+    double abc_p[32], * abc = abc_p;
+    int abc_len = o.Gen_Diff_With_PreAlloc(abc4_len, abc4, abc2_len, abc2, &abc, 32);
+    double bcd1_p[32], * bcd1 = bcd1_p;
+    int bcd1_len = o.Gen_Product_With_PreAlloc(2, bez, cd_len, cd, &bcd1, 32);
+    double bcd2_p[32], * bcd2 = bcd2_p;
+    int bcd2_len = o.Gen_Product_With_PreAlloc(2, cez, bd_len, bd, &bcd2, 32);
+    double bcd3_p[32], * bcd3 = bcd3_p;
+    int bcd3_len = o.Gen_Product_With_PreAlloc(2, dez, bc_len, bc, &bcd3, 32);
+    double bcd4_p[32], * bcd4 = bcd4_p;
+    int bcd4_len = o.Gen_Sum_With_PreAlloc(bcd1_len, bcd1, bcd3_len, bcd3, &bcd4, 32);
+    double bcd_p[32], * bcd = bcd_p;
+    int bcd_len = o.Gen_Diff_With_PreAlloc(bcd4_len, bcd4, bcd2_len, bcd2, &bcd, 32);
+    double cda1_p[32], * cda1 = cda1_p;
+    int cda1_len = o.Gen_Product_With_PreAlloc(2, cez, da_len, da, &cda1, 32);
+    double cda2_p[32], * cda2 = cda2_p;
+    int cda2_len = o.Gen_Product_With_PreAlloc(2, dez, ac_len, ac, &cda2, 32);
+    double cda3_p[32], * cda3 = cda3_p;
+    int cda3_len = o.Gen_Product_With_PreAlloc(2, aez, cd_len, cd, &cda3, 32);
+    double cda4_p[32], * cda4 = cda4_p;
+    int cda4_len = o.Gen_Sum_With_PreAlloc(cda1_len, cda1, cda3_len, cda3, &cda4, 32);
+    double cda_p[32], * cda = cda_p;
+    int cda_len = o.Gen_Sum_With_PreAlloc(cda4_len, cda4, cda2_len, cda2, &cda, 32);
+    double dab1_p[32], * dab1 = dab1_p;
+    int dab1_len = o.Gen_Product_With_PreAlloc(2, dez, ab_len, ab, &dab1, 32);
+    double dab2_p[32], * dab2 = dab2_p;
+    int dab2_len = o.Gen_Product_With_PreAlloc(2, aez, bd_len, bd, &dab2, 32);
+    double dab3_p[32], * dab3 = dab3_p;
+    int dab3_len = o.Gen_Product_With_PreAlloc(2, bez, da_len, da, &dab3, 32);
+    double dab4_p[32], * dab4 = dab4_p;
+    int dab4_len = o.Gen_Sum_With_PreAlloc(dab1_len, dab1, dab3_len, dab3, &dab4, 32);
+    double dab_p[32], * dab = dab_p;
+    int dab_len = o.Gen_Sum_With_PreAlloc(dab4_len, dab4, dab2_len, dab2, &dab, 32);
+    double al1[8];
+    int al1_len = o.Gen_Product(2, aex, 2, aex, al1);
+    double al2[8];
+    int al2_len = o.Gen_Product(2, aey, 2, aey, al2);
+    double al3[8];
+    int al3_len = o.Gen_Product(2, aez, 2, aez, al3);
+    double al4[16];
+    int al4_len = o.Gen_Sum(al1_len, al1, al2_len, al2, al4);
+    double alift[24];
+    int alift_len = o.Gen_Sum(al4_len, al4, al3_len, al3, alift);
+    double bl1[8];
+    int bl1_len = o.Gen_Product(2, bex, 2, bex, bl1);
+    double bl2[8];
+    int bl2_len = o.Gen_Product(2, bey, 2, bey, bl2);
+    double bl3[8];
+    int bl3_len = o.Gen_Product(2, bez, 2, bez, bl3);
+    double bl4[16];
+    int bl4_len = o.Gen_Sum(bl1_len, bl1, bl2_len, bl2, bl4);
+    double blift[24];
+    int blift_len = o.Gen_Sum(bl4_len, bl4, bl3_len, bl3, blift);
+    double cl1[8];
+    int cl1_len = o.Gen_Product(2, cex, 2, cex, cl1);
+    double cl2[8];
+    int cl2_len = o.Gen_Product(2, cey, 2, cey, cl2);
+    double cl3[8];
+    int cl3_len = o.Gen_Product(2, cez, 2, cez, cl3);
+    double cl4[16];
+    int cl4_len = o.Gen_Sum(cl1_len, cl1, cl2_len, cl2, cl4);
+    double clift[24];
+    int clift_len = o.Gen_Sum(cl4_len, cl4, cl3_len, cl3, clift);
+    double dl1[8];
+    int dl1_len = o.Gen_Product(2, dex, 2, dex, dl1);
+    double dl2[8];
+    int dl2_len = o.Gen_Product(2, dey, 2, dey, dl2);
+    double dl3[8];
+    int dl3_len = o.Gen_Product(2, dez, 2, dez, dl3);
+    double dl4[16];
+    int dl4_len = o.Gen_Sum(dl1_len, dl1, dl2_len, dl2, dl4);
+    double dlift[24];
+    int dlift_len = o.Gen_Sum(dl4_len, dl4, dl3_len, dl3, dlift);
+    double ds1_p[32], * ds1 = ds1_p;
+    int ds1_len = o.Gen_Product_With_PreAlloc(dlift_len, dlift, abc_len, abc, &ds1, 32);
+    double ds2_p[32], * ds2 = ds2_p;
+    int ds2_len = o.Gen_Product_With_PreAlloc(clift_len, clift, dab_len, dab, &ds2, 32);
+    double dl_p[32], * dl = dl_p;
+    int dl_len = o.Gen_Diff_With_PreAlloc(ds2_len, ds2, ds1_len, ds1, &dl, 32);
+    double dr1_p[32], * dr1 = dr1_p;
+    int dr1_len = o.Gen_Product_With_PreAlloc(blift_len, blift, cda_len, cda, &dr1, 32);
+    double dr2_p[32], * dr2 = dr2_p;
+    int dr2_len = o.Gen_Product_With_PreAlloc(alift_len, alift, bcd_len, bcd, &dr2, 32);
+    double dr_p[32], * dr = dr_p;
+    int dr_len = o.Gen_Diff_With_PreAlloc(dr2_len, dr2, dr1_len, dr1, &dr, 32);
+    double det_p[32], * det = det_p;
+    int det_len = o.Gen_Sum_With_PreAlloc(dl_len, dl, dr_len, dr, &det, 32);
+
+    double return_value = det[det_len - 1];
+    if (det_p != det) free(det);
+    if (dr_p != dr) free(dr);
+    if (dr2_p != dr2) free(dr2);
+    if (dr1_p != dr1) free(dr1);
+    if (dl_p != dl) free(dl);
+    if (ds2_p != ds2) free(ds2);
+    if (ds1_p != ds1) free(ds1);
+    if (dab_p != dab) free(dab);
+    if (dab4_p != dab4) free(dab4);
+    if (dab3_p != dab3) free(dab3);
+    if (dab2_p != dab2) free(dab2);
+    if (dab1_p != dab1) free(dab1);
+    if (cda_p != cda) free(cda);
+    if (cda4_p != cda4) free(cda4);
+    if (cda3_p != cda3) free(cda3);
+    if (cda2_p != cda2) free(cda2);
+    if (cda1_p != cda1) free(cda1);
+    if (bcd_p != bcd) free(bcd);
+    if (bcd4_p != bcd4) free(bcd4);
+    if (bcd3_p != bcd3) free(bcd3);
+    if (bcd2_p != bcd2) free(bcd2);
+    if (bcd1_p != bcd1) free(bcd1);
+    if (abc_p != abc) free(abc);
+    if (abc4_p != abc4) free(abc4);
+    if (abc3_p != abc3) free(abc3);
+    if (abc2_p != abc2) free(abc2);
+    if (abc1_p != abc1) free(abc1);
+
+    if (return_value > 0) return IP_Sign::POSITIVE;
+    if (return_value < 0) return IP_Sign::NEGATIVE;
+    if (return_value == 0) return IP_Sign::ZERO;
+    return IP_Sign::UNDEFINED;
+}
+
+int insphere(double pax, double pay, double paz, double pbx, double pby, double pbz, double pcx, double pcy, double pcz, double pdx, double pdy, double pdz, double pex, double pey, double pez)
+{
+    int ret;
+    ret = insphere_filtered(pax, pay, paz, pbx, pby, pbz, pcx, pcy, pcz, pdx, pdy, pdz, pex, pey, pez);
+    if (ret != Filtered_Sign::UNCERTAIN) return ret;
+    ret = insphere_interval(pax, pay, paz, pbx, pby, pbz, pcx, pcy, pcz, pdx, pdy, pdz, pex, pey, pez);
+    if (ret != Filtered_Sign::UNCERTAIN) return ret;
+    return insphere_exact(pax, pay, paz, pbx, pby, pbz, pcx, pcy, pcz, pdx, pdy, pdz, pex, pey, pez);
+}
+
+double insphere(const double* pa, const double* pb, const double* pc, const double* pd, const double* pe)
+{
+    int ret;
+    ret = insphere_filtered(pa, pb, pc, pd, pe);
+    if (ret != Filtered_Sign::UNCERTAIN) return ret;
+    ret = insphere_interval(pa[0], pa[1], pa[2], pb[0], pb[1], pb[2], pc[0], pc[1], pc[2], pd[0], pd[1], pd[2], pe[0], pe[1], pe[2]);
+    if (ret != Filtered_Sign::UNCERTAIN) return ret;
+    return insphere_exact(pa[0], pa[1], pa[2], pb[0], pb[1], pb[2], pc[0], pc[1], pc[2], pd[0], pd[1], pd[2], pe[0], pe[1], pe[2]);
 }
