@@ -25,13 +25,14 @@
 *                                                                           *
 ****************************************************************************/ 
 
-/* Should include incircle too. */
+/* TODO: include incircle too. */
 
 
 #include "implicit_point.h"
 
 #pragma intrinsic(fabs)
 
+////////////////////// O R I E N T   2 D ////////////////////////////////////
 
 inline int orient2d_filtered(double p1x, double p1y, double p2x, double p2y, double p3x, double p3y)
 {
@@ -102,12 +103,8 @@ int orient2d(double p1x, double p1y, double p2x, double p2y, double p3x, double 
     return orient2d_exact(p1x, p1y, p2x, p2y, p3x, p3y);
 }
 
-double orient2d(const double *p1, const double *p2, const double *p3)
-{
-    const int ret = orient2d_filtered(p1[0], p1[1], p2[0], p2[1], p3[0], p3[1]);
-    if (ret) return ret;
-    return orient2d_exact(p1[0], p1[1], p2[0], p2[1], p3[0], p3[1]);
-}
+
+////////////////////// O R I E N T   3 D ////////////////////////////////////
 
 static inline int o3d_subfilt(const double fadx, const double fbdx, const double fcdx,
     const double fady, const double fbdy, const double fcdy,
@@ -131,14 +128,6 @@ int orient3d_filtered(double px, double py, double pz, double qx, double qy, dou
     return o3d_subfilt(fadx, fbdx, fcdx, fady, fbdy, fcdy, fadz, fbdz, fcdz);
 }
 
-int orient3d_filtered(const double* p, const double* q, const double* r, const double* s)
-{
-    const double fadx = q[0] - p[0], fbdx = r[0] - p[0], fcdx = s[0] - p[0];
-    const double fady = q[1] - p[1], fbdy = r[1] - p[1], fcdy = s[1] - p[1];
-    const double fadz = q[2] - p[2], fbdz = r[2] - p[2], fcdz = s[2] - p[2];
-
-    return o3d_subfilt(fadx, fbdx, fcdx, fady, fbdy, fcdy, fadz, fbdz, fcdz);
-}
 
 inline void supo3d1(expansionObject& o,
     const double* c1, const double* c2, const double* c3, const double* c4, const double* c5, const double* c6,
@@ -176,38 +165,33 @@ inline void supo3d1(expansionObject& o,
 	}
 }
 
-inline void supo3d2(expansionObject& o,
-    const double* c1, const double* c2, double* c3, const double* c4, double* u,
-	int& fl, double fin[2][192], int& wh,
-	double* c5, double& i, double* c6, double* c7)
+#define supo3d2(o, c1, c2, c3, c4, u, fl, fin, wh, c5, i, c6, c7) \
+    if (c1[0] != 0.0) {\
+        if (c2[0] != 0.0) {\
+            o.Two_Prod(c1[0], c2[0], c3);\
+            o.Two_One_Prod(c3, c4[1], u);\
+            fl = o.Gen_Sum(fl, fin[wh], 4, u, fin[!wh]);\
+            wh = !wh;\
+            if (c4[0] != 0.0) {\
+                o.Two_One_Prod(c3, c4[0], u);\
+                fl = o.Gen_Sum(fl, fin[wh], 4, u, fin[!wh]);\
+                wh = !wh;\
+            }\
+        }\
+        if (c5[0] != 0.0) {\
+            i = -c1[0];\
+            o.Two_Prod(i, c5[0], c6);\
+            o.Two_One_Prod(c6, c7[1], u);\
+            fl = o.Gen_Sum(fl, fin[wh], 4, u, fin[!wh]);\
+            wh = !wh;\
+            if (c7[0] != 0.0) {\
+                o.Two_One_Prod(c6, c7[0], u);\
+                fl = o.Gen_Sum(fl, fin[wh], 4, u, fin[!wh]);\
+                wh = !wh;\
+            }\
+        }\
+    }
 
-{
-	if (c1[0] != 0.0) {
-		if (c2[0] != 0.0) {
-			o.Two_Prod(c1[0], c2[0], c3);
-			o.Two_One_Prod(c3, c4[1], u);
-			fl = o.Gen_Sum(fl, fin[wh], 4, u, fin[!wh]);
-			wh = !wh;
-			if (c4[0] != 0.0) {
-				o.Two_One_Prod(c3, c4[0], u);
-				fl = o.Gen_Sum(fl, fin[wh], 4, u, fin[!wh]);
-				wh = !wh;
-			}
-		}
-		if (c5[0] != 0.0) {
-			i = -c1[0];
-			o.Two_Prod(i, c5[0], c6);
-			o.Two_One_Prod(c6, c7[1], u);
-			fl = o.Gen_Sum(fl, fin[wh], 4, u, fin[!wh]);
-			wh = !wh;
-			if (c7[0] != 0.0) {
-				o.Two_One_Prod(c6, c7[0], u);
-				fl = o.Gen_Sum(fl, fin[wh], 4, u, fin[!wh]);
-				wh = !wh;
-			}
-		}
-	}
-}
 
 int orient3d_exact(double pdx, double pdy, double pdz, double pax, double pay, double paz, double pbx, double pby, double pbz, double pcx, double pcy, double pcz)
 {
@@ -360,94 +344,88 @@ int orient3d_exact(double pdx, double pdy, double pdz, double pax, double pay, d
 
 int orient3d(double px, double py, double pz, double qx, double qy, double qz, double rx, double ry, double rz, double sx, double sy, double sz)
 {
-   int ret;
-   ret = orient3d_filtered(px, py, pz, qx, qy, qz, rx, ry, rz, sx, sy, sz);
+   const int ret = orient3d_filtered(px, py, pz, qx, qy, qz, rx, ry, rz, sx, sy, sz);
    if (ret) return ret;
    return orient3d_exact(px, py, pz, qx, qy, qz, rx, ry, rz, sx, sy, sz);
 }
 
-double orient3d(const double* p, const double* q, const double* r, const double* s)
-{
-    int ret;
-    ret = orient3d_filtered(p, q, r, s);
-    if (ret) return ret;
-    return orient3d_exact(p[0], p[1], p[2], q[0], q[1], q[2], r[0], r[1], r[2], s[0], s[1], s[2]);
-}
 
+////////////////////// I N S P H E R E ////////////////////////////////////
 
 static inline int isp_subfilt(const double  aex, const double  bex, const double  cex, const double  dex, 
     const double  aey, const double  bey, const double  cey, const double  dey, 
     const double  aez, const double  bez, const double  cez, const double  dez)
 {
-    double aexbey = aex * bey;
-    double bexaey = bex * aey;
-    double ab = aexbey - bexaey;
-    double bexcey = bex * cey;
-    double cexbey = cex * bey;
-    double bc = bexcey - cexbey;
-    double cexdey = cex * dey;
-    double dexcey = dex * cey;
-    double cd = cexdey - dexcey;
-    double dexaey = dex * aey;
-    double aexdey = aex * dey;
-    double da = dexaey - aexdey;
-    double aexcey = aex * cey;
-    double cexaey = cex * aey;
-    double ac = aexcey - cexaey;
-    double bexdey = bex * dey;
-    double dexbey = dex * bey;
-    double bd = bexdey - dexbey;
-    double abc1 = aez * bc;
-    double abc2 = bez * ac;
-    double abc3 = cez * ab;
-    double abc4 = abc1 + abc3;
-    double abc = abc4 - abc2;
-    double bcd1 = bez * cd;
-    double bcd2 = cez * bd;
-    double bcd3 = dez * bc;
-    double bcd4 = bcd1 + bcd3;
-    double bcd = bcd4 - bcd2;
-    double cda1 = cez * da;
-    double cda2 = dez * ac;
-    double cda3 = aez * cd;
-    double cda4 = cda1 + cda3;
-    double cda = cda4 + cda2;
-    double dab1 = dez * ab;
-    double dab2 = aez * bd;
-    double dab3 = bez * da;
-    double dab4 = dab1 + dab3;
-    double dab = dab4 + dab2;
-    double al1 = aex * aex;
-    double al2 = aey * aey;
-    double al3 = aez * aez;
-    double al4 = al1 + al2;
-    double alift = al4 + al3;
-    double bl1 = bex * bex;
-    double bl2 = bey * bey;
-    double bl3 = bez * bez;
-    double bl4 = bl1 + bl2;
-    double blift = bl4 + bl3;
-    double cl1 = cex * cex;
-    double cl2 = cey * cey;
-    double cl3 = cez * cez;
-    double cl4 = cl1 + cl2;
-    double clift = cl4 + cl3;
-    double dl1 = dex * dex;
-    double dl2 = dey * dey;
-    double dl3 = dez * dez;
-    double dl4 = dl1 + dl2;
-    double dlift = dl4 + dl3;
-    double ds1 = dlift * abc;
-    double ds2 = clift * dab;
-    double dl = ds2 - ds1;
-    double dr1 = blift * cda;
-    double dr2 = alift * bcd;
-    double dr = dr2 - dr1;
-    double det = dl + dr;
+    const double aexbey = aex * bey;
+    const double bexaey = bex * aey;
+    const double ab = aexbey - bexaey;
+    const double bexcey = bex * cey;
+    const double cexbey = cex * bey;
+    const double bc = bexcey - cexbey;
+    const double cexdey = cex * dey;
+    const double dexcey = dex * cey;
+    const double cd = cexdey - dexcey;
+    const double dexaey = dex * aey;
+    const double aexdey = aex * dey;
+    const double da = dexaey - aexdey;
+    const double aexcey = aex * cey;
+    const double cexaey = cex * aey;
+    const double ac = aexcey - cexaey;
+    const double bexdey = bex * dey;
+    const double dexbey = dex * bey;
+    const double bd = bexdey - dexbey;
+    const double abc1 = aez * bc;
+    const double abc2 = bez * ac;
+    const double abc3 = cez * ab;
+    const double abc4 = abc1 + abc3;
+    const double abc = abc4 - abc2;
+    const double bcd1 = bez * cd;
+    const double bcd2 = cez * bd;
+    const double bcd3 = dez * bc;
+    const double bcd4 = bcd1 + bcd3;
+    const double bcd = bcd4 - bcd2;
+    const double cda1 = cez * da;
+    const double cda2 = dez * ac;
+    const double cda3 = aez * cd;
+    const double cda4 = cda1 + cda3;
+    const double cda = cda4 + cda2;
+    const double dab1 = dez * ab;
+    const double dab2 = aez * bd;
+    const double dab3 = bez * da;
+    const double dab4 = dab1 + dab3;
+    const double dab = dab4 + dab2;
+    const double al1 = aex * aex;
+    const double al2 = aey * aey;
+    const double al3 = aez * aez;
+    const double al4 = al1 + al2;
+    const double alift = al4 + al3;
+    const double bl1 = bex * bex;
+    const double bl2 = bey * bey;
+    const double bl3 = bez * bez;
+    const double bl4 = bl1 + bl2;
+    const double blift = bl4 + bl3;
+    const double cl1 = cex * cex;
+    const double cl2 = cey * cey;
+    const double cl3 = cez * cez;
+    const double cl4 = cl1 + cl2;
+    const double clift = cl4 + cl3;
+    const double dl1 = dex * dex;
+    const double dl2 = dey * dey;
+    const double dl3 = dez * dez;
+    const double dl4 = dl1 + dl2;
+    const double dlift = dl4 + dl3;
+    const double ds1 = dlift * abc;
+    const double ds2 = clift * dab;
+    const double dl = ds2 - ds1;
+    const double dr1 = blift * cda;
+    const double dr2 = alift * bcd;
+    const double dr = dr2 - dr1;
+    const double det = dl + dr;
 
     double _tmp_fabs;
 
     double max_var = 0.0;
+
     if ((_tmp_fabs = fabs(aex)) > max_var) max_var = _tmp_fabs;
     if ((_tmp_fabs = fabs(bex)) > max_var) max_var = _tmp_fabs;
     if ((_tmp_fabs = fabs(cex)) > max_var) max_var = _tmp_fabs;
@@ -465,112 +443,104 @@ static inline int isp_subfilt(const double  aex, const double  bex, const double
     epsilon *= epsilon;
     epsilon *= max_var;
     epsilon *= 1.145750161413163e-13;
-    if (det > epsilon) return IP_Sign::POSITIVE;
-    if (-det > epsilon) return IP_Sign::NEGATIVE;
-    return Filtered_Sign::UNCERTAIN;
+    return ((det >= epsilon) - (-det >= epsilon));
 }
 
-int insphere_filtered(double pax, double pay, double paz, double pbx, double pby, double pbz, double pcx, double pcy, double pcz, double pdx, double pdy, double pdz, double pex, double pey, double pez)
+int insphere_filtered(const double pax, const double pay, const double paz, const double pbx, const double pby, const double pbz, const double pcx, const double pcy, const double pcz, const double pdx, const double pdy, const double pdz, const double pex, const double pey, const double pez)
 {
     return isp_subfilt(pax - pex, pbx - pex, pcx - pex, pdx - pex,
         pay - pey, pby - pey, pcy - pey, pdy - pey,
         paz - pez, pbz - pez, pcz - pez, pdz - pez);
 }
 
-int insphere_filtered(const double* pa, const double* pb, const double* pc, const double* pd, const double* pe)
-{
-    return isp_subfilt(pa[0] - pe[0], pb[0] - pe[0], pc[0] - pe[0], pd[0] - pe[0],
-        pa[1] - pe[1], pb[1] - pe[1], pc[1] - pe[1], pd[1] - pe[1],
-        pa[2] - pe[2], pb[2] - pe[2], pc[2] - pe[2], pd[2] - pe[2]);
-}
 
-int insphere_interval(interval_number pax, interval_number pay, interval_number paz, interval_number pbx, interval_number pby, interval_number pbz, interval_number pcx, interval_number pcy, interval_number pcz, interval_number pdx, interval_number pdy, interval_number pdz, interval_number pex, interval_number pey, interval_number pez)
+int insphere_interval(const interval_number pax, const interval_number pay, const interval_number paz, const interval_number pbx, const interval_number pby, const interval_number pbz, const interval_number pcx, const interval_number pcy, const interval_number pcz, const interval_number pdx, const interval_number pdy, const interval_number pdz, const interval_number pex, const interval_number pey, const interval_number pez)
 {
     setFPUModeToRoundUP();
-    interval_number aex(pax - pex);
-    interval_number bex(pbx - pex);
-    interval_number cex(pcx - pex);
-    interval_number dex(pdx - pex);
-    interval_number aey(pay - pey);
-    interval_number bey(pby - pey);
-    interval_number cey(pcy - pey);
-    interval_number dey(pdy - pey);
-    interval_number aez(paz - pez);
-    interval_number bez(pbz - pez);
-    interval_number cez(pcz - pez);
-    interval_number dez(pdz - pez);
-    interval_number aexbey(aex * bey);
-    interval_number bexaey(bex * aey);
-    interval_number ab(aexbey - bexaey);
-    interval_number bexcey(bex * cey);
-    interval_number cexbey(cex * bey);
-    interval_number bc(bexcey - cexbey);
-    interval_number cexdey(cex * dey);
-    interval_number dexcey(dex * cey);
-    interval_number cd(cexdey - dexcey);
-    interval_number dexaey(dex * aey);
-    interval_number aexdey(aex * dey);
-    interval_number da(dexaey - aexdey);
-    interval_number aexcey(aex * cey);
-    interval_number cexaey(cex * aey);
-    interval_number ac(aexcey - cexaey);
-    interval_number bexdey(bex * dey);
-    interval_number dexbey(dex * bey);
-    interval_number bd(bexdey - dexbey);
-    interval_number abc1(aez * bc);
-    interval_number abc2(bez * ac);
-    interval_number abc3(cez * ab);
-    interval_number abc4(abc1 + abc3);
-    interval_number abc(abc4 - abc2);
-    interval_number bcd1(bez * cd);
-    interval_number bcd2(cez * bd);
-    interval_number bcd3(dez * bc);
-    interval_number bcd4(bcd1 + bcd3);
-    interval_number bcd(bcd4 - bcd2);
-    interval_number cda1(cez * da);
-    interval_number cda2(dez * ac);
-    interval_number cda3(aez * cd);
-    interval_number cda4(cda1 + cda3);
-    interval_number cda(cda4 + cda2);
-    interval_number dab1(dez * ab);
-    interval_number dab2(aez * bd);
-    interval_number dab3(bez * da);
-    interval_number dab4(dab1 + dab3);
-    interval_number dab(dab4 + dab2);
-    interval_number al1(aex * aex);
-    interval_number al2(aey * aey);
-    interval_number al3(aez * aez);
-    interval_number al4(al1 + al2);
-    interval_number alift(al4 + al3);
-    interval_number bl1(bex * bex);
-    interval_number bl2(bey * bey);
-    interval_number bl3(bez * bez);
-    interval_number bl4(bl1 + bl2);
-    interval_number blift(bl4 + bl3);
-    interval_number cl1(cex * cex);
-    interval_number cl2(cey * cey);
-    interval_number cl3(cez * cez);
-    interval_number cl4(cl1 + cl2);
-    interval_number clift(cl4 + cl3);
-    interval_number dl1(dex * dex);
-    interval_number dl2(dey * dey);
-    interval_number dl3(dez * dez);
-    interval_number dl4(dl1 + dl2);
-    interval_number dlift(dl4 + dl3);
-    interval_number ds1(dlift * abc);
-    interval_number ds2(clift * dab);
-    interval_number dl(ds2 - ds1);
-    interval_number dr1(blift * cda);
-    interval_number dr2(alift * bcd);
-    interval_number dr(dr2 - dr1);
-    interval_number det(dl + dr);
+    const interval_number aex(pax - pex);
+    const interval_number bex(pbx - pex);
+    const interval_number cex(pcx - pex);
+    const interval_number dex(pdx - pex);
+    const interval_number aey(pay - pey);
+    const interval_number bey(pby - pey);
+    const interval_number cey(pcy - pey);
+    const interval_number dey(pdy - pey);
+    const interval_number aez(paz - pez);
+    const interval_number bez(pbz - pez);
+    const interval_number cez(pcz - pez);
+    const interval_number dez(pdz - pez);
+    const interval_number aexbey(aex * bey);
+    const interval_number bexaey(bex * aey);
+    const interval_number ab(aexbey - bexaey);
+    const interval_number bexcey(bex * cey);
+    const interval_number cexbey(cex * bey);
+    const interval_number bc(bexcey - cexbey);
+    const interval_number cexdey(cex * dey);
+    const interval_number dexcey(dex * cey);
+    const interval_number cd(cexdey - dexcey);
+    const interval_number dexaey(dex * aey);
+    const interval_number aexdey(aex * dey);
+    const interval_number da(dexaey - aexdey);
+    const interval_number aexcey(aex * cey);
+    const interval_number cexaey(cex * aey);
+    const interval_number ac(aexcey - cexaey);
+    const interval_number bexdey(bex * dey);
+    const interval_number dexbey(dex * bey);
+    const interval_number bd(bexdey - dexbey);
+    const interval_number abc1(aez * bc);
+    const interval_number abc2(bez * ac);
+    const interval_number abc3(cez * ab);
+    const interval_number abc4(abc1 + abc3);
+    const interval_number abc(abc4 - abc2);
+    const interval_number bcd1(bez * cd);
+    const interval_number bcd2(cez * bd);
+    const interval_number bcd3(dez * bc);
+    const interval_number bcd4(bcd1 + bcd3);
+    const interval_number bcd(bcd4 - bcd2);
+    const interval_number cda1(cez * da);
+    const interval_number cda2(dez * ac);
+    const interval_number cda3(aez * cd);
+    const interval_number cda4(cda1 + cda3);
+    const interval_number cda(cda4 + cda2);
+    const interval_number dab1(dez * ab);
+    const interval_number dab2(aez * bd);
+    const interval_number dab3(bez * da);
+    const interval_number dab4(dab1 + dab3);
+    const interval_number dab(dab4 + dab2);
+    const interval_number al1(aex * aex);
+    const interval_number al2(aey * aey);
+    const interval_number al3(aez * aez);
+    const interval_number al4(al1 + al2);
+    const interval_number alift(al4 + al3);
+    const interval_number bl1(bex * bex);
+    const interval_number bl2(bey * bey);
+    const interval_number bl3(bez * bez);
+    const interval_number bl4(bl1 + bl2);
+    const interval_number blift(bl4 + bl3);
+    const interval_number cl1(cex * cex);
+    const interval_number cl2(cey * cey);
+    const interval_number cl3(cez * cez);
+    const interval_number cl4(cl1 + cl2);
+    const interval_number clift(cl4 + cl3);
+    const interval_number dl1(dex * dex);
+    const interval_number dl2(dey * dey);
+    const interval_number dl3(dez * dez);
+    const interval_number dl4(dl1 + dl2);
+    const interval_number dlift(dl4 + dl3);
+    const interval_number ds1(dlift * abc);
+    const interval_number ds2(clift * dab);
+    const interval_number dl(ds2 - ds1);
+    const interval_number dr1(blift * cda);
+    const interval_number dr2(alift * bcd);
+    const interval_number dr(dr2 - dr1);
+    const interval_number det(dl + dr);
     setFPUModeToRoundNEAR();
 
     if (!det.signIsReliable()) return Filtered_Sign::UNCERTAIN;
     return det.sign();
 }
 
-int insphere_exact(double pax, double pay, double paz, double pbx, double pby, double pbz, double pcx, double pcy, double pcz, double pdx, double pdy, double pdz, double pex, double pey, double pez)
+int insphere_exact(const double pax, const double pay, const double paz, const double pbx, const double pby, const double pbz, const double pcx, const double pcy, const double pcz, const double pdx, const double pdy, const double pdz, const double pex, const double pey, const double pez)
 {
     expansionObject o;
     double aex[2];
@@ -763,22 +733,12 @@ int insphere_exact(double pax, double pay, double paz, double pbx, double pby, d
     return IP_Sign::UNDEFINED;
 }
 
-int insphere(double pax, double pay, double paz, double pbx, double pby, double pbz, double pcx, double pcy, double pcz, double pdx, double pdy, double pdz, double pex, double pey, double pez)
+int insphere(const double pax, const double pay, const double paz, const double pbx, const double pby, const double pbz, const double pcx, const double pcy, const double pcz, const double pdx, const double pdy, const double pdz, const double pex, const double pey, const double pez)
 {
     int ret;
     ret = insphere_filtered(pax, pay, paz, pbx, pby, pbz, pcx, pcy, pcz, pdx, pdy, pdz, pex, pey, pez);
-    if (ret != Filtered_Sign::UNCERTAIN) return ret;
+    if (ret) return ret;
     ret = insphere_interval(pax, pay, paz, pbx, pby, pbz, pcx, pcy, pcz, pdx, pdy, pdz, pex, pey, pez);
-    if (ret != Filtered_Sign::UNCERTAIN) return ret;
+    if (ret) return ret;
     return insphere_exact(pax, pay, paz, pbx, pby, pbz, pcx, pcy, pcz, pdx, pdy, pdz, pex, pey, pez);
-}
-
-double insphere(const double* pa, const double* pb, const double* pc, const double* pd, const double* pe)
-{
-    int ret;
-    ret = insphere_filtered(pa, pb, pc, pd, pe);
-    if (ret != Filtered_Sign::UNCERTAIN) return ret;
-    ret = insphere_interval(pa[0], pa[1], pa[2], pb[0], pb[1], pb[2], pc[0], pc[1], pc[2], pd[0], pd[1], pd[2], pe[0], pe[1], pe[2]);
-    if (ret != Filtered_Sign::UNCERTAIN) return ret;
-    return insphere_exact(pa[0], pa[1], pa[2], pb[0], pb[1], pb[2], pc[0], pc[1], pc[2], pd[0], pd[1], pd[2], pe[0], pe[1], pe[2]);
 }
