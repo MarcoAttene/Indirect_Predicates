@@ -29,8 +29,8 @@ elseif(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 endif()
 
 # Public include directory
-target_include_directories(${PROJECT_NAME} PUBLIC .)
-target_include_directories(${PROJECT_NAME} PUBLIC predicates)
+target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/predicates")
 
 
 # simde library for sim inteercompatibility
