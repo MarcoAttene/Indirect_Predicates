@@ -6,12 +6,11 @@ project(indirectPredicates)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 # add the executable
-add_executable(${PROJECT_NAME}
+add_library(${PROJECT_NAME}
     implicit_point.cpp
     numerics.cpp
     predicates/indirect_predicates.cpp
     predicates/hand_optimized_predicates.cpp
-    test.cpp
 )
 
 # Compiler-specific options
@@ -37,3 +36,9 @@ target_include_directories(${PROJECT_NAME} PUBLIC predicates)
 # simde library for sim inteercompatibility
 include(simde)
 target_link_libraries(${PROJECT_NAME} PUBLIC simde)
+
+
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+	add_executable(${PROJECT_NAME}_bin test.cpp)
+    target_link_libraries(${PROJECT_NAME}_bin PUBLIC ${PROJECT_NAME})
+endif()
