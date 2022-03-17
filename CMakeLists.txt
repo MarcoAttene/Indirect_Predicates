@@ -3,13 +3,14 @@ cmake_minimum_required(VERSION 3.10)
 # set the project name
 project(indirectPredicates)
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
 # add the executable
-add_executable(${PROJECT_NAME} 
+add_library(${PROJECT_NAME}
     implicit_point.cpp
     numerics.cpp
     predicates/indirect_predicates.cpp
     predicates/hand_optimized_predicates.cpp
-    test.cpp
 )
 
 # Compiler-specific options
@@ -28,5 +29,16 @@ elseif(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 endif()
 
 # Public include directory
-target_include_directories(${PROJECT_NAME} PUBLIC .)
-target_include_directories(${PROJECT_NAME} PUBLIC predicates)
+target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/predicates")
+
+
+# simde library for sim inteercompatibility
+include(simde)
+target_link_libraries(${PROJECT_NAME} PUBLIC simde)
+
+
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+	add_executable(${PROJECT_NAME}_bin test.cpp)
+    target_link_libraries(${PROJECT_NAME}_bin PUBLIC ${PROJECT_NAME})
+endif()

@@ -12,3 +12,4 @@ test_delaunay.cpp
 shewchuk.c
 x64
 .vs
+bin*
