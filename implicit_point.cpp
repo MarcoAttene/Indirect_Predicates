@@ -99,6 +99,7 @@ int genericPoint::lessThan(const genericPoint& a, const genericPoint& b)
 		if (a.isTPI() && b.isTPI())	return lessThan_TT(a, b);
 
 		ip_error("genericPoint::lessThan - points must be 3D\n");
+        return 0; // warning killer
 }
 
 
@@ -118,45 +119,48 @@ int genericPoint::lessThanOnX(const genericPoint& a, const genericPoint& b)
 		if (a.isLPI() && b.isTPI())	return lessThanOnX_LT(a.toLPI(), b.toTPI());
 		if (a.isTPI() && b.isTPI())	return lessThanOnX_TT(a.toTPI(), b.toTPI());
 
-	ip_error("genericPoint::lessThanOnX - points must be 3D\n");
+        ip_error("genericPoint::lessThanOnX - points must be 3D\n");
+        return 0; // warning killer
 }
 
 int genericPoint::lessThanOnY(const genericPoint& a, const genericPoint& b)
 {
-		if (a.isExplicit3D() && b.isExplicit3D())
-		{
-			double av = a.toExplicit3D().Y(), bv = b.toExplicit3D().Y();
-			return ((av > bv) - (av < bv));
-		}
-		if (a.isLPI() && b.isExplicit3D()) return lessThanOnY_LE(a.toLPI(), b.toExplicit3D().Y());
-		if (a.isTPI() && b.isExplicit3D()) return lessThanOnY_TE(a.toTPI(), b.toExplicit3D().Y());
-		if (a.isExplicit3D() && b.isLPI()) return -lessThanOnY_LE(b.toLPI(), a.toExplicit3D().Y());
-		if (a.isLPI() && b.isLPI()) return lessThanOnY_LL(a.toLPI(), b.toLPI());
-		if (a.isTPI() && b.isLPI())	return -lessThanOnY_LT(b.toLPI(), a.toTPI());
-		if (a.isExplicit3D() && b.isTPI()) return -lessThanOnY_TE(b.toTPI(), a.toExplicit3D().Y());
-		if (a.isLPI() && b.isTPI())	return lessThanOnY_LT(a.toLPI(), b.toTPI());
-		if (a.isTPI() && b.isTPI())	return lessThanOnY_TT(a.toTPI(), b.toTPI());
+    if (a.isExplicit3D() && b.isExplicit3D())
+    {
+        double av = a.toExplicit3D().Y(), bv = b.toExplicit3D().Y();
+        return ((av > bv) - (av < bv));
+    }
+    if (a.isLPI() && b.isExplicit3D()) return lessThanOnY_LE(a.toLPI(), b.toExplicit3D().Y());
+    if (a.isTPI() && b.isExplicit3D()) return lessThanOnY_TE(a.toTPI(), b.toExplicit3D().Y());
+    if (a.isExplicit3D() && b.isLPI()) return -lessThanOnY_LE(b.toLPI(), a.toExplicit3D().Y());
+    if (a.isLPI() && b.isLPI()) return lessThanOnY_LL(a.toLPI(), b.toLPI());
+    if (a.isTPI() && b.isLPI())	return -lessThanOnY_LT(b.toLPI(), a.toTPI());
+    if (a.isExplicit3D() && b.isTPI()) return -lessThanOnY_TE(b.toTPI(), a.toExplicit3D().Y());
+    if (a.isLPI() && b.isTPI())	return lessThanOnY_LT(a.toLPI(), b.toTPI());
+    if (a.isTPI() && b.isTPI())	return lessThanOnY_TT(a.toTPI(), b.toTPI());
 
-	ip_error("genericPoint::lessThanOnY - points must be 3D\n");
+    ip_error("genericPoint::lessThanOnY - points must be 3D\n");
+    return 0; // warning killer
 }
 
 int genericPoint::lessThanOnZ(const genericPoint& a, const genericPoint& b)
 {
-		if (a.isExplicit3D() && b.isExplicit3D())
-		{
-			double av = a.toExplicit3D().Z(), bv = b.toExplicit3D().Z();
-			return ((av > bv) - (av < bv));
-		}
-		if (a.isLPI() && b.isExplicit3D()) return lessThanOnZ_LE(a.toLPI(), b.toExplicit3D().Z());
-		if (a.isTPI() && b.isExplicit3D()) return lessThanOnZ_TE(a.toTPI(), b.toExplicit3D().Z());
-		if (a.isExplicit3D() && b.isLPI()) return -lessThanOnZ_LE(b.toLPI(), a.toExplicit3D().Z());
-		if (a.isLPI() && b.isLPI()) return lessThanOnZ_LL(a.toLPI(), b.toLPI());
-		if (a.isTPI() && b.isLPI())	return -lessThanOnZ_LT(b.toLPI(), a.toTPI());
-		if (a.isExplicit3D() && b.isTPI()) return -lessThanOnZ_TE(b.toTPI(), a.toExplicit3D().Z());
-		if (a.isLPI() && b.isTPI())	return lessThanOnZ_LT(a.toLPI(), b.toTPI());
-		if (a.isTPI() && b.isTPI())	return lessThanOnZ_TT(a.toTPI(), b.toTPI());
+    if (a.isExplicit3D() && b.isExplicit3D())
+    {
+        double av = a.toExplicit3D().Z(), bv = b.toExplicit3D().Z();
+        return ((av > bv) - (av < bv));
+    }
+    if (a.isLPI() && b.isExplicit3D()) return lessThanOnZ_LE(a.toLPI(), b.toExplicit3D().Z());
+    if (a.isTPI() && b.isExplicit3D()) return lessThanOnZ_TE(a.toTPI(), b.toExplicit3D().Z());
+    if (a.isExplicit3D() && b.isLPI()) return -lessThanOnZ_LE(b.toLPI(), a.toExplicit3D().Z());
+    if (a.isLPI() && b.isLPI()) return lessThanOnZ_LL(a.toLPI(), b.toLPI());
+    if (a.isTPI() && b.isLPI())	return -lessThanOnZ_LT(b.toLPI(), a.toTPI());
+    if (a.isExplicit3D() && b.isTPI()) return -lessThanOnZ_TE(b.toTPI(), a.toExplicit3D().Z());
+    if (a.isLPI() && b.isTPI())	return lessThanOnZ_LT(a.toLPI(), b.toTPI());
+    if (a.isTPI() && b.isTPI())	return lessThanOnZ_TT(a.toTPI(), b.toTPI());
 
-	ip_error("genericPoint::lessThanOnZ - points must be 3D\n");
+    ip_error("genericPoint::lessThanOnZ - points must be 3D\n");
+    return 0; // warning killer
 }
 
 inline int orient2d_EEE(const genericPoint& a, const genericPoint& b, const genericPoint& c) { return orient2d(a.toExplicit2D().X(), a.toExplicit2D().Y(), b.toExplicit2D().X(), b.toExplicit2D().Y(), c.toExplicit2D().X(), c.toExplicit2D().Y()); }
@@ -166,20 +170,19 @@ inline int orient2d_SSS(const genericPoint& a, const genericPoint& b, const gene
 
 int genericPoint::orient2D(const genericPoint& a, const genericPoint& b, const genericPoint& c)
 {
-	// Here we implicitly assume that points are 2D. Do not check.
+    // Here we implicitly assume that points are 2D. Do not check.
 
-	if (a.isExplicit2D() && b.isExplicit2D() && c.isExplicit2D()) return orient2d_EEE(a, b, c);
-	if (a.isSSI() && b.isExplicit2D() && c.isExplicit2D()) return orient2d_SEE(a, b, c);
-	if (a.isExplicit2D() && b.isSSI() && c.isExplicit2D()) return orient2d_SEE(b, c, a);
-	if (a.isExplicit2D() && b.isExplicit2D() && c.isSSI()) return orient2d_SEE(c, a, b);
-	if (a.isSSI() && b.isSSI() && c.isExplicit2D()) return orient2d_SSE(a, b, c);
-	if (a.isExplicit2D() && b.isSSI() && c.isSSI())	return orient2d_SSE(b, c, a);
-	if (a.isSSI() && b.isExplicit2D() && c.isSSI())	return orient2d_SSE(c, a, b);
-	if (a.isSSI() && b.isSSI() && c.isSSI()) return orient2d_SSS(a, b, c);
+    if (a.isExplicit2D() && b.isExplicit2D() && c.isExplicit2D()) return orient2d_EEE(a, b, c);
+    if (a.isSSI() && b.isExplicit2D() && c.isExplicit2D()) return orient2d_SEE(a, b, c);
+    if (a.isExplicit2D() && b.isSSI() && c.isExplicit2D()) return orient2d_SEE(b, c, a);
+    if (a.isExplicit2D() && b.isExplicit2D() && c.isSSI()) return orient2d_SEE(c, a, b);
+    if (a.isSSI() && b.isSSI() && c.isExplicit2D()) return orient2d_SSE(a, b, c);
+    if (a.isExplicit2D() && b.isSSI() && c.isSSI())	return orient2d_SSE(b, c, a);
+    if (a.isSSI() && b.isExplicit2D() && c.isSSI())	return orient2d_SSE(c, a, b);
+    if (a.isSSI() && b.isSSI() && c.isSSI()) return orient2d_SSS(a, b, c);
 
-	ip_error("genericPoint::orient2d - should not happen\n");
-
-	return 0;
+    ip_error("genericPoint::orient2d - should not happen\n");
+    return 0; // warning killer
 }
 
 
@@ -196,40 +199,39 @@ inline int orient2dxy_LTT(const genericPoint& a, const genericPoint& b, const ge
 
 int genericPoint::orient2Dxy(const genericPoint& a, const genericPoint& b, const genericPoint& c)
 {
-		if (a.isExplicit3D() && b.isExplicit3D() && c.isExplicit3D()) return orient2dxy_EEE(a, b, c);
+    if (a.isExplicit3D() && b.isExplicit3D() && c.isExplicit3D()) return orient2dxy_EEE(a, b, c);
 
-		if (a.isLPI() && b.isExplicit3D() && c.isExplicit3D()) return orient2dxy_LEE(a, b, c);
-		if (a.isExplicit3D() && b.isLPI() && c.isExplicit3D()) return orient2dxy_LEE(b, c, a);
-		if (a.isExplicit3D() && b.isExplicit3D() && c.isLPI()) return orient2dxy_LEE(c, a, b);
-		if (a.isTPI() && b.isExplicit3D() && c.isExplicit3D()) return orient2dxy_TEE(a, b, c);
-		if (a.isExplicit3D() && b.isTPI() && c.isExplicit3D()) return orient2dxy_TEE(b, c, a);
-		if (a.isExplicit3D() && b.isExplicit3D() && c.isTPI()) return orient2dxy_TEE(c, a, b);
+    if (a.isLPI() && b.isExplicit3D() && c.isExplicit3D()) return orient2dxy_LEE(a, b, c);
+    if (a.isExplicit3D() && b.isLPI() && c.isExplicit3D()) return orient2dxy_LEE(b, c, a);
+    if (a.isExplicit3D() && b.isExplicit3D() && c.isLPI()) return orient2dxy_LEE(c, a, b);
+    if (a.isTPI() && b.isExplicit3D() && c.isExplicit3D()) return orient2dxy_TEE(a, b, c);
+    if (a.isExplicit3D() && b.isTPI() && c.isExplicit3D()) return orient2dxy_TEE(b, c, a);
+    if (a.isExplicit3D() && b.isExplicit3D() && c.isTPI()) return orient2dxy_TEE(c, a, b);
 
-		if (a.isLPI() && b.isLPI() && c.isExplicit3D()) return orient2dxy_LLE(a, b, c);
-		if (a.isExplicit3D() && b.isLPI() && c.isLPI()) return orient2dxy_LLE(b, c, a);
-		if (a.isLPI() && b.isExplicit3D() && c.isLPI()) return orient2dxy_LLE(c, a, b);
-		if (a.isTPI() && b.isTPI() && c.isExplicit3D()) return orient2dxy_TTE(a, b, c);
-		if (a.isExplicit3D() && b.isTPI() && c.isTPI()) return orient2dxy_TTE(b, c, a);
-		if (a.isTPI() && b.isExplicit3D() && c.isTPI()) return orient2dxy_TTE(c, a, b);
-		if (a.isLPI() && b.isTPI() && c.isExplicit3D()) return orient2dxy_LTE(a, b, c);
-		if (a.isExplicit3D() && b.isLPI() && c.isTPI()) return orient2dxy_LTE(b, c, a);
-		if (a.isExplicit3D() && b.isTPI() && c.isLPI()) return -orient2dxy_LTE(c, b, a);
-		if (a.isLPI() && b.isExplicit3D() && c.isTPI()) return -orient2dxy_LTE(a, c, b);
-		if (a.isTPI() && b.isExplicit3D() && c.isLPI()) return orient2dxy_LTE(c, a, b);
-		if (a.isTPI() && b.isLPI() && c.isExplicit3D()) return -orient2dxy_LTE(b, a, c);
+    if (a.isLPI() && b.isLPI() && c.isExplicit3D()) return orient2dxy_LLE(a, b, c);
+    if (a.isExplicit3D() && b.isLPI() && c.isLPI()) return orient2dxy_LLE(b, c, a);
+    if (a.isLPI() && b.isExplicit3D() && c.isLPI()) return orient2dxy_LLE(c, a, b);
+    if (a.isTPI() && b.isTPI() && c.isExplicit3D()) return orient2dxy_TTE(a, b, c);
+    if (a.isExplicit3D() && b.isTPI() && c.isTPI()) return orient2dxy_TTE(b, c, a);
+    if (a.isTPI() && b.isExplicit3D() && c.isTPI()) return orient2dxy_TTE(c, a, b);
+    if (a.isLPI() && b.isTPI() && c.isExplicit3D()) return orient2dxy_LTE(a, b, c);
+    if (a.isExplicit3D() && b.isLPI() && c.isTPI()) return orient2dxy_LTE(b, c, a);
+    if (a.isExplicit3D() && b.isTPI() && c.isLPI()) return -orient2dxy_LTE(c, b, a);
+    if (a.isLPI() && b.isExplicit3D() && c.isTPI()) return -orient2dxy_LTE(a, c, b);
+    if (a.isTPI() && b.isExplicit3D() && c.isLPI()) return orient2dxy_LTE(c, a, b);
+    if (a.isTPI() && b.isLPI() && c.isExplicit3D()) return -orient2dxy_LTE(b, a, c);
 
-		if (a.isLPI() && b.isLPI() && c.isTPI()) return orient2dxy_LLT(a, b, c);
-		if (a.isLPI() && b.isTPI() && c.isTPI()) return orient2dxy_LTT(a, b, c);
-		if (a.isLPI() && b.isTPI() && c.isLPI()) return orient2dxy_LLT(c, a, b);
-		if (a.isTPI() && b.isTPI() && c.isLPI()) return orient2dxy_LTT(c, a, b);
-		if (a.isTPI() && b.isLPI() && c.isLPI()) return orient2dxy_LLT(b, c, a);
-		if (a.isTPI() && b.isLPI() && c.isTPI()) return orient2dxy_LTT(b, c, a);
-		if (a.isLPI() && b.isLPI() && c.isLPI()) return orient2dxy_LLL(a, b, c);
-		if (a.isTPI() && b.isTPI() && c.isTPI()) return orient2dxy_TTT(a, b, c);
+    if (a.isLPI() && b.isLPI() && c.isTPI()) return orient2dxy_LLT(a, b, c);
+    if (a.isLPI() && b.isTPI() && c.isTPI()) return orient2dxy_LTT(a, b, c);
+    if (a.isLPI() && b.isTPI() && c.isLPI()) return orient2dxy_LLT(c, a, b);
+    if (a.isTPI() && b.isTPI() && c.isLPI()) return orient2dxy_LTT(c, a, b);
+    if (a.isTPI() && b.isLPI() && c.isLPI()) return orient2dxy_LLT(b, c, a);
+    if (a.isTPI() && b.isLPI() && c.isTPI()) return orient2dxy_LTT(b, c, a);
+    if (a.isLPI() && b.isLPI() && c.isLPI()) return orient2dxy_LLL(a, b, c);
+    if (a.isTPI() && b.isTPI() && c.isTPI()) return orient2dxy_TTT(a, b, c);
 
-		ip_error("genericPoint::orient2dxy - should not happen\n");
-
-		return 0;
+    ip_error("genericPoint::orient2dxy - should not happen\n");
+    return 0; // warning killer
 }
 
 inline int orient2dyz_EEE(const genericPoint& a, const genericPoint& b, const genericPoint& c) { return orient2d(a.toExplicit3D().Y(), a.toExplicit3D().Z(), b.toExplicit3D().Y(), b.toExplicit3D().Z(), c.toExplicit3D().Y(), c.toExplicit3D().Z()); }
@@ -277,8 +279,7 @@ int genericPoint::orient2Dyz(const genericPoint& a, const genericPoint& b, const
 	if (a.isTPI() && b.isTPI() && c.isTPI()) return orient2dyz_TTT(a, b, c);
 
 	ip_error("genericPoint::orient2dyz - should not happen\n");
-
-	return 0;
+    return 0; // warning killer
 }
 
 inline int orient2dzx_EEE(const genericPoint& a, const genericPoint& b, const genericPoint& c) { return orient2d(a.toExplicit3D().Z(), a.toExplicit3D().X(), b.toExplicit3D().Z(), b.toExplicit3D().X(), c.toExplicit3D().Z(), c.toExplicit3D().X()); }
@@ -326,8 +327,7 @@ int genericPoint::orient2Dzx(const genericPoint& a, const genericPoint& b, const
 	if (a.isTPI() && b.isTPI() && c.isTPI()) return orient2dzx_TTT(a, b, c);
 
 	ip_error("genericPoint::orient2dzx - should not happen\n");
-
-	return 0;
+    return 0; // warning killer
 }
 
 
@@ -500,7 +500,7 @@ int genericPoint::orient3D(const genericPoint& a, const genericPoint& b, const g
 	}
 
 	ip_error("genericPoint::orient3d - should not happen/unsupported\n");
-	return 0;
+    return 0; // warning killer
 }
 
 
@@ -553,8 +553,7 @@ int genericPoint::incircle(const genericPoint& a, const genericPoint& b, const g
 		if (a.isSSI() && b.isSSI() && c.isSSI() && d.isSSI()) return incircle2d_SSSS(a, b, c, d);
 
 		ip_error("genericPoint::incircle - should not happen (2D)\n");
-
-		return 0;
+        return 0; // warning killer
 }
 
 inline int incircle2dxy_EEEE(const genericPoint& a, const genericPoint& b, const genericPoint& c, const genericPoint& d)
@@ -606,8 +605,7 @@ int genericPoint::incirclexy(const genericPoint& a, const genericPoint& b, const
 		if (a.isLPI() && b.isLPI() && c.isLPI() && d.isLPI()) return incircle2dxy_LLLL(a, b, c, d);
 
 		ip_error("genericPoint::incirclexy - unsupported configuration (TPIs not implemented yet)\n");
-
-		return 0;
+        return 0; // warning killer
 }
 
 
@@ -621,7 +619,7 @@ int genericPoint::inSphere(const genericPoint& a, const genericPoint& b, const g
 			e.toExplicit3D().X(), e.toExplicit3D().Y(), e.toExplicit3D().Z());
 
 	ip_error("genericPoint::inSphere - Only explicit 3D points supported\n");
-	return 0;
+    return 0; // warning killer
 }
 
 
