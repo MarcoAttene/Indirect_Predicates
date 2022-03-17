@@ -38,7 +38,8 @@
 
 	inline void ip_error(const char* msg)
 	{
-		fprintf(stderr, msg);
+        std::cerr << msg << std::endl;
+        //fprintf(stderr, msg);
 		exit(0);
 	}
 
@@ -67,7 +68,6 @@
 #else
 
 #pragma STDC FENV_ACCESS ON
-
 	inline void setFPUModeToRoundUP() { fesetround(FE_UPWARD); }
 	inline void setFPUModeToRoundNEAR() { fesetround(FE_TONEAREST); }
 #endif
