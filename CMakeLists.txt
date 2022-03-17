@@ -6,7 +6,6 @@ option(BUILD_EXECUTABLE "Build Indirect Predicates Test Executable" ON)
 option(BUILD_LIBRARY    "Build Indirect Predicates Static Library"  ON)
 
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_11)
-set_target_properties(${PROJECT_NAME} PROPERTIES CXX_EXTENSIONS ON)
 
 if(BUILD_EXECUTABLE)
     message("Build Indirect Predicates Test Executable")
