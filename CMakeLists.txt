@@ -4,7 +4,6 @@ project(indirectPredicates)
 
 option(BUILD_LIBRARY "Build Indirect Predicates as a static Library" ON)
 
-
 if(BUILD_LIBRARY)
     add_library(${PROJECT_NAME}
                 implicit_point.cpp
