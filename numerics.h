@@ -50,9 +50,11 @@
 #define	ISVISUALSTUDIO
 #endif
 
-	// 64-bit
+// 64-bit
 #ifdef IS64BITPLATFORM
+#ifndef __arm64__ // do not use SIMD instructions on Apple ARM M1
 #define USE_SIMD_INSTRUCTIONS
+#endif
 #endif
 
 #ifdef ISVISUALSTUDIO
