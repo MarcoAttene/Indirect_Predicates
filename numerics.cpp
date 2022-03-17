@@ -1,29 +1,29 @@
 /****************************************************************************
- * Indirect predicates for geometric constructions					        *
- *                                                                           *
- * Consiglio Nazionale delle Ricerche                                        *
- * Istituto di Matematica Applicata e Tecnologie Informatiche                *
- * Sezione di Genova                                                         *
- * IMATI-GE / CNR                                                            *
- *                                                                           *
- * Authors: Marco Attene                                                     *
- * Copyright(C) 2019: IMATI-GE / CNR                                         *
- * All rights reserved.                                                      *
- *                                                                           *
- * This program is free software; you can redistribute it and/or modify      *
- * it under the terms of the GNU Lesser General Public License as published  *
- * by the Free Software Foundation; either version 3 of the License, or (at  *
- * your option) any later version.                                           *
- *                                                                           *
- * This program is distributed in the hope that it will be useful, but       *
- * WITHOUT ANY WARRANTY; without even the implied warranty of                *
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser  *
- * General Public License for more details.                                  *
- *                                                                           *
- * You should have received a copy of the GNU Lesser General Public License  *
- * along with this program.  If not, see http://www.gnu.org/licenses/.       *
- *                                                                           *
- ****************************************************************************/
+* Indirect predicates for geometric constructions					        *
+*                                                                           *
+* Consiglio Nazionale delle Ricerche                                        *
+* Istituto di Matematica Applicata e Tecnologie Informatiche                *
+* Sezione di Genova                                                         *
+* IMATI-GE / CNR                                                            *
+*                                                                           *
+* Authors: Marco Attene                                                     *
+* Copyright(C) 2019: IMATI-GE / CNR                                         *
+* All rights reserved.                                                      *
+*                                                                           *
+* This program is free software; you can redistribute it and/or modify      *
+* it under the terms of the GNU Lesser General Public License as published  *
+* by the Free Software Foundation; either version 3 of the License, or (at  *
+* your option) any later version.                                           *
+*                                                                           *
+* This program is distributed in the hope that it will be useful, but       *
+* WITHOUT ANY WARRANTY; without even the implied warranty of                *
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser  *
+* General Public License for more details.                                  *
+*                                                                           *
+* You should have received a copy of the GNU Lesser General Public License  *
+* along with this program.  If not, see http://www.gnu.org/licenses/.       *
+*                                                                           *
+****************************************************************************/
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -34,7 +34,7 @@
 
 #include "numerics.h"
 
-void expansionObject::Two_Two_Prod(const double a1, const double a0, const double b1, const double b0, double *h)
+void expansionObject::Two_Two_Prod(const double a1, const double a0, const double b1, const double b0, double* h)
 {
 	double _ch, _cl, _m, _n;
 	Split(a0, _ah, _al);
@@ -69,51 +69,20 @@ int expansionObject::Gen_Sum(const int elen, const double *e, const int flen, co
 	int e_k, f_k, h_k;
 
 	h_k = e_k = f_k = 0;
-	if ((fn > en) == (fn > -en))
-	{
-		Q = en;
-		e_k++;
-	}
-	else
-	{
-		Q = fn;
-		f_k++;
-	}
+	if ((fn > en) == (fn > -en)) { Q = en; e_k++; } else { Q = fn; f_k++; }
 
 	if ((e_k < elen) && (f_k < flen))
 	{
-		en = e[e_k];
-		fn = f[f_k];
-		if ((fn > en) == (fn > -en))
-		{
-			Quick_Two_Sum(en, Q, Qn, hh);
-			e_k++;
-		}
-		else
-		{
-			Quick_Two_Sum(fn, Q, Qn, hh);
-			f_k++;
-		}
+		en = e[e_k]; fn = f[f_k];
+		if ((fn > en) == (fn > -en)) { Quick_Two_Sum(en, Q, Qn, hh); e_k++; } else { Quick_Two_Sum(fn, Q, Qn, hh); f_k++; }
 		Q = Qn;
-		if (hh != 0.0)
-			h[h_k++] = hh;
+		if (hh != 0.0) h[h_k++] = hh;
 		while ((e_k < elen) && (f_k < flen))
 		{
-			en = e[e_k];
-			fn = f[f_k];
-			if ((fn > en) == (fn > -en))
-			{
-				Two_Sum(Q, en, Qn, hh);
-				e_k++;
-			}
-			else
-			{
-				Two_Sum(Q, fn, Qn, hh);
-				f_k++;
-			}
+			en = e[e_k]; fn = f[f_k];
+			if ((fn > en) == (fn > -en)) { Two_Sum(Q, en, Qn, hh); e_k++; } else { Two_Sum(Q, fn, Qn, hh); f_k++; }
 			Q = Qn;
-			if (hh != 0.0)
-				h[h_k++] = hh;
+			if (hh != 0.0) h[h_k++] = hh;
 		}
 	}
 
@@ -122,8 +91,7 @@ int expansionObject::Gen_Sum(const int elen, const double *e, const int flen, co
 		en = e[e_k++];
 		Two_Sum(Q, en, Qn, hh);
 		Q = Qn;
-		if (hh != 0.0)
-			h[h_k++] = hh;
+		if (hh != 0.0) h[h_k++] = hh;
 	}
 
 	while (f_k < flen)
@@ -131,11 +99,9 @@ int expansionObject::Gen_Sum(const int elen, const double *e, const int flen, co
 		fn = f[f_k++];
 		Two_Sum(Q, fn, Qn, hh);
 		Q = Qn;
-		if (hh != 0.0)
-			h[h_k++] = hh;
+		if (hh != 0.0) h[h_k++] = hh;
 	}
-	if ((Q != 0.0) || (h_k == 0))
-		h[h_k++] = Q;
+	if ((Q != 0.0) || (h_k == 0)) h[h_k++] = Q;
 
 	return h_k;
 }
@@ -146,51 +112,20 @@ int expansionObject::Gen_Diff(const int elen, const double *e, const int flen, c
 	int e_k, f_k, h_k;
 
 	h_k = e_k = f_k = 0;
-	if ((fn > en) == (fn > -en))
-	{
-		Q = en;
-		e_k++;
-	}
-	else
-	{
-		Q = fn;
-		f_k++;
-	}
+	if ((fn > en) == (fn > -en)) { Q = en; e_k++; } else { Q = fn; f_k++; }
 
 	if ((e_k < elen) && (f_k < flen))
 	{
-		en = e[e_k];
-		fn = -f[f_k];
-		if ((fn > en) == (fn > -en))
-		{
-			Quick_Two_Sum(en, Q, Qn, hh);
-			e_k++;
-		}
-		else
-		{
-			Quick_Two_Sum(fn, Q, Qn, hh);
-			f_k++;
-		}
+		en = e[e_k]; fn = -f[f_k];
+		if ((fn > en) == (fn > -en)) { Quick_Two_Sum(en, Q, Qn, hh); e_k++; } else { Quick_Two_Sum(fn, Q, Qn, hh); f_k++; }
 		Q = Qn;
-		if (hh != 0.0)
-			h[h_k++] = hh;
+		if (hh != 0.0) h[h_k++] = hh;
 		while ((e_k < elen) && (f_k < flen))
 		{
-			en = e[e_k];
-			fn = -f[f_k];
-			if ((fn > en) == (fn > -en))
-			{
-				Two_Sum(Q, en, Qn, hh);
-				e_k++;
-			}
-			else
-			{
-				Two_Sum(Q, fn, Qn, hh);
-				f_k++;
-			}
+			en = e[e_k]; fn = -f[f_k];
+			if ((fn > en) == (fn > -en)) { Two_Sum(Q, en, Qn, hh); e_k++; } else { Two_Sum(Q, fn, Qn, hh); f_k++; }
 			Q = Qn;
-			if (hh != 0.0)
-				h[h_k++] = hh;
+			if (hh != 0.0) h[h_k++] = hh;
 		}
 	}
 
@@ -199,8 +134,7 @@ int expansionObject::Gen_Diff(const int elen, const double *e, const int flen, c
 		en = e[e_k++];
 		Two_Sum(Q, en, Qn, hh);
 		Q = Qn;
-		if (hh != 0.0)
-			h[h_k++] = hh;
+		if (hh != 0.0) h[h_k++] = hh;
 	}
 
 	while (f_k < flen)
@@ -208,16 +142,15 @@ int expansionObject::Gen_Diff(const int elen, const double *e, const int flen, c
 		fn = -f[f_k++];
 		Two_Sum(Q, fn, Qn, hh);
 		Q = Qn;
-		if (hh != 0.0)
-			h[h_k++] = hh;
+		if (hh != 0.0) h[h_k++] = hh;
 	}
-	if ((Q != 0.0) || (h_k == 0))
-		h[h_k++] = Q;
+	if ((Q != 0.0) || (h_k == 0)) h[h_k++] = Q;
 
 	return h_k;
 }
 
-int expansionObject::Gen_Scale(const int elen, const double *e, const double &b, double *h)
+
+int expansionObject::Gen_Scale(const int elen, const double *e, const double& b, double *h)
 {
 	double Q, sum, hh, pr1, pr0, enow;
 	int e_k, h_k;
@@ -225,27 +158,24 @@ int expansionObject::Gen_Scale(const int elen, const double *e, const double &b,
 	Split(b, _bh, _bl);
 	Two_Prod_PreSplit(e[0], b, _bh, _bl, Q, hh);
 	h_k = 0;
-	if (hh != 0)
-		h[h_k++] = hh;
+	if (hh != 0) h[h_k++] = hh;
 
 	for (e_k = 1; e_k < elen; e_k++)
 	{
 		enow = e[e_k];
 		Two_Prod_PreSplit(enow, b, _bh, _bl, pr1, pr0);
 		Two_Sum(Q, pr0, sum, hh);
-		if (hh != 0)
-			h[h_k++] = hh;
+		if (hh != 0) h[h_k++] = hh;
 		Quick_Two_Sum(pr1, sum, Q, hh);
-		if (hh != 0)
-			h[h_k++] = hh;
+		if (hh != 0) h[h_k++] = hh;
 	}
-	if ((Q != 0.0) || (h_k == 0))
-		h[h_k++] = Q;
+	if ((Q != 0.0) || (h_k == 0)) h[h_k++] = Q;
 
 	return h_k;
 }
 
-void expansionObject::Two_Square(const double &a1, const double &a0, double *x)
+
+void expansionObject::Two_Square(const double& a1, const double& a0, double *x)
 {
 	Square(a0, _j, x[0]);
 	_0 = a0 + a0;
@@ -257,15 +187,14 @@ void expansionObject::Two_Square(const double &a1, const double &a0, double *x)
 
 int expansionObject::Sub_product(const int alen, const double *a, const int blen, const double *b, double *h)
 {
-	if (alen == 1)
-		return Gen_Scale(blen, b, a[0], h);
+	if (alen == 1) return Gen_Scale(blen, b, a[0], h);
 	int partial = 2 * alen * blen;
 	int allmem = 2 * (partial + blen);
 	double ph1_p[1024];
-	double *ph1 = (allmem > 1024) ? ((double *)malloc(allmem * sizeof(double))) : (ph1_p);
+	double *ph1 = (allmem>1024) ? ((double *)malloc(allmem * sizeof(double))) : (ph1_p);
 	double *ph2 = ph1 + partial;
 	double *th = ph2 + partial;
-	double *ph[2] = {ph1, ph2};
+	double *ph[2] = { ph1, ph2 };
 	int first = 0;
 	int phl = Gen_Scale(blen, b, a[0], ph[0]);
 
@@ -273,47 +202,40 @@ int expansionObject::Sub_product(const int alen, const double *a, const int blen
 	{
 		int thl = Gen_Scale(blen, b, a[i], th);
 		first = i & 1;
-		phl = Gen_Sum(phl, ph[(i + 1) & 1], thl, th, ph[first]);
+		phl = Gen_Sum(phl, ph[(i+1)&1], thl, th, ph[first]);
 	}
-	if (first)
-		for (int i = 0; i < phl; i++)
-			h[i] = ph2[i];
-	else
-		for (int i = 0; i < phl; i++)
-			h[i] = ph1[i];
-	if (allmem > 1024)
-		free(ph1);
+	if (first) for (int i = 0; i < phl; i++) h[i] = ph2[i];
+	else for (int i = 0; i < phl; i++) h[i] = ph1[i];
+	if (allmem>1024) free(ph1);
 	return phl;
 }
 
+
 int expansionObject::Gen_Product(const int alen, const double *a, const int blen, const double *b, double *h)
 {
-	if (blen == 1)
-		return Gen_Scale(alen, a, b[0], h);
-	else if (alen < blen)
-		return Sub_product(alen, a, blen, b, h);
-	else
-		return Sub_product(blen, b, alen, a, h);
+	if (blen == 1) return Gen_Scale(alen, a, b[0], h);
+	else if (alen < blen) return Sub_product(alen, a, blen, b, h);
+	else return Sub_product(blen, b, alen, a, h);
 }
+
 
 double expansionObject::To_Double(const int elen, const double *e)
 {
 	double Q = e[0];
-	for (int e_i = 1; e_i < elen; e_i++)
-		Q += e[e_i];
+	for (int e_i = 1; e_i < elen; e_i++) Q += e[e_i];
 	return Q;
 }
 
 #ifdef USE_SIMD_INSTRUCTIONS
 void interval_number::init()
 {
-	zero = simde_mm_setzero_pd();
-	sign_low_mask = simde_mm_slli_epi32(simde_mm_set_epi32(1, 0, 0, 0), 31);
-	sign_high_mask = simde_mm_slli_epi32(simde_mm_set_epi32(0, 0, 1, 0), 31);
+	zero = _mm_setzero_pd();
+	sign_low_mask = _mm_slli_epi32(_mm_set_epi32(1, 0, 0, 0), 31);
+	sign_high_mask = _mm_slli_epi32(_mm_set_epi32(0, 0, 1, 0), 31);
 }
 
-simde__m128d interval_number::zero;
-simde__m128i interval_number::sign_low_mask, interval_number::sign_high_mask;
+__m128d interval_number::zero;
+__m128i interval_number::sign_low_mask, interval_number::sign_high_mask;
 
 #endif
 
@@ -322,7 +244,7 @@ void initFPU()
 #ifdef IS64BITPLATFORM
 #ifdef USE_SIMD_INSTRUCTIONS
 	interval_number::init();
-	SIMDE_MM_SET_FLUSH_ZERO_MODE(SIMDE_MM_FLUSH_ZERO_ON);
+	_MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
 #endif
 #else
 #ifdef USE_SIMD_INSTRUCTIONS
@@ -332,7 +254,7 @@ void initFPU()
 	_control87(_PC_53, _MCW_PC); /* Set FPU control word for double precision. */
 #else
 	int cword;
-	cword = 4722; /* set FPU control word for double precision */
+	cword = 4722;                 /* set FPU control word for double precision */
 	_FPU_SETCW(cword);
 #endif
 #endif
