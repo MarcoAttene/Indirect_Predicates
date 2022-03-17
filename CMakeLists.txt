@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 
 project(indirectPredicates)
 
-option(BUILD_LIBRARY "Build Indirect Predicates as a static Library" ON)
+option(BUILD_LIBRARY "Build the indirect predicates as a static library" ON)
 
 if(BUILD_LIBRARY)
     add_library(${PROJECT_NAME}
@@ -15,7 +15,8 @@ else()
                    implicit_point.cpp
                    numerics.cpp
                    predicates/indirect_predicates.cpp
-                   predicates/hand_optimized_predicates.cpp)
+                   predicates/hand_optimized_predicates.cpp
+                   test.cpp)
 endif()
 
 target_include_directories(${PROJECT_NAME} PUBLIC .)
