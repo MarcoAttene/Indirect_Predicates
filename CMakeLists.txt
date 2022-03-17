@@ -2,26 +2,25 @@ cmake_minimum_required(VERSION 3.10)
 
 project(indirectPredicates)
 
-option(BUILD_EXECUTABLE "Build Indirect Predicates Test Executable" ON)
-option(BUILD_LIBRARY    "Build Indirect Predicates Static Library"  ON)
+option(BUILD_LIBRARY "Build Indirect Predicates as a static Library" ON)
 
 
 if(BUILD_LIBRARY)
-    message("Build Indirect Predicates Static Library")
     add_library(${PROJECT_NAME}
-                implicit_point.h
                 implicit_point.cpp
-                numerics.h
                 numerics.cpp
-                predicates/indirect_predicates.h
                 predicates/indirect_predicates.cpp
                 predicates/hand_optimized_predicates.cpp)
+else()
+    add_executable(${PROJECT_NAME}
+                   implicit_point.cpp
+                   numerics.cpp
+                   predicates/indirect_predicates.cpp
+                   predicates/hand_optimized_predicates.cpp)
 endif()
 
 target_include_directories(${PROJECT_NAME} PUBLIC .)
 target_include_directories(${PROJECT_NAME} PUBLIC predicates)
-
-
 
 # Compiler-specific options to grant IEEE 754 compliance
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
