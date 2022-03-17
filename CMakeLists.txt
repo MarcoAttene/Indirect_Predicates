@@ -32,6 +32,8 @@ endif()
 target_include_directories(${PROJECT_NAME} PUBLIC .)
 target_include_directories(${PROJECT_NAME} PUBLIC predicates)
 
+target_compile_features(${PROJECT_NAME} INTERFACE cxx_std_11)
+
 # Compiler-specific options to grant IEEE 754 compliance
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     target_compile_options(${PROJECT_NAME} PUBLIC -frounding-math)
