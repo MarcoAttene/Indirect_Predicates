@@ -7,7 +7,7 @@ option(BUILD_LIBRARY    "Build Indirect Predicates Static Library"  ON)
 
 if(BUILD_EXECUTABLE)
     message("Build Indirect Predicates Test Executable")
-    add_executable(${PROJECT_NAME}
+    add_executable(${PROJECT_NAME}-test
                    implicit_point.h
                    implicit_point.cpp
                    numerics.h
