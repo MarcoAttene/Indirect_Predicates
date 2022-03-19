@@ -28,8 +28,10 @@ foreach(TARGET ${ALL_TARGETS})
             target_compile_options(${TARGET} PUBLIC -frounding-math)
             find_package(Threads)
             target_link_libraries(${TARGET} ${CMAKE_THREAD_LIBS_INIT})
-        elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES  "Clang" OR
-                "${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
+        elseif (CMAKE_CXX_COMPILER_ID MATCHES  "Clang" OR
+                CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
+	    # this does not seem to be needed anymore....
+	    # (uncomment it if you observe unexpected behaviour)
             #target_compile_options(${TARGET} PUBLIC -O0)
         endif()
         target_include_directories(${TARGET} PUBLIC .)
