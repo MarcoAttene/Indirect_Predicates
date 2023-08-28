@@ -1,5 +1,3 @@
-indirectPredicates.sln
-indirectPredicates.vcxproj.user
 JPCK/.vs
 JPCK/x64
 JPCK/converter.sln
@@ -7,8 +5,3 @@ JPCK/converter.vcxproj.user
 JPCK/predicates/other
 build
 OLD
-TESTS.txt
-test_delaunay.cpp
-shewchuk.c
-x64
-.vs

@@ -21,7 +21,7 @@ You are free to use this software according to the licensing terms specified at 
 If you use it for research purposes and produce publications, please cite the following paper 
 that describes the underlying theory:
 
-> M. Attene. Indirect Predicates for Geometric Constructions. In Elsevier Computer-Aided Design (2020, to appear).
+> M. Attene. Indirect Predicates for Geometric Constructions. In Elsevier Computer-Aided Design (2020).
 
 -------------------
 System Requirements
@@ -30,9 +30,22 @@ System Requirements
 The software has been tested on 64 bit PCs running:
  - Microsoft Windows OS with MSVC
  - Linux with standard gcc/g++ development environment
- - Mac OSX. Unfortunately CLANG does not support direct access to the floating point environment.
-   The only way to use this software with CLANG is to disable all optimizations (-O0).
+ - Mac OSX with CLANG.
 
+---------------------
+Usage
+---------------------
+
+The repository provides a header-only C++ library.
+To use in your code:
+1) Add the "Indirect_Predicates-master/include" path to the list of paths where your compiler searches header files
+2) Include "implicit_point.h" in your code 
+3) Tell your compiler to use the following directives:
+   MSVC: /fp:strict /Oi /STACK:8421376 /D _CRT_SECURE_NO_WARNINGS
+   GCC/G++: -frounding-math -O2 -Wl,-z,stacksize=8421376
+   CLANG: -frounding-math -O0 -Wl,-z,stacksize=8421376
+
+As an example, check the CMakeLists.txt provided to compile the test.cpp code.
 
 ---------------------
 Copyright and license

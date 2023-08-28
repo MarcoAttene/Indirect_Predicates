@@ -4,15 +4,35 @@
 
 #ifdef TEST_PLAIN_PREDICATES
 #include <vector>
+#include <algorithm>
 #include <chrono>
 
-extern "C" double orient2d(double* pa, double* pb, double* pc);
-extern "C" double orient3d(double* pa, double* pb, double* pc, double* pd);
+//extern "C" double orient2d(double* pa, double* pb, double* pc);
+//extern "C" double orient3d(double* pa, double* pb, double* pc, double* pd);
 
 int orient2d(double p1x, double p1y, double p2x, double p2y, double p3x, double p3y);
 int orient3d(double px, double py, double pz, double qx, double qy, double qz, double rx, double ry, double rz, double sx, double sy, double sz);
 
 inline double randomUnitDouble() { return ((double)rand()) / RAND_MAX; }
+
+typedef bigfloat exact_nt;
+
+//int orient3d(const exact_nt& px, const exact_nt& py, const exact_nt& pz, const exact_nt& qx, const exact_nt& qy, const exact_nt& qz, const exact_nt& rx, const exact_nt& ry, const exact_nt& rz, const exact_nt& sx, const exact_nt& sy, const exact_nt& sz)
+//{
+//	exact_nt fadx, fbdx, fcdx, fady, fbdy, fcdy, fadz, fbdz, fcdz, eb;
+//	exact_nt fbdxcdy, fcdxbdy, fcdxady, fadxcdy, fadxbdy, fbdxady, det;
+//
+//	fadx = qx - px; fbdx = rx - px; fcdx = sx - px;
+//	fady = qy - py; fbdy = ry - py; fcdy = sy - py;
+//	fadz = qz - pz; fbdz = rz - pz; fcdz = sz - pz;
+//
+//	fbdxcdy = fbdx * fcdy * fadz; fcdxbdy = fcdx * fbdy * fadz;
+//	fcdxady = fcdx * fady * fbdz; fadxcdy = fadx * fcdy * fbdz;
+//	fadxbdy = fadx * fbdy * fcdz; fbdxady = fbdx * fady * fcdz;
+//
+//	det = (fbdxcdy - fcdxbdy) + (fcdxady - fadxcdy) + (fadxbdy - fbdxady);
+//	return sgn(det);
+//}
 
 void testPlainPredicates2D()
 {
@@ -54,28 +74,29 @@ void testPlainPredicates2D()
 	// Calculate predicates on them
 	dummy = 0;
 	c_start = std::chrono::system_clock::now();
-	for (int i = 0; i < num_all_triplets * 6; i += 6)
+	for (int i = 0; i < num_all_triplets * 6; i += 6) {
 		dummy += orient2d(atp[i], atp[i + 1], atp[i + 2], atp[i + 3], atp[i + 4], atp[i + 5]);
+	}
 	std::cout << "IPreds elapsed time: " << (std::chrono::system_clock::now() - c_start).count() / 10000000.0 << "s\n";
 	std::cout << "Dummy sum: " << dummy << "\n";
 
 	// Calculate predicates on them
-	dummy = 0;
-	c_start = std::chrono::system_clock::now();
-	for (int i = 0; i < num_all_triplets * 6; i += 6)
-	{
-		const double r = orient2d(atp + i, atp + i + 2, atp + i + 4);
-		dummy += ((r > 0) - (r < 0));
-	}
-	std::cout << "Shewchuk elapsed time: " << (std::chrono::system_clock::now() - c_start).count() / 10000000.0 << "s\n";
-	std::cout << "Dummy sum: " << dummy << "\n";
+	//dummy = 0;
+	//c_start = std::chrono::system_clock::now();
+	//for (int i = 0; i < num_all_triplets * 6; i += 6)
+	//{
+	//	const double r = orient2d(atp + i, atp + i + 2, atp + i + 4);
+	//	dummy += ((r > 0) - (r < 0));
+	//}
+	//std::cout << "Shewchuk elapsed time: " << (std::chrono::system_clock::now() - c_start).count() / 10000000.0 << "s\n";
+	//std::cout << "Dummy sum: " << dummy << "\n";
 
 }
 
 
 void testPlainPredicates3D()
 {
-	int num_all_tets = 1000000;
+	int num_all_tets = 100000;
 	const double perc_degn = 0.05;
 	const int num_random_tets = num_all_tets * (1.0 - perc_degn);
 	const int num_degn_tets = num_all_tets * perc_degn;
@@ -115,21 +136,37 @@ void testPlainPredicates3D()
 	std::cout << "Dummy sum: " << dummy << "\n";
 
 	// Calculate predicates on them
-	dummy = 0;
-	c_start = std::chrono::system_clock::now();
-	for (int i = 0; i < num_all_tets * 12; i += 12)
-	{
-		const double r = orient3d(atp + i, atp + i + 3, atp + i + 6, atp + i + 9);
-		dummy += ((r > 0) - (r < 0));
-	}
-	std::cout << "Shewchuk elapsed time: " << (std::chrono::system_clock::now() - c_start).count() / 10000000.0 << "s\n";
-	std::cout << "Dummy sum: " << dummy << "\n";
+	//dummy = 0;
+	//c_start = std::chrono::system_clock::now();
+	//for (int i = 0; i < num_all_tets * 12; i += 12)
+	//{
+	//	const double r = orient3d(atp + i, atp + i + 3, atp + i + 6, atp + i + 9);
+	//	dummy += ((r > 0) - (r < 0));
+	//}
+	//std::cout << "Shewchuk elapsed time: " << (std::chrono::system_clock::now() - c_start).count() / 10000000.0 << "s\n";
+	//std::cout << "Dummy sum: " << dummy << "\n";
 }
+
 
 int main(int argc, char* argv[])
 {
 	initFPU();
 
+	/*
+	const size_t num_ops = 100000000;
+
+	setFPUModeToRoundUP();
+	interval_number a = 3.0, b = 13.0;
+	interval_number r(0);
+	interval_number uno(1);
+
+	auto c_start = std::chrono::system_clock::now();
+	for (size_t i = 0; i < num_ops; i++)
+		r = (r * uno) + ((a * b) * ((i % 2)?(-1):(1)));
+	std::cout << "Elapsed time: " << (std::chrono::system_clock::now() - c_start).count() / 10000000.0 << "s\n";
+
+	printf("%f\n", r.getInterval()[0]);
+	*/
 	testPlainPredicates3D();
 
 	return 0;
@@ -141,12 +178,12 @@ int main(int argc, char *argv[])
 {
 	initFPU();
 
-	explicitPoint2D a(1, 1), b(3, 3), c(3, 1), d(1, 3);
+	explicitPoint2D a(1, 1), b(3, 3), c(2, 1), d(1, 2);
 	implicitPoint2D_SSI i(a, b, c, d);
 
 	if (genericPoint::orient2D(a, i, b) == 0) std::cout << "Collinear\n";
 	else std::cout << "Not collinear\n";
-	
+
 	return 0;
 }
 #endif

@@ -41,7 +41,7 @@ err_bound is the error bound for the parameter
 val_bound is the value bound for the parameter
 The aforementioned four values are produced when compiling the lambda code.
 
-6) Sign declaration
+6) Sign declaration (deprecated)
 SIGN d1 d2 ... dn
 where di are normally lambda outputs that determine the final sign
 
@@ -61,20 +61,4 @@ Lambdas
 3d_TPI = 3D three planes intersection
 2d3d_LPI = XY coords of the 3D line-plane intersection
 2d3d_TPI = XY coords of the 3D three planes intersection
-
-orient2d variants (E = Explicit, S = SSI)
-> SEE, SSE, SSS
-EEE = direct orient2d version
-
-
-orient2d3d variants (E = Explicit, L = LPI, T = TPI)
-> EEE, LEE, LLE, LLL, TEE, TTE, TTT, LTE, LLT, LTT
-
-ELE = -LEE
-EEL = LEE
-ELL = LLE
-LEL = -LLE
-...
-all orientations use X,Y coordinates
-
 

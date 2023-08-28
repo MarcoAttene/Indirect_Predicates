@@ -1,12 +1,16 @@
-pax pay paz
+genericPoint(p1:l1x,l1y,l1z,d1)
 pbx pby pbz
 pcx pcy pcz
 pdx pdy pdz
 pex pey pez
 
-aex = pax - pex
-aey = pay - pey
-aez = paz - pez
+pexd = pex * d1
+peyd = pey * d1
+pezd = pez * d1
+aex = l1x - pexd
+aey = l1y - peyd
+aez = l1z - pezd
+
 bex = pbx - pex
 bey = pby - pey
 bez = pbz - pez
@@ -86,9 +90,11 @@ dlift = dl4 + dl3
 
 ds1 = dlift * abc
 ds2 = clift * dab
-dl = ds2 - ds1
+dlp = ds2 - ds1
+dl = dlp * d1
 
-dr1 = blift * cda
+dr1p = blift * cda
+dr1 = dr1p * d1
 dr2 = alift * bcd
 dr = dr2 - dr1
 
