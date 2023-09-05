@@ -68,8 +68,11 @@ inline void ip_error(const char* msg)
 
 // 64-bit
 #ifdef IS64BITPLATFORM
+#ifndef __ARM_ARCH
 #define USE_SIMD_INSTRUCTIONS
 #endif
+#endif
+
 
 #ifdef ISVISUALSTUDIO
 
