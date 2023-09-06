@@ -25,6 +25,8 @@
 *                                                                           *
 ****************************************************************************/ 
 
+#pragma once 
+
 /* This code was generated automatically. Do not edit unless you exactly   */
 /* know what you are doing!                                                */
 
