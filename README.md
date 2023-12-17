@@ -40,12 +40,12 @@ The repository provides a header-only C++ library.
 To use in your code:
 1) Add the "Indirect_Predicates-master/include" path to the list of paths where your compiler searches header files
 2) Include "implicit_point.h" in your code 
-3) ALWAYS tell your compiler to use the following directives:
-   MSVC: /fp:strict /Oi /STACK:8421376 /D _CRT_SECURE_NO_WARNINGS
-   GCC/G++/CLANG: -frounding-math -O2 -Wl,-z,stacksize=8421376
-4) Tell your compiler whether your CPU supports SSE2/AVX2 instructions
-   MSVC: /arch:SSE2 or /arch:AVX2
-   GCC/G++/CLANG: -msse2 or -mavx2
+3) ALWAYS tell your compiler to use the following directives:<br>
+   MSVC: /fp:strict /Oi /STACK:8421376 /D _CRT_SECURE_NO_WARNINGS<br>
+   GCC/G++/CLANG: -frounding-math -O2 -Wl,-z,stacksize=8421376<br>
+4) Tell your compiler whether your CPU supports SSE2/AVX2 instructions<br>
+   MSVC: /arch:SSE2 or /arch:AVX2<br>
+   GCC/G++/CLANG: -msse2 or -mavx2<br>
    
 As an example, check the CMakeLists.txt provided to compile the test.cpp code.
 
