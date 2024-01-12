@@ -1338,7 +1338,7 @@ inline double bigrational::get_d() const {
 	bignatural den = denominator;
 	int32_t E = (int32_t)num.getNumSignificantBits() - (int32_t)den.getNumSignificantBits();
 	if (E > 0) { den <<= E; if (den > num) { E--; den >>= 1; } }
-	else if (E < 0) { num <<= -E; if (den > num) { E--; num <<= 1; } }
+	else if (E <= 0) { num <<= -E; if (den > num) { E--; num <<= 1; } }
 
 	if (E > 1023) return INFINITY;
 	else if (E < -1022) return -INFINITY;
