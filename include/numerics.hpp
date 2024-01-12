@@ -1334,6 +1334,7 @@ inline bigrational bigrational::operator+(const bigrational& r) const {
 }
 
 inline double bigrational::get_d() const {
+	if (sign == 0) return 0.0;
 	bignatural num = numerator;
 	bignatural den = denominator;
 	int32_t E = (int32_t)num.getNumSignificantBits() - (int32_t)den.getNumSignificantBits();
