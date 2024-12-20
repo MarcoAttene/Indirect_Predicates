@@ -65,6 +65,7 @@ protected:
 
 public:
 	genericPoint(const Point_Type& t) : type(t) {}
+	virtual ~genericPoint() = default;
 
 	Point_Type getType() const { return type; }
 	bool is2D() const { return type <= SSI; }
