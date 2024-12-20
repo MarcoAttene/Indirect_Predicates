@@ -442,8 +442,8 @@ public:
 //
 //////////////////////////////////////////////////////////////////////////////////////
 
-using namespace ::std;
-
+namespace std
+{
 ostream& operator<<(ostream& os, const genericPoint& p);
 
 inline ostream& operator<<(ostream& os, const explicitPoint2D& p)
@@ -482,6 +482,7 @@ inline ostream& operator<<(ostream& os, const implicitPoint3D_LNC& p)
 	explicitPoint3D e;
 	if (p.apapExplicit(e)) return os << e;
 	else return os << "UNDEF_LNC";
+}
 }
 
 #include "hand_optimized_predicates.hpp"
