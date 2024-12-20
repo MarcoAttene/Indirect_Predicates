@@ -29,7 +29,9 @@
 #define MEMPOOL_H
 
 #include <vector>
+#if __cplusplus >= 202002L
 #include <bit>
+#endif
 #include <bitset>
 #include <cstdint>
 
