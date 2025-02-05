@@ -26,28 +26,42 @@ that describes the underlying theory:
 -------------------
 System Requirements
 --------------------
-
 The software has been tested on 64 bit PCs running:
  - Microsoft Windows OS with MSVC
  - Linux with standard gcc/g++ development environment
  - Mac OSX with CLANG.
 
----------------------
-Usage
----------------------
+--------------------
+Compile a test
+--------------------
+1) Open a command prompt
+2) Enter the directory containing this README file
+3) cmake -S . -B build/ -D CMAKE_BUILD_TYPE=Release
+4) cmake --build build/ --config Release
 
+You may want to set the target architecture to make the compiler optimize the code for your hardware.
+To do that, edit the CMakeLists.txt file accordingly before running the commands hereabove.
+By default, CMakeLists is configured for x86-64 architectures with AVX2 support.
+
+---------------------
+Generic usage
+---------------------
 The repository provides a header-only C++ library.
 To use in your code:
 1) Add the "Indirect_Predicates-master/include" path to the list of paths where your compiler searches header files
 2) Include "implicit_point.h" in your code 
-3) ALWAYS tell your compiler to use the following directives:<br>
-   MSVC: /fp:strict /Oi /STACK:8421376 /D _CRT_SECURE_NO_WARNINGS<br>
-   GCC/G++/CLANG: -frounding-math -O2 -Wl,-z,stacksize=8421376<br>
-4) Tell your compiler whether your CPU supports SSE2/AVX2 instructions<br>
-   MSVC: /arch:SSE2 or /arch:AVX2<br>
-   GCC/G++/CLANG: -msse2 or -mavx2<br>
+3) ALWAYS tell your compiler to use the following directives:
+   MSVC: /fp:strict /Oi /D _CRT_SECURE_NO_WARNINGS
+   GCC/G++/CLANG: -frounding-math -O2
+4) Tell your compiler whether your CPU supports SSE2/AVX2/ARMNEON instructions
+   MSVC: /arch:SSE2 or /arch:AVX2 or /arch:ARMV8.0
+   GCC/G++/CLANG: -msse2 or (-mavx2 and -mfma) or -march=armv8-a+simd
    
+On ARM CPUs supporting NEON instructions you may need to download SIMDE from:
+https://github.com/simd-everywhere/simde/archive/refs/heads/master.zip
+
 As an example, check the CMakeLists.txt provided to compile the test.cpp code.
+CMake automatically downloads SIMDE if necessary.
 
 ---------------------
 Copyright and license
