@@ -53,10 +53,9 @@ enum Point_Type {
 	EXPLICIT2D = 1,
 	SSI = 2, // This must be the last 2D config in this ordered list
 	EXPLICIT3D = 3,
-	LPI = 4, // Line-Plane Intersection
-	TPI = 5, // Three-Planes Intersection
-	LNC = 6,  // LiNear Combination
-	BPT = 7  // Barycentric Point in Triangle
+	LPI = 4, // Line-plane intersection
+	TPI = 5, // Three-planes intersection
+	LNC = 6  // Linear combination
 };
 
 // This is a generic point. It can be extended as either explicit or implicit point
@@ -76,7 +75,6 @@ public:
 	bool isLPI() const { return (type == LPI); }
 	bool isTPI() const { return (type == TPI); }
 	bool isLNC() const { return (type == LNC); }
-	bool isBPT() const { return (type == BPT); }
 
 	// The following functions convert to explicit points.
 	// Use only after having verified the correct type through getType()
@@ -95,7 +93,6 @@ public:
 	class implicitPoint3D_LPI& toLPI() { return (implicitPoint3D_LPI&)(*this); }
 	class implicitPoint3D_TPI& toTPI() { return (implicitPoint3D_TPI&)(*this); }
 	class implicitPoint3D_LNC& toLNC() { return (implicitPoint3D_LNC&)(*this); }
-	class implicitPoint3D_BPT& toBPT() { return (implicitPoint3D_BPT&)(*this); }
 
 	const class explicitPoint2D& toExplicit2D() const { return (explicitPoint2D&)(*this); }
 	const class implicitPoint2D_SSI& toSSI() const { return (implicitPoint2D_SSI&)(*this); }
@@ -103,7 +100,6 @@ public:
 	const class implicitPoint3D_LPI& toLPI() const { return (implicitPoint3D_LPI&)(*this); }
 	const class implicitPoint3D_TPI& toTPI() const { return (implicitPoint3D_TPI&)(*this); }
 	const class implicitPoint3D_LNC& toLNC() const { return (implicitPoint3D_LNC&)(*this); }
-	const class implicitPoint3D_BPT& toBPT() const { return (implicitPoint3D_BPT&)(*this); }
 
 	// Calculates the first two cartesian coordinates. If the point is implicit, these
 	// coordinates are approximated due to floating point roundoff.
@@ -150,10 +146,6 @@ public:
 	// InSphere - fully supported
 	// Input can be any combination of 3D points
 	static int inSphere(const genericPoint& a, const genericPoint& b, const genericPoint& c, const genericPoint& d, const genericPoint& e);
-
-	// InGabrielSphere - fully supported (<0 if q is in the diemetral sphere by a,b,c)
-	// Input can be any combination of 3D points
-	static int inGabrielSphere(const genericPoint& q, const genericPoint& a, const genericPoint& b, const genericPoint& c);
 
 	// incircle - fully supported
 	// Input can be any combination of 2D points
@@ -444,32 +436,6 @@ public:
 };
 
 
-// Implicit point defined as a linear combination of three points
-class implicitPoint3D_BPT : public genericPoint {
-	const explicitPoint3D & ip, & iq, & ir; // The three points
-	const double v, u; // The two weights. Position = ip*v + iq*u + ir*(1-u-v)
-
-public:
-	implicitPoint3D_BPT(const explicitPoint3D& _p, const explicitPoint3D& _q, const explicitPoint3D& _r,
-		const double _v, const double _u);
-
-	const explicitPoint3D& P() const { return ip; }
-	const explicitPoint3D& Q() const { return iq; }
-	const explicitPoint3D& R() const { return ir; }
-	const double U() const { return u; }
-	const double V() const { return v; }
-
-private: // Cached values
-	interval_number dfilter_lambda_x, dfilter_lambda_y, dfilter_lambda_z, dfilter_denominator;
-
-public:
-	bool getIntervalLambda(interval_number& lx, interval_number& ly, interval_number& lz, interval_number& d) const;
-	void getExactLambda(double** lx, int& lxl, double** ly, int& lyl, double** lz, int& lzl, double** d, int& dl) const;
-	void getBigfloatLambda(bigfloat& lx, bigfloat& ly, bigfloat& lz, bigfloat& d) const;
-	bool getExactXYZCoordinates(bigrational& x, bigrational& y, bigrational& z) const;
-};
-
-
 //////////////////////////////////////////////////////////////////////////////////////
 //
 // OUTPUT TO STD STREAMS
@@ -516,13 +482,6 @@ inline ostream& operator<<(ostream& os, const implicitPoint3D_LNC& p)
 	explicitPoint3D e;
 	if (p.apapExplicit(e)) return os << e;
 	else return os << "UNDEF_LNC";
-}
-
-inline ostream& operator<<(ostream& os, const implicitPoint3D_BPT& p)
-{
-	explicitPoint3D e;
-	if (p.apapExplicit(e)) return os << e;
-	else return os << "UNDEF_BPT";
 }
 
 #include "hand_optimized_predicates.hpp"
