@@ -11,7 +11,7 @@ cmake_minimum_required(VERSION 3.10)
 
 #							#Generic build
 #set(ENABLE_SSE2 True)		#Build for x86-64 with SSE2
-#set(ENABLE_AVX2 True)		#Build for x86-64 with AVX2
+set(ENABLE_AVX2 True)		#Build for x86-64 with AVX2
 #set(ENABLE_ARMNEON True)	#Build for ARM with NEON
 
 # --------- DON NOT EDIT BELOW THIS LINE! --------
@@ -77,7 +77,7 @@ if(ENABLE_ARMNEON)
 	FetchContent_Declare(
 		simde
 		URL https://github.com/simd-everywhere/simde/archive/refs/heads/master.zip)
-	FetchContent_MakeAvailable(simde)
+	FetchContent_Populate(simde)
 	message(STATUS "simde is available in " ${simde_SOURCE_DIR})
 
 	target_include_directories(${PROJECT_NAME} PUBLIC ${simde_SOURCE_DIR}/simde)
