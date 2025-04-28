@@ -81,4 +81,5 @@ if(ENABLE_ARMNEON)
 	message(STATUS "simde is available in " ${simde_SOURCE_DIR})
 
 	target_include_directories(${PROJECT_NAME} PUBLIC ${simde_SOURCE_DIR}/simde)
+	target_compile_options(${PROJECT_NAME} PUBLIC -DSIMDE_ENABLE_NATIVE_ALIASES)
 endif()
