@@ -2185,14 +2185,14 @@ inline void bignatural::operator>>=(uint32_t n) {
 inline bool bignatural::operator==(const bignatural& b) const {
 	if (size() != b.size()) return false;
 	auto dp = digits, de = digits + m_size, db = b.digits;
-	while (dp != de && *dp++ == *db++);
+	while (dp != de && *dp == *db) { dp++; db++; }
 	return (dp == de);
 }
 
 inline bool bignatural::operator!=(const bignatural& b) const {
 	if (size() != b.size()) return true;
 	auto dp = digits, de = digits + m_size, db = b.digits;
-	while (dp != de && *dp++ == *db++);
+	while (dp != de && *dp == *db) { dp++; db++; }
 	return (dp != de);
 }
 
