@@ -74,8 +74,7 @@
 #		define USE_SIMD_INSTRUCTIONS
 #		define USE_AVX2_INSTRUCTIONS
 #	endif
-#	ifdef __ARM_NEON
-#		define SIMDE_ENABLE_NATIVE_ALIASES
+#	ifdef SIMDE_ENABLE_NATIVE_ALIASES
 #		include <x86/avx2.h>
 #		include <x86/fma.h>
 #		define USE_SIMD_INSTRUCTIONS
