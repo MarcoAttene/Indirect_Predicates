@@ -1,0 +1,39 @@
+genericPoint(p1:l1x,l1y,l1z,d1)
+genericPoint(p2:l2x,l2y,l2z,d2)
+genericPoint(p3:l3x,l3y,l3z,d3)
+genericPoint(p4:l4x,l4y,l4z,d4)
+genericPoint(p5:l5x,l5y,l5z,d5)
+
+aex = l1x * d5 - l5x * d1
+aey = l1y * d5 - l5y * d1
+aez = l1z * d5 - l5z * d1
+alift = aex^2 + aey^2 + aez^2
+
+bex = l2x * d5 - l5x * d2
+bey = l2y * d5 - l5y * d2
+bez = l2z * d5 - l5z * d2
+blift = bex^2 + bey^2 + bez^2
+
+cex = l3x * d5 - l5x * d3
+cey = l3y * d5 - l5y * d3
+cez = l3z * d5 - l5z * d3
+clift = cex^2 + cey^2 + cez^2
+
+dex = l4x * d5 - l5x * d4
+dey = l4y * d5 - l5y * d4
+dez = l4z * d5 - l5z * d4
+dlift = dex^2 + dey^2 + dez^2
+
+ab = aex * bey - bex * aey
+bc = bex * cey - cex * bey
+cd = cex * dey - dex * cey
+da = dex * aey - aex * dey
+ac = aex * cey - cex * aey
+bd = bex * dey - dex * bey
+
+abc = aez * bc - bez * ac + cez * ab
+bcd = bez * cd - cez * bd + dez * bc
+cda = cez * da + dez * ac + aez * cd
+dab = dez * ab + aez * bd + bez * da
+
+d = (clift * dab - dlift * abc) + (alift * bcd - blift * cda)

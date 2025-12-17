@@ -1,0 +1,32 @@
+genericPoint(a:l2x,l2y,l2z,d2)
+genericPoint(b:l3x,l3y,l3z,d3)
+genericPoint(c:l4x,l4y,l4z,d4)
+qx qy qz
+
+bax = l3x * d2 - l2x * d3
+bay = l3y * d2 - l2y * d3
+baz = l3z * d2 - l2z * d3
+cax = l4x * d2 - l2x * d4
+cay = l4y * d2 - l2y * d4
+caz = l4z * d2 - l2z * d4
+qax = qx * d2 - l2x 
+qay = qy * d2 - l2y 
+qaz = qz * d2 - l2z
+
+ba2 = (bax^2 + bay^2 + baz^2) * d4 // d2^2 d3^2 d4
+ca2 = (cax^2 + cay^2 + caz^2) * d3 // d2^2 d3 d4^2
+
+abcx = cax * ba2 - bax * ca2 // d2^3 d3^2 d4^2
+abcy = cay * ba2 - bay * ca2 
+abcz = caz * ba2 - baz * ca2
+
+crossbcx = bay * caz - baz * cay // d2^2 d3 d4
+crossbcy = baz * cax - bax * caz
+crossbcz = bax * cay - bay * cax
+
+ccax = abcy * crossbcz - abcz * crossbcy // d2^5 d3^3 d4^3
+ccay = abcz * crossbcx - abcx * crossbcz
+ccaz = abcx * crossbcy - abcy * crossbcx
+
+c2 = (crossbcx^2 + crossbcy^2 + crossbcz^2) * d3 * d4 // d2^4 d3^2 d4^2
+ret = qax * (qax * c2 - ccax) + qay * (qay * c2 - ccay) + qaz * (qaz * c2 - ccaz)

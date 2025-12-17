@@ -1,0 +1,16 @@
+genericPoint(p1:l1x,l1y,l1z,d1)
+genericPoint(p2:l2x,l2y,l2z,d2)
+genericPoint(p3:l3x,l3y,l3z,d3)
+genericPoint(p4:l4x,l4y,l4z,d4)
+
+v1x = l2x * d4 - l4x * d2
+v1y = l2y * d4 - l4y * d2
+v1z = l2z * d4 - l4z * d2
+v2x = l3x * d4 - l4x * d3
+v2y = l3y * d4 - l4y * d3
+v2z = l3z * d4 - l4z * d3
+v3x = l1x * d4 - l4x * d1
+v3y = l1y * d4 - l4y * d1
+v3z = l1z * d4 - l4z * d1
+
+det = ((v3x * v1z - v3z * v1x) * v2y - (v3x * v1y - v3y * v1x) * v2z) - (v3y * v1z - v3z * v1y) * v2x

@@ -1,7 +1,9 @@
-JPCK/.vs
-JPCK/x64
-JPCK/converter/x64
-JPCK/converter.sln
-JPCK/converter.vcxproj.user
-JPCK/predicates/other
+JPCK_V2/.vs
+JPCK_V2/x64
+JPCK_V2/jpck/x64
+JPCK_V2/jpck.sln
+JPCK_V2/jpck.vcxproj.user
+JPCK_V2/predicates/other
+JPCK_V2/jpck
 build
+To_Polynomial_Fraction

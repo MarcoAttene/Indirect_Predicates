@@ -1,0 +1,18 @@
+pax pay pbx pby pcx pcy pdx pdy
+
+adx = pax - pdx
+ady = pay - pdy
+bdx = pbx - pdx
+bdy = pby - pdy
+cdx = pcx - pdx
+cdy = pcy - pdy
+
+abdet = adx * bdy - bdx * ady
+bcdet = bdx * cdy - cdx * bdy
+cadet = cdx * ady - adx * cdy
+
+alift = adx^2 + ady^2
+blift = bdx^2 + bdy^2
+clift = cdx^2 + cdy^2
+
+L = alift * bcdet + blift * cadet + clift * abdet

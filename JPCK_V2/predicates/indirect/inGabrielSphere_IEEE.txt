@@ -1,0 +1,38 @@
+genericPoint(q:l1x,l1y,l1z,d1)
+ax ay az bx by bz cx cy cz
+
+bax = bx - ax 
+bay = by - ay 
+baz = bz - az
+cax = cx - ax 
+cay = cy - ay 
+caz = cz - az
+
+crossbcx = bay * caz - baz * cay // d1^2
+crossbcy = baz * cax - bax * caz
+crossbcz = bax * cay - bay * cax
+
+ba2 = bax * bax + bay * bay + baz * baz // d1^2
+ca2 = cax * cax + cay * cay + caz * caz
+
+calx = cax * ba2 // d1^3
+caly = cay * ba2 
+calz = caz * ba2
+balx = bax * ca2 
+baly = bay * ca2 
+balz = baz * ca2
+abcx = calx - balx // d1^3
+abcy = caly - baly 
+abcz = calz - balz
+
+ccax = abcy * crossbcz - abcz * crossbcy // d1^5
+ccay = abcz * crossbcx - abcx * crossbcz
+ccaz = abcx * crossbcy - abcy * crossbcx
+
+c2 = crossbcx^2 + crossbcy^2 + crossbcz^2 // d1^4
+
+qax = l1x - ax * d1
+qay = l1y - ay * d1
+qaz = l1z - az * d1
+
+ret = qax * (qax * c2 - ccax * d1) + qay * (qay * c2 - ccay * d1) + qaz * (qaz * c2 - ccaz * d1)

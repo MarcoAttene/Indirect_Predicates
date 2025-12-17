@@ -1,0 +1,11 @@
+// Sign of (p-q).dot(r-q)
+px py pz rx ry rz qx qy qz
+
+lx = px - qx
+ly = py - qy
+lz = pz - qz
+gx = rx - qx
+gy = ry - qy
+gz = rz - qz
+
+d = lx * gx + ly * gy + lz * gz

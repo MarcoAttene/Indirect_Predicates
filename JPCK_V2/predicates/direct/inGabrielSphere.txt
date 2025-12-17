@@ -1,0 +1,29 @@
+qx qy qz ax ay az bx by bz cx cy cz
+
+bax = bx - ax 
+bay = by - ay 
+baz = bz - az
+cax = cx - ax 
+cay = cy - ay 
+caz = cz - az
+qax = qx - ax 
+qay = qy - ay 
+qaz = qz - az
+
+ba2 = bax^2 + bay^2 + baz^2
+ca2 = cax^2 + cay^2 + caz^2
+
+abcx = cax * ba2 - bax * ca2 
+abcy = cay * ba2 - bay * ca2 
+abcz = caz * ba2 - baz * ca2
+
+crossbcx = bay * caz - baz * cay 
+crossbcy = baz * cax - bax * caz
+crossbcz = bax * cay - bay * cax
+
+ccax = abcy * crossbcz - abcz * crossbcy
+ccay = abcz * crossbcx - abcx * crossbcz
+ccaz = abcx * crossbcy - abcy * crossbcx
+
+c2 = crossbcx^2 + crossbcy^2 + crossbcz^2
+ret = qax * (qax * c2 - ccax) + qay * (qay * c2 - ccay) + qaz * (qaz * c2 - ccaz)
