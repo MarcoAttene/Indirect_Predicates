@@ -2,17 +2,9 @@
 genericPoint(p:lpx,lpy,dp)
 genericPoint(q:lqx,lqy,dq)
 rx ry
-dqp = dq * dp
-pxq = lpx * dqp
-pyq = lpy * dqp
-rxq = rx * dq
-ryq = ry * dq
-lqxd = lqx * dp
-lqyd = lqy * dp
-lx = pxq - lqxd
-ly = pyq - lqyd
-gx = rxq - lqx
-gy = ryq - lqy
-dx = lx * gx
-dy = ly * gy
-d = dx + dy
+lx = dq * lpx - dp * lqx
+ly = dq * lpy - dp * lqy
+gx = dq * rx - lqx
+gy = dq * ry - lqy
+
+d = lx * gx + ly * gy

@@ -7,3 +7,4 @@ JPCK_V2/predicates/other
 JPCK_V2/jpck
 build
 To_Polynomial_Fraction
+.local.cmake

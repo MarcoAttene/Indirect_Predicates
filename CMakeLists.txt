@@ -1,4 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
+if(POLICY CMP0135)
+  cmake_policy(SET CMP0135 NEW)
+endif()
 
 # Set the target architecture.
 # All modern x86/x64 processors support AVX2.
@@ -60,6 +63,11 @@ else()
 	target_compile_options(${PROJECT_NAME} PUBLIC -O3)
 	# grant IEEE 754 compliance
 	target_compile_options(${PROJECT_NAME} PUBLIC -frounding-math)
+	# the exact predicates rely on error-free transformations (e.g. Dekker
+	# two-product): forbid the compiler from contracting a*b+c into an FMA, which
+	# rounds once instead of twice and silently breaks those identities. This
+	# mirrors the /fp:strict used on the MSVC path.
+	target_compile_options(${PROJECT_NAME} PUBLIC -ffp-contract=off)
 	# set target architecture
 	if(ENABLE_AVX2)
 		target_compile_options(${PROJECT_NAME} PUBLIC "-mavx2")
@@ -77,9 +85,24 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 	include
 )
 
-if(ENABLE_ARMNEON)
-	include(FetchContent)
+# Dependencies
+include(FetchContent)
 
+if(EXISTS ../.local.cmake)
+	set(nfg_SOURCE_DIR "../NFG/")
+else()
+	FetchContent_Declare(
+		nfg
+		URL https://github.com/MarcoAttene/nfg/archive/refs/heads/master.zip)
+	FetchContent_Populate(nfg)
+	message(STATUS "NFG is available in " ${nfg_SOURCE_DIR})
+
+endif()
+
+target_include_directories(${PROJECT_NAME} PUBLIC ${nfg_SOURCE_DIR}/include)
+
+
+if(ENABLE_ARMNEON)
 	FetchContent_Declare(
 		simde
 		URL https://github.com/simd-everywhere/simde/archive/refs/heads/master.zip)

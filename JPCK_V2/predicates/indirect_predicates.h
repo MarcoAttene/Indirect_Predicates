@@ -475,20 +475,11 @@ template<class PT, class T> static inline int dotProductSign2D_IEI_t(const gener
 		return 0;
 	}
 
-	const T dqp = (dq*dp);
-	const T pxq = (lpx*dqp);
-	const T pyq = (lpy*dqp);
-	const T rxq = (rx*dq);
-	const T ryq = (ry*dq);
-	const T lqxd = (lqx*dp);
-	const T lqyd = (lqy*dp);
-	const T lx = (pxq-lqxd);
-	const T ly = (pyq-lqyd);
-	const T gx = (rxq-lqx);
-	const T gy = (ryq-lqy);
-	const T dx = (lx*gx);
-	const T dy = (ly*gy);
-	const T d = (dx+dy);
+	const T lx = ((dq*lpx)-(dp*lqx));
+	const T ly = ((dq*lpy)-(dp*lqy));
+	const T gx = ((dq*rx)-lqx);
+	const T gy = ((dq*ry)-lqy);
+	const T d = ((lx*gx)+(ly*gy));
 
 	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
 
@@ -730,27 +721,13 @@ template<class PT, class T> static inline int dotProductSign3D_IEI_t(const gener
 		return 0;
 	}
 
-	const T dqp = (dq*dp);
-	const T pxq = (lpx*dqp);
-	const T pyq = (lpy*dqp);
-	const T pzq = (lpz*dqp);
-	const T rxq = (rx*dq);
-	const T ryq = (ry*dq);
-	const T rzq = (rz*dq);
-	const T lqxd = (lqx*dp);
-	const T lqyd = (lqy*dp);
-	const T lqzd = (lqz*dp);
-	const T lx = (pxq-lqxd);
-	const T ly = (pyq-lqyd);
-	const T lz = (pzq-lqzd);
-	const T gx = (rxq-lqx);
-	const T gy = (ryq-lqy);
-	const T gz = (rzq-lqz);
-	const T dx = (lx*gx);
-	const T dy = (ly*gy);
-	const T dz = (lz*gz);
-	const T d1 = (dx+dy);
-	const T d = (d1+dz);
+	const T lx = ((dq*lpx)-(dp*lqx));
+	const T ly = ((dq*lpy)-(dp*lqy));
+	const T lz = ((dq*lpz)-(dp*lqz));
+	const T gx = ((dq*rx)-lqx);
+	const T gy = ((dq*ry)-lqy);
+	const T gz = ((dq*rz)-lqz);
+	const T d = ((lx*gx)+((ly*gy)+(lz*gz)));
 
 	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
 
