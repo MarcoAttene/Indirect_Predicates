@@ -1439,9 +1439,11 @@ inline bool implicitPoint3D_LNC::getExactXYZCoordinates(bigrational& x, bigratio
 {
 	bigfloat lx, ly, lz, d;
 	getBigfloatLambda(lx, ly, lz, d);
-	x = bigrational(lx);
-	y = bigrational(ly);
-	z = bigrational(lz);
+	if (sgn(d) == 0) return false;
+	const bigrational rd(d);
+	x = bigrational(lx) / rd;
+	y = bigrational(ly) / rd;
+	z = bigrational(lz) / rd;
 	return true;
 }
 
@@ -1449,9 +1451,11 @@ inline bool implicitPoint3D_BPT::getExactXYZCoordinates(bigrational& x, bigratio
 {
 	bigfloat lx, ly, lz, d;
 	getBigfloatLambda(lx, ly, lz, d);
-	x = bigrational(lx);
-	y = bigrational(ly);
-	z = bigrational(lz);
+	if (sgn(d) == 0) return false;
+	const bigrational rd(d);
+	x = bigrational(lx) / rd;
+	y = bigrational(ly) / rd;
+	z = bigrational(lz) / rd;
 	return true;
 }
 
@@ -1459,9 +1463,11 @@ inline bool implicitPoint3D_TBC::getExactXYZCoordinates(bigrational& x, bigratio
 {
 	bigfloat lx, ly, lz, d;
 	getBigfloatLambda(lx, ly, lz, d);
-	x = bigrational(lx);
-	y = bigrational(ly);
-	z = bigrational(lz);
+	if (sgn(d) == 0) return false;
+	const bigrational rd(d);
+	x = bigrational(lx) / rd;
+	y = bigrational(ly) / rd;
+	z = bigrational(lz) / rd;
 	return true;
 }
 
