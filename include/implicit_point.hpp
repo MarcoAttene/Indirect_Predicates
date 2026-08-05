@@ -461,6 +461,21 @@ inline int genericPoint::orient3D(const genericPoint& a, const genericPoint& b, 
 	return orient3d_indirect_IIII(a, b, c, d);
 }
 
+// All-explicit case, completing the inSphere_* family. This exists so that
+// genericPoint::inSphere can reach the free inSphere() without qualifying the call as
+// ::inSphere: the member of the same name hides the free function, and the global-scope
+// qualification stops working if this header is included inside a namespace (as
+// VolumeRemesher does, to keep these definitions out of the global namespace). A
+// distinct name needs no qualification and works in either scope.
+inline int inSphere_EEEEE(const genericPoint& a, const genericPoint& b, const genericPoint& c, const genericPoint& d, const genericPoint& e) {
+	return inSphere(
+		a.toExplicit3D().X(), a.toExplicit3D().Y(), a.toExplicit3D().Z(),
+		b.toExplicit3D().X(), b.toExplicit3D().Y(), b.toExplicit3D().Z(),
+		c.toExplicit3D().X(), c.toExplicit3D().Y(), c.toExplicit3D().Z(),
+		d.toExplicit3D().X(), d.toExplicit3D().Y(), d.toExplicit3D().Z(),
+		e.toExplicit3D().X(), e.toExplicit3D().Y(), e.toExplicit3D().Z());
+}
+
 inline int inSphere_IEEEE(const genericPoint& a, const genericPoint& b, const genericPoint& c, const genericPoint& d, const genericPoint& e) {
 	return inSphere_IEEEE(a,
 		b.toExplicit3D().X(), b.toExplicit3D().Y(), b.toExplicit3D().Z(),
@@ -495,11 +510,7 @@ inline int genericPoint::inSphere(const genericPoint& a, const genericPoint& b, 
 {
 	const int num_explicit = a.isExplicit3D() + b.isExplicit3D() + c.isExplicit3D() + d.isExplicit3D() + e.isExplicit3D();
 
-	if (num_explicit == 5) return ::inSphere(a.toExplicit3D().X(), a.toExplicit3D().Y(), a.toExplicit3D().Z(), 
-											b.toExplicit3D().X(), b.toExplicit3D().Y(), b.toExplicit3D().Z(),
-											c.toExplicit3D().X(), c.toExplicit3D().Y(), c.toExplicit3D().Z(),
-											d.toExplicit3D().X(), d.toExplicit3D().Y(), d.toExplicit3D().Z(),
-											e.toExplicit3D().X(), e.toExplicit3D().Y(), e.toExplicit3D().Z());
+	if (num_explicit == 5) return inSphere_EEEEE(a, b, c, d, e);
 
 	const genericPoint* A[5] = { &a, &b, &c, &d, &e };
 
@@ -530,11 +541,7 @@ inline int genericPoint::inSphere(const genericPoint& a, const genericPoint& b, 
 {
 	const int num_explicit = a.isExplicit3D() + b.isExplicit3D() + c.isExplicit3D() + d.isExplicit3D() + e.isExplicit3D();
 
-	if (num_explicit == 5) return ::inSphere(a.toExplicit3D().X(), a.toExplicit3D().Y(), a.toExplicit3D().Z(),
-		b.toExplicit3D().X(), b.toExplicit3D().Y(), b.toExplicit3D().Z(),
-		c.toExplicit3D().X(), c.toExplicit3D().Y(), c.toExplicit3D().Z(),
-		d.toExplicit3D().X(), d.toExplicit3D().Y(), d.toExplicit3D().Z(),
-		e.toExplicit3D().X(), e.toExplicit3D().Y(), e.toExplicit3D().Z());
+	if (num_explicit == 5) return inSphere_EEEEE(a, b, c, d, e);
 
 	const genericPoint* A[5] = { &a, &b, &c, &d, &e };
 
