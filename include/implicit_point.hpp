@@ -936,7 +936,7 @@ inline bool implicitPoint3D_LNC::getIntervalLambda(interval_number& lx, interval
 	ly = dfilter_lambda_y;
 	lz = dfilter_lambda_z;
 	d = dfilter_denominator;
-	return true;
+	return (dfilter_denominator.signIsReliable());
 }
 
 inline implicitPoint3D_LNC::implicitPoint3D_LNC(const genericPoint& _p, const genericPoint& _q,
@@ -947,6 +947,12 @@ inline implicitPoint3D_LNC::implicitPoint3D_LNC(const genericPoint& _p, const ge
 	ip.getIntervalLambda(p[0], p[1], p[2], p[3]);
 	iq.getIntervalLambda(q[0], q[1], q[2], q[3]);
 	lambda3d_LNC<interval_number, interval_number, interval_number>(p, q, t, dfilter_lambda_x, dfilter_lambda_y, dfilter_lambda_z, dfilter_denominator);
+	if (dfilter_denominator.isNegative()) {
+		dfilter_lambda_x.negate();
+		dfilter_lambda_y.negate();
+		dfilter_lambda_z.negate();
+		dfilter_denominator.negate();
+	}
 }
 
 inline bool implicitPoint3D_BPT::getIntervalLambda(interval_number& lx, interval_number& ly, interval_number& lz, interval_number& d) const
@@ -955,7 +961,7 @@ inline bool implicitPoint3D_BPT::getIntervalLambda(interval_number& lx, interval
 	ly = dfilter_lambda_y;
 	lz = dfilter_lambda_z;
 	d = dfilter_denominator;
-	return true;
+	return (dfilter_denominator.signIsReliable());
 }
 
 inline implicitPoint3D_BPT::implicitPoint3D_BPT(const genericPoint& _p, const genericPoint& _q, const genericPoint& _r,
@@ -967,6 +973,12 @@ inline implicitPoint3D_BPT::implicitPoint3D_BPT(const genericPoint& _p, const ge
 	iq.getIntervalLambda(q[0], q[1], q[2], q[3]);
 	ir.getIntervalLambda(r[0], r[1], r[2], r[3]);
 	lambda3d_BPT<interval_number, interval_number, interval_number>(p, q, r, u, v, dfilter_lambda_x, dfilter_lambda_y, dfilter_lambda_z, dfilter_denominator);
+	if (dfilter_denominator.isNegative()) {
+		dfilter_lambda_x.negate();
+		dfilter_lambda_y.negate();
+		dfilter_lambda_z.negate();
+		dfilter_denominator.negate();
+	}
 }
 
 inline bool implicitPoint3D_TBC::getIntervalLambda(interval_number& lx, interval_number& ly, interval_number& lz, interval_number& d) const
@@ -975,7 +987,7 @@ inline bool implicitPoint3D_TBC::getIntervalLambda(interval_number& lx, interval
 	ly = dfilter_lambda_y;
 	lz = dfilter_lambda_z;
 	d = dfilter_denominator;
-	return true;
+	return (dfilter_denominator.signIsReliable());
 }
 
 inline implicitPoint3D_TBC::implicitPoint3D_TBC(const genericPoint& _p, const genericPoint& _q, const genericPoint& _r, const genericPoint& _s)
@@ -987,6 +999,12 @@ inline implicitPoint3D_TBC::implicitPoint3D_TBC(const genericPoint& _p, const ge
 	ir.getIntervalLambda(r[0], r[1], r[2], r[3]);
 	is.getIntervalLambda(s[0], s[1], s[2], s[3]);
 	lambda3d_TBC<interval_number, interval_number>(p, q, r, s, dfilter_lambda_x, dfilter_lambda_y, dfilter_lambda_z, dfilter_denominator);
+	if (dfilter_denominator.isNegative()) {
+		dfilter_lambda_x.negate();
+		dfilter_lambda_y.negate();
+		dfilter_lambda_z.negate();
+		dfilter_denominator.negate();
+	}
 }
 
 
