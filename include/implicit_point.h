@@ -128,12 +128,6 @@ public:
 	bool getExactXYCoordinates(bigrational& x, bigrational& y) const;
 	bool getExactXYZCoordinates(bigrational& x, bigrational& y, bigrational& z) const;
 
-	std::string get_str() const {
-		bigrational x, y, z;
-		if (!getExactXYZCoordinates(x, y, z)) return "UNDEFINED_GENERIC_POINT";
-		return x.get_str() + " " + y.get_str() + " " + z.get_str();
-	}
-
 	// These are the indirect predicates supported up to now.
 	// In each predicate, it is assumed that input points are either all 2D or all 3D
 	// as expected. No check is performed. Passing wrong implicit points may result in
@@ -208,9 +202,7 @@ public:
 	static int maxComponentInTriangleNormal(double v1x, double v1y, double v1z, double v2x, double v2y, double v2z, double v3x, double v3y, double v3z);
 
 	// TRUE if A-B-C are not collinear
-	static bool misaligned(const genericPoint& A, const genericPoint& B, const genericPoint& C) {
-		return (orient2Dxy(A, B, C) || orient2Dyz(A, B, C) || orient2Dzx(A, B, C));
-	}
+	static bool misaligned(const genericPoint& A, const genericPoint& B, const genericPoint& C);
 
 	// TRUE if 'p' is in the interior of v1-v2
 	static bool pointInInnerSegment(const genericPoint& p, const genericPoint& v1, const genericPoint& v2);
@@ -251,17 +243,9 @@ public:
     // The following methods are equivalent to the corresponding functions hereabove,
 	// but faster. They assume that points are coplanar and the dominant normal component 
 	// is n_max (see maxComponentInTriangleNormal()).
-	static int orient2D(const genericPoint& a, const genericPoint& b, const genericPoint& c, int n_max)
-	{
-		if (n_max == 0) return orient2Dyz(a, b, c);
-		else if (n_max == 1) return orient2Dzx(a, b, c);
-		else return orient2Dxy(a, b, c);
-	}
+	static int orient2D(const genericPoint& a, const genericPoint& b, const genericPoint& c, int n_max);
 
-	static bool misaligned(const genericPoint& A, const genericPoint& B, const genericPoint& C, int n_max)
-	{
-		return ((n_max == 2 && orient2Dxy(A, B, C)) || (n_max == 0 && orient2Dyz(A, B, C)) || (n_max == 1 && orient2Dzx(A, B, C)));
-	}
+	static bool misaligned(const genericPoint& A, const genericPoint& B, const genericPoint& C, int n_max);
 
 	static bool pointInInnerSegment(const genericPoint& p, const genericPoint& v1, const genericPoint& v2, int n_max);
 	static bool pointInSegment(const genericPoint& p, const genericPoint& v1, const genericPoint& v2, int n_max);
@@ -280,7 +264,6 @@ public:
 	bool apapExplicit(explicitPoint2D&) const;
 	bool apapExplicit(explicitPoint3D&) const;
 
-
 	bool getIntervalLambda(interval_number& lx, interval_number& ly, interval_number& d) const;
 	void getBigfloatLambda(bigfloat& lx, bigfloat& ly, bigfloat& d) const;
 	void getExpansionLambda(expansion& lx, expansion& ly, expansion& d) const;
@@ -294,6 +277,12 @@ public:
 	bool getLambda3D(bigfloat& lx, bigfloat& ly, bigfloat& lz, bigfloat& d) const { getBigfloatLambda(lx, ly, lz, d); return true; }
 	bool getLambda2D(expansion& lx, expansion& ly, expansion& d) const { getExpansionLambda(lx, ly, d); return true; }
 	bool getLambda3D(expansion& lx, expansion& ly, expansion& lz, expansion& d) const { getExpansionLambda(lx, ly, lz, d); return true; }
+
+	std::string get_str() const {
+		bigrational x, y, z;
+		if (!getExactXYZCoordinates(x, y, z)) return "UNDEFINED_GENERIC_POINT";
+		return x.get_str() + " " + y.get_str() + " " + z.get_str();
+	}
 };
 
 
@@ -379,7 +368,42 @@ public:
 
 	const double* ptr() const { return &x; }
 
+	// When all points are known to be explicit we may use slightly faster versions of the same predicates defined for genericPoints
 	bool getExactXYZCoordinates(bigrational& _x, bigrational& _y, bigrational& _z) const { _x = bigfloat(x); _y = bigfloat(y); _z = bigfloat(z); return true; }
+	bool getApproxXYZCoordinates(double& _x, double& _y, double& _z, bool apap = true) const { _x = x; _y = y; _z = z; return true; };
+	static int orient2Dxy(const explicitPoint3D& a, const explicitPoint3D& b, const explicitPoint3D& c);
+	static int orient2Dyz(const explicitPoint3D& a, const explicitPoint3D& b, const explicitPoint3D& c);
+	static int orient2Dzx(const explicitPoint3D& a, const explicitPoint3D& b, const explicitPoint3D& c);
+	static int orient3D(const explicitPoint3D& a, const explicitPoint3D& b, const explicitPoint3D& c, const explicitPoint3D& d);
+	static int inSphere(const explicitPoint3D& a, const explicitPoint3D& b, const explicitPoint3D& c, const explicitPoint3D& d, const explicitPoint3D& e);
+	static int inGabrielSphere(const explicitPoint3D& q, const explicitPoint3D& a, const explicitPoint3D& b, const explicitPoint3D& c);
+	static int incirclexy(const explicitPoint3D& a, const explicitPoint3D& b, const explicitPoint3D& c, const explicitPoint3D& d);
+	static int dotProductSign3D(const explicitPoint3D& a, const explicitPoint3D& b, const explicitPoint3D& c);
+	static int lessThanOnX(const explicitPoint3D& a, const explicitPoint3D& b) { return (a.X() > b.X()) - (a.X() < b.X()); }
+	static int lessThanOnY(const explicitPoint3D& a, const explicitPoint3D& b) { return (a.Y() > b.Y()) - (a.Y() < b.Y()); }
+	static int lessThanOnZ(const explicitPoint3D& a, const explicitPoint3D& b) { return (a.Z() > b.Z()) - (a.Z() < b.Z()); }
+	static int lessThan(const explicitPoint3D& a, const explicitPoint3D& b);
+	static bool coincident(const explicitPoint3D& a, const explicitPoint3D& b) { return a.X() == b.X() && a.Y() == b.Y() && a.Z() == b.Z(); }
+	static bool misaligned(const explicitPoint3D& A, const explicitPoint3D& B, const explicitPoint3D& C);
+	static bool pointInInnerSegment(const explicitPoint3D& p, const explicitPoint3D& v1, const explicitPoint3D& v2);
+	static bool pointInSegment(const explicitPoint3D& p, const explicitPoint3D& v1, const explicitPoint3D& v2);
+	static bool pointInInnerTriangle(const explicitPoint3D& P, const explicitPoint3D& A, const explicitPoint3D& B, const explicitPoint3D& C);
+	static bool pointInTriangle(const explicitPoint3D& P, const explicitPoint3D& A, const explicitPoint3D& B, const explicitPoint3D& C);
+	static bool pointInTriangle(const explicitPoint3D& P, const explicitPoint3D& A, const explicitPoint3D& B, const explicitPoint3D& C, int& oAB, int& oBC, int& oCA);
+	static bool innerSegmentsCross(const explicitPoint3D& A, const explicitPoint3D& B, const explicitPoint3D& P, const explicitPoint3D& Q);
+	static bool segmentsCross(const explicitPoint3D& A, const explicitPoint3D& B, const explicitPoint3D& P, const explicitPoint3D& Q);
+	static bool innerSegmentCrossesInnerTriangle(const explicitPoint3D& s1, const explicitPoint3D& s2, const explicitPoint3D& v1, const explicitPoint3D& v2, const explicitPoint3D& v3);
+	static bool lineCrossesInnerTriangle(const explicitPoint3D& s1, const explicitPoint3D& s2, const explicitPoint3D& v1, const explicitPoint3D& v2, const explicitPoint3D& v3);
+	static bool lineCrossesTriangle(const explicitPoint3D& s1, const explicitPoint3D& s2, const explicitPoint3D& v1, const explicitPoint3D& v2, const explicitPoint3D& v3);
+	static bool innerSegmentCrossesTriangle(const explicitPoint3D& s1, const explicitPoint3D& s2, const explicitPoint3D& v1, const explicitPoint3D& v2, const explicitPoint3D& v3);
+	static int orient2D(const explicitPoint3D& a, const explicitPoint3D& b, const explicitPoint3D& c, int n_max);
+	static bool misaligned(const explicitPoint3D& A, const explicitPoint3D& B, const explicitPoint3D& C, int n_max);
+	static bool pointInInnerSegment(const explicitPoint3D& p, const explicitPoint3D& v1, const explicitPoint3D& v2, int n_max);
+	static bool pointInSegment(const explicitPoint3D& p, const explicitPoint3D& v1, const explicitPoint3D& v2, int n_max);
+	static bool pointInInnerTriangle(const explicitPoint3D& P, const explicitPoint3D& A, const explicitPoint3D& B, const explicitPoint3D& C, int n_max);
+	static bool pointInTriangle(const explicitPoint3D& P, const explicitPoint3D& A, const explicitPoint3D& B, const explicitPoint3D& C, int n_max);
+	static bool innerSegmentsCross(const explicitPoint3D& A, const explicitPoint3D& B, const explicitPoint3D& P, const explicitPoint3D& Q, int n_max);
+	static bool segmentsCross(const explicitPoint3D& A, const explicitPoint3D& B, const explicitPoint3D& P, const explicitPoint3D& Q, int n_max);
 };
 
 

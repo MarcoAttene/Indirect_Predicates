@@ -1586,357 +1586,959 @@ inline int genericPoint::maxComponentInTriangleNormal(double ov1x, double ov1y, 
 //
 /////////////////////////////////////////////
 
-inline bool genericPoint::innerSegmentsCross(const genericPoint& A, const genericPoint& B, const genericPoint& P, const genericPoint& Q)
+//inline bool genericPoint::innerSegmentsCross(const genericPoint& A, const genericPoint& B, const genericPoint& P, const genericPoint& Q)
+//{
+//	int o11, o12, o21, o22;
+//
+//	o11 = orient2Dxy(P, A, B);
+//	o12 = orient2Dxy(Q, B, A);
+//	o21 = orient2Dxy(A, P, Q);
+//	o22 = orient2Dxy(B, Q, P);
+//	if (o11 || o21 || o12 || o22) return (o11 == o12 && o21 == o22);
+//
+//	o11 = orient2Dyz(P, A, B);
+//	o12 = orient2Dyz(Q, B, A);
+//	o21 = orient2Dyz(A, P, Q);
+//	o22 = orient2Dyz(B, Q, P);
+//	if (o11 || o21 || o12 || o22) return (o11 == o12 && o21 == o22);
+//
+//	o11 = orient2Dzx(P, A, B);
+//	o12 = orient2Dzx(Q, B, A);
+//	o21 = orient2Dzx(A, P, Q);
+//	o22 = orient2Dzx(B, Q, P);
+//	if (o11 || o21 || o12 || o22) return (o11 == o12 && o21 == o22);
+//
+//	return false;
+//}
+//
+//inline bool genericPoint::segmentsCross(const genericPoint& A, const genericPoint& B, const genericPoint& P, const genericPoint& Q)
+//{
+//	int o11, o12, o21, o22;
+//
+//	o11 = orient2Dxy(P, A, B);
+//	o12 = orient2Dxy(Q, B, A);
+//	o21 = orient2Dxy(A, P, Q);
+//	o22 = orient2Dxy(B, Q, P);
+//	if ((o11 || o12) && (o11 * o12 >= 0) && (o21 || o22) && (o21 * o22 >= 0)) return true;
+//
+//	o11 = orient2Dyz(P, A, B);
+//	o12 = orient2Dyz(Q, B, A);
+//	o21 = orient2Dyz(A, P, Q);
+//	o22 = orient2Dyz(B, Q, P);
+//	if ((o11 || o12) && (o11 * o12 >= 0) && (o21 || o22) && (o21 * o22 >= 0)) return true;
+//
+//	o11 = orient2Dzx(P, A, B);
+//	o12 = orient2Dzx(Q, B, A);
+//	o21 = orient2Dzx(A, P, Q);
+//	o22 = orient2Dzx(B, Q, P);
+//	if ((o11 || o12) && (o11 * o12 >= 0) && (o21 || o22) && (o21 * o22 >= 0)) return true;
+//
+//	return false;
+//}
+//
+//inline bool genericPoint::innerSegmentCrossesInnerTriangle(const genericPoint& s1, const genericPoint& s2, const genericPoint& v1, const genericPoint& v2, const genericPoint& v3)
+//{
+//	int o1 = orient3D(s1, v1, v2, v3); if (o1 == 0) return false;
+//	int o2 = orient3D(s2, v1, v2, v3); if (o2 == 0) return false;
+//
+//	if ((o1 > 0 && o2 > 0) || (o1 < 0 && o2 < 0)) return false;
+//	o1 = orient3D(s1, s2, v1, v2);
+//	o2 = orient3D(s1, s2, v2, v3);
+//	if ((o1 >= 0 && o2 <= 0) || (o1 <= 0 && o2 >= 0)) return false;
+//	int o3 = orient3D(s1, s2, v3, v1);
+//	if ((o1 >= 0 && o3 <= 0) || (o1 <= 0 && o3 >= 0)) return false;
+//	if ((o2 >= 0 && o3 <= 0) || (o2 <= 0 && o3 >= 0)) return false;
+//	return true;
+//}
+//
+//inline bool genericPoint::pointInInnerSegment(const genericPoint& p, const genericPoint& v1, const genericPoint& v2)
+//{
+//	if (misaligned(p, v1, v2)) return false;
+//
+//	int lt2, lt3;
+//	lt2 = lessThanOnX(v1, p);
+//	lt3 = lessThanOnX(p, v2);
+//	if (lt2) return (lt2 == lt3);
+//	lt2 = lessThanOnY(v1, p);
+//	lt3 = lessThanOnY(p, v2);
+//	if (lt2) return (lt2 == lt3);
+//	lt2 = lessThanOnZ(v1, p);
+//	lt3 = lessThanOnZ(p, v2);
+//	if (lt2) return (lt2 == lt3);
+//	return false;
+//}
+//
+//inline bool genericPoint::pointInSegment(const genericPoint& p, const genericPoint& v1, const genericPoint& v2)
+//{
+//	if (misaligned(p, v1, v2)) return false;
+//
+//	int lt2x = lessThanOnX(v1, p);
+//	int lt3x = lessThanOnX(p, v2);
+//	if (lt2x && lt3x) return (lt2x == lt3x);
+//	int lt2y = lessThanOnY(v1, p);
+//	int lt3y = lessThanOnY(p, v2);
+//	if (lt2y && lt3y) return (lt2y == lt3y);
+//	int lt2z = lessThanOnZ(v1, p);
+//	int lt3z = lessThanOnZ(p, v2);
+//	if (lt2z && lt3z) return (lt2z == lt3z);
+//
+//	return ((lt2x == 0 && lt2y == 0 && lt2z == 0) || (lt3x == 0 && lt3y == 0 && lt3z == 0));
+//}
+//
+//inline bool genericPoint::pointInTriangle(const genericPoint& P, const genericPoint& A, const genericPoint& B, const genericPoint& C)
+//{
+//	int o1, o2, o3;
+//	o1 = orient2Dxy(P, A, B);
+//	o2 = orient2Dxy(P, B, C);
+//	o3 = orient2Dxy(P, C, A);
+//	if (o1 || o2 || o3) return ((o1 >= 0 && o2 >= 0 && o3 >= 0) || (o1 <= 0 && o2 <= 0 && o3 <= 0));
+//	o1 = orient2Dyz(P, A, B);
+//	o2 = orient2Dyz(P, B, C);
+//	o3 = orient2Dyz(P, C, A);
+//	if (o1 || o2 || o3) return ((o1 >= 0 && o2 >= 0 && o3 >= 0) || (o1 <= 0 && o2 <= 0 && o3 <= 0));
+//	o1 = orient2Dzx(P, A, B);
+//	o2 = orient2Dzx(P, B, C);
+//	o3 = orient2Dzx(P, C, A);
+//	return ((o1 >= 0 && o2 >= 0 && o3 >= 0) || (o1 <= 0 && o2 <= 0 && o3 <= 0));
+//}
+//
+//
+//inline bool genericPoint::pointInTriangle(const genericPoint& P, const genericPoint& A, const genericPoint& B, const genericPoint& C, int& o1, int& o2, int& o3)
+//{
+//	o1 = orient2Dxy(P, A, B);
+//	o2 = orient2Dxy(P, B, C);
+//	o3 = orient2Dxy(P, C, A);
+//	if (o1 || o2 || o3) return ((o1 >= 0 && o2 >= 0 && o3 >= 0) || (o1 <= 0 && o2 <= 0 && o3 <= 0));
+//	o1 = orient2Dyz(P, A, B);
+//	o2 = orient2Dyz(P, B, C);
+//	o3 = orient2Dyz(P, C, A);
+//	if (o1 || o2 || o3) return ((o1 >= 0 && o2 >= 0 && o3 >= 0) || (o1 <= 0 && o2 <= 0 && o3 <= 0));
+//	o1 = orient2Dzx(P, A, B);
+//	o2 = orient2Dzx(P, B, C);
+//	o3 = orient2Dzx(P, C, A);
+//	return ((o1 >= 0 && o2 >= 0 && o3 >= 0) || (o1 <= 0 && o2 <= 0 && o3 <= 0));
+//}
+//
+//inline bool genericPoint::pointInInnerTriangle(const genericPoint& P, const genericPoint& A, const genericPoint& B, const genericPoint& C)
+//{
+//	int o1, o2, o3;
+//	o1 = orient2Dxy(P, A, B);
+//	o2 = orient2Dxy(P, B, C);
+//	o3 = orient2Dxy(P, C, A);
+//	if (o1 || o2 || o3) return ((o1 > 0 && o2 > 0 && o3 > 0) || (o1 < 0 && o2 < 0 && o3 < 0));
+//	o1 = orient2Dyz(P, A, B);
+//	o2 = orient2Dyz(P, B, C);
+//	o3 = orient2Dyz(P, C, A);
+//	if (o1 || o2 || o3) return ((o1 > 0 && o2 > 0 && o3 > 0) || (o1 < 0 && o2 < 0 && o3 < 0));
+//	o1 = orient2Dzx(P, A, B);
+//	o2 = orient2Dzx(P, B, C);
+//	o3 = orient2Dzx(P, C, A);
+//	return ((o1 > 0 && o2 > 0 && o3 > 0) || (o1 < 0 && o2 < 0 && o3 < 0));
+//}
+//
+//inline bool genericPoint::lineCrossesInnerTriangle(const genericPoint& s1, const genericPoint& s2, const genericPoint& v1, const genericPoint& v2, const genericPoint& v3)
+//{
+//	const int o1 = genericPoint::orient3D(s1, s2, v1, v2);
+//	const int o2 = genericPoint::orient3D(s1, s2, v2, v3);
+//	if ((o1 >= 0 && o2 <= 0) || (o1 <= 0 && o2 >= 0)) return false;
+//	const int o3 = genericPoint::orient3D(s1, s2, v3, v1);
+//	if ((o1 >= 0 && o3 <= 0) || (o1 <= 0 && o3 >= 0)) return false;
+//	if ((o2 >= 0 && o3 <= 0) || (o2 <= 0 && o3 >= 0)) return false;
+//	return true;
+//}
+//
+//inline bool genericPoint::lineCrossesTriangle(const genericPoint& s1, const genericPoint& s2, const genericPoint& v1, const genericPoint& v2, const genericPoint& v3)
+//{
+//	const int o1 = genericPoint::orient3D(s1, s2, v1, v2);
+//	const int o2 = genericPoint::orient3D(s1, s2, v2, v3);
+//	if ((o1 > 0 && o2 < 0) || (o1 < 0 && o2 > 0)) return false;
+//	const int o3 = genericPoint::orient3D(s1, s2, v3, v1);
+//	if ((o1 > 0 && o3 < 0) || (o1 < 0 && o3 > 0)) return false;
+//	if ((o2 > 0 && o3 < 0) || (o2 < 0 && o3 > 0)) return false;
+//	return true;
+//}
+//
+//inline bool genericPoint::innerSegmentCrossesTriangle(const genericPoint& s1, const genericPoint& s2, const genericPoint& v1, const genericPoint& v2, const genericPoint& v3)
+//{
+//	const int o1 = genericPoint::orient3D(s1, v1, v2, v3); if (o1 == 0) return false;
+//	const int o2 = genericPoint::orient3D(s2, v1, v2, v3); if (o2 == 0) return false;
+//
+//	if ((o1 > 0 && o2 > 0) || (o1 < 0 && o2 < 0)) return false;
+//	return lineCrossesTriangle(s1, s2, v1, v2, v3);
+//}
+//
+//
+//
+//inline bool genericPoint::pointInInnerSegment(const genericPoint& p, const genericPoint& v1, const genericPoint& v2, int xyz)
+//{
+//	int lt2, lt3;
+//	if (xyz == 0)
+//	{
+//		if (orient2Dyz(p, v1, v2)) return false;
+//		lt2 = lessThanOnY(v1, p);
+//		lt3 = lessThanOnY(p, v2);
+//		if (lt2) return (lt2 == lt3);
+//		lt2 = lessThanOnZ(v1, p);
+//		lt3 = lessThanOnZ(p, v2);
+//	}
+//	else if (xyz == 1)
+//	{
+//		if (orient2Dzx(p, v1, v2)) return false;
+//		lt2 = lessThanOnX(v1, p);
+//		lt3 = lessThanOnX(p, v2);
+//		if (lt2) return (lt2 == lt3);
+//		lt2 = lessThanOnZ(v1, p);
+//		lt3 = lessThanOnZ(p, v2);
+//	}
+//	else
+//	{
+//		if (orient2Dxy(p, v1, v2)) return false;
+//		lt2 = lessThanOnX(v1, p);
+//		lt3 = lessThanOnX(p, v2);
+//		if (lt2) return (lt2 == lt3);
+//		lt2 = lessThanOnY(v1, p);
+//		lt3 = lessThanOnY(p, v2);
+//	}
+//	return (lt2 && (lt2 == lt3));
+//}
+//
+//inline bool genericPoint::pointInSegment(const genericPoint& p, const genericPoint& v1, const genericPoint& v2, int xyz)
+//{
+//	int lt2, lt3, lt4, lt5;
+//	if (xyz == 0)
+//	{
+//		if (orient2Dyz(p, v1, v2)) return false;
+//		lt2 = lessThanOnY(v1, p);
+//		lt3 = lessThanOnY(p, v2);
+//		if (lt2 && lt3) return (lt2 == lt3);
+//		lt4 = lessThanOnZ(v1, p);
+//		lt5 = lessThanOnZ(p, v2);
+//	}
+//	else if (xyz == 1)
+//	{
+//		if (orient2Dzx(p, v1, v2)) return false;
+//		lt2 = lessThanOnX(v1, p);
+//		lt3 = lessThanOnX(p, v2);
+//		if (lt2 && lt3) return (lt2 == lt3);
+//		lt4 = lessThanOnZ(v1, p);
+//		lt5 = lessThanOnZ(p, v2);
+//	}
+//	else
+//	{
+//		if (orient2Dxy(p, v1, v2)) return false;
+//		lt2 = lessThanOnX(v1, p);
+//		lt3 = lessThanOnX(p, v2);
+//		if (lt2 && lt3) return (lt2 == lt3);
+//		lt4 = lessThanOnY(v1, p);
+//		lt5 = lessThanOnY(p, v2);
+//	}
+//	return ((lt2 == 0 && lt4 == 0) || (lt3 == 0 && lt5 == 0));
+//}
+//
+//inline bool genericPoint::pointInInnerTriangle(const genericPoint& P, const genericPoint& A, const genericPoint& B, const genericPoint& C, int xyz)
+//{
+//	int o1, o2, o3;
+//	if (xyz == 2)
+//	{
+//		o1 = genericPoint::orient2Dxy(P, A, B);
+//		o2 = genericPoint::orient2Dxy(P, B, C);
+//		o3 = genericPoint::orient2Dxy(P, C, A);
+//	}
+//	else if (xyz == 0)
+//	{
+//		o1 = genericPoint::orient2Dyz(P, A, B);
+//		o2 = genericPoint::orient2Dyz(P, B, C);
+//		o3 = genericPoint::orient2Dyz(P, C, A);
+//	}
+//	else
+//	{
+//		o1 = genericPoint::orient2Dzx(P, A, B);
+//		o2 = genericPoint::orient2Dzx(P, B, C);
+//		o3 = genericPoint::orient2Dzx(P, C, A);
+//	}
+//	return ((o1 > 0 && o2 > 0 && o3 > 0) || (o1 < 0 && o2 < 0 && o3 < 0));
+//}
+//
+//inline bool genericPoint::pointInTriangle(const genericPoint& P, const genericPoint& A, const genericPoint& B, const genericPoint& C, int xyz)
+//{
+//	int o1, o2, o3;
+//	if (xyz == 2)
+//	{
+//		o1 = genericPoint::orient2Dxy(P, A, B);
+//		o2 = genericPoint::orient2Dxy(P, B, C);
+//		o3 = genericPoint::orient2Dxy(P, C, A);
+//	}
+//	else if (xyz == 0)
+//	{
+//		o1 = genericPoint::orient2Dyz(P, A, B);
+//		o2 = genericPoint::orient2Dyz(P, B, C);
+//		o3 = genericPoint::orient2Dyz(P, C, A);
+//	}
+//	else
+//	{
+//		o1 = genericPoint::orient2Dzx(P, A, B);
+//		o2 = genericPoint::orient2Dzx(P, B, C);
+//		o3 = genericPoint::orient2Dzx(P, C, A);
+//	}
+//	return ((o1 >= 0 && o2 >= 0 && o3 >= 0) || (o1 <= 0 && o2 <= 0 && o3 <= 0));
+//}
+//
+//inline bool genericPoint::innerSegmentsCross(const genericPoint& A, const genericPoint& B, const genericPoint& P, const genericPoint& Q, int xyz)
+//{
+//	int o11, o12, o21, o22;
+//
+//	if (xyz == 2)
+//	{
+//		o11 = orient2Dxy(P, A, B);
+//		o12 = orient2Dxy(Q, B, A);
+//		o21 = orient2Dxy(A, P, Q);
+//		o22 = orient2Dxy(B, Q, P);
+//	}
+//	else if (xyz == 0)
+//	{
+//		o11 = orient2Dyz(P, A, B);
+//		o12 = orient2Dyz(Q, B, A);
+//		o21 = orient2Dyz(A, P, Q);
+//		o22 = orient2Dyz(B, Q, P);
+//	}
+//	else
+//	{
+//		o11 = orient2Dzx(P, A, B);
+//		o12 = orient2Dzx(Q, B, A);
+//		o21 = orient2Dzx(A, P, Q);
+//		o22 = orient2Dzx(B, Q, P);
+//	}
+//
+//	return (o11 && o21 && o11 == o12 && o21 == o22);
+//}
+//
+//inline bool genericPoint::segmentsCross(const genericPoint& A, const genericPoint& B, const genericPoint& P, const genericPoint& Q, int xyz)
+//{
+//	int o11, o12, o21, o22;
+//
+//	if (xyz == 2)
+//	{
+//		o11 = orient2Dxy(P, A, B);
+//		o12 = orient2Dxy(Q, B, A);
+//		o21 = orient2Dxy(A, P, Q);
+//		o22 = orient2Dxy(B, Q, P);
+//	}
+//	else if (xyz == 0)
+//	{
+//		o11 = orient2Dyz(P, A, B);
+//		o12 = orient2Dyz(Q, B, A);
+//		o21 = orient2Dyz(A, P, Q);
+//		o22 = orient2Dyz(B, Q, P);
+//	}
+//	else
+//	{
+//		o11 = orient2Dzx(P, A, B);
+//		o12 = orient2Dzx(Q, B, A);
+//		o21 = orient2Dzx(A, P, Q);
+//		o22 = orient2Dzx(B, Q, P);
+//	}
+//
+//	return ((o11 || o12) && (o11 * o12 >= 0) && (o21 || o22) && (o21 * o22 >= 0));
+//}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// SPECIALIZED PREDICATES FOR EXPLICIT POINTS IN 3D - SLIGHTLY FASTER THAN THE CORRESPONDING GENERIC VERSIONS
+//
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+inline int explicitPoint3D::orient2Dxy(const explicitPoint3D& a, const explicitPoint3D& b, const explicitPoint3D& c) { 
+	return orient2d(a.X(), a.Y(), b.X(), b.Y(), c.X(), c.Y()); 
+}
+
+inline int explicitPoint3D::orient2Dyz(const explicitPoint3D& a, const explicitPoint3D& b, const explicitPoint3D& c) { 
+	return orient2d(a.Y(), a.Z(), b.Y(), b.Z(), c.Y(), c.Z()); 
+}
+
+inline int explicitPoint3D::orient2Dzx(const explicitPoint3D& a, const explicitPoint3D& b, const explicitPoint3D& c) { 
+	return orient2d(a.Z(), a.X(), b.Z(), b.X(), c.Z(), c.X()); 
+}
+
+inline int explicitPoint3D::orient3D(const explicitPoint3D& a, const explicitPoint3D& b, const explicitPoint3D& c, const explicitPoint3D& d)
 {
+	return orient3d(a.X(), a.Y(), a.Z(), b.X(), b.Y(), b.Z(), c.X(), c.Y(), c.Z(), d.X(), d.Y(), d.Z());
+}
+
+inline int inSphere_ns(const double& pax, const double& pay, const double& paz, const double& pbx, const double& pby, const double& pbz, const double& pcx, const double& pcy, const double& pcz, const double& pdx, const double& pdy, const double& pdz, const double& pex, const double& pey, const double& pez) {
+	return inSphere(pax, pay, paz, pbx, pby, pbz, pcx, pcy, pcz, pdx, pdy, pdz, pex, pey, pez);
+}
+
+inline int explicitPoint3D::inSphere(const explicitPoint3D& a, const explicitPoint3D& b, const explicitPoint3D& c, const explicitPoint3D& d, const explicitPoint3D& e) {
+	return inSphere_ns(a.X(), a.Y(), a.Z(), b.X(), b.Y(), b.Z(), c.X(), c.Y(), c.Z(), d.X(), d.Y(), d.Z(), e.X(), e.Y(), e.Z());
+}
+
+inline int inGabrielSphere_ns(const double& qx, const double& qy, const double& qz, const double& ax, const double& ay, const double& az, const double& bx, const double& by, const double& bz, const double& cx, const double& cy, const double& cz) {
+	return inGabrielSphere(qx, qy, qz, ax, ay, az, bx, by, bz, cx, cy, cz);
+}
+
+inline int explicitPoint3D::inGabrielSphere(const explicitPoint3D& q, const explicitPoint3D& a, const explicitPoint3D& b, const explicitPoint3D& c) {
+	return inGabrielSphere_ns(q.X(), q.Y(), q.Z(), a.X(), a.Y(), a.Z(), b.X(), b.Y(), b.Z(), c.X(), c.Y(), c.Z());
+}
+
+inline int incircle_ns(const double& pax, const double& pay, const double& pbx, const double& pby, const double& pcx, const double& pcy, const double& pdx, const double& pdy) {
+	return incircle(pax, pay, pbx, pby, pcx, pcy, pdx, pdy);
+}
+
+inline int explicitPoint3D::incirclexy(const explicitPoint3D& a, const explicitPoint3D& b, const explicitPoint3D& c, const explicitPoint3D& d) {
+	return incircle_ns(a.X(), a.Y(), b.X(), b.Y(), c.X(), c.Y(), d.X(), d.Y());
+}
+
+inline int dotProductSign3D_ns(const double& px, const double& py, const double& pz, const double& rx, const double& ry, const double& rz, const double& qx, const double& qy, const double& qz) {
+	return dotProductSign3D(px, py, pz, rx, ry, rz, qx, qy, qz);
+}
+
+inline int explicitPoint3D::dotProductSign3D(const explicitPoint3D& a, const explicitPoint3D& b, const explicitPoint3D& c) {
+	return dotProductSign3D_ns(a.X(), a.Y(), a.Z(), b.X(), b.Y(), b.Z(), c.X(), c.Y(), c.Z());
+}
+
+inline int explicitPoint3D::lessThan(const explicitPoint3D& a, const explicitPoint3D& b)
+{
+	int ret;
+	if ((ret = ((a.X() > b.X()) - (a.X() < b.X())))) return ret;
+	if ((ret = ((a.Y() > b.Y()) - (a.Y() < b.Y())))) return ret;
+	return ((a.Z() > b.Z()) - (a.Z() < b.Z()));
+}
+
+// MODEL FUNCTIONS FOR DERIVED PREDICATES
+
+template<class T> bool misaligned_t(const T& A, const T& B, const T& C) {
+	return (T::orient2Dxy(A, B, C) || T::orient2Dyz(A, B, C) || T::orient2Dzx(A, B, C));
+}
+
+template<class T> bool innerSegmentsCross_t(const T& A, const T& B, const T& P, const T& Q) {
 	int o11, o12, o21, o22;
 
-	o11 = orient2Dxy(P, A, B);
-	o12 = orient2Dxy(Q, B, A);
-	o21 = orient2Dxy(A, P, Q);
-	o22 = orient2Dxy(B, Q, P);
+	o11 = T::orient2Dxy(P, A, B);
+	o12 = T::orient2Dxy(Q, B, A);
+	o21 = T::orient2Dxy(A, P, Q);
+	o22 = T::orient2Dxy(B, Q, P);
 	if (o11 || o21 || o12 || o22) return (o11 == o12 && o21 == o22);
 
-	o11 = orient2Dyz(P, A, B);
-	o12 = orient2Dyz(Q, B, A);
-	o21 = orient2Dyz(A, P, Q);
-	o22 = orient2Dyz(B, Q, P);
+	o11 = T::orient2Dyz(P, A, B);
+	o12 = T::orient2Dyz(Q, B, A);
+	o21 = T::orient2Dyz(A, P, Q);
+	o22 = T::orient2Dyz(B, Q, P);
 	if (o11 || o21 || o12 || o22) return (o11 == o12 && o21 == o22);
 
-	o11 = orient2Dzx(P, A, B);
-	o12 = orient2Dzx(Q, B, A);
-	o21 = orient2Dzx(A, P, Q);
-	o22 = orient2Dzx(B, Q, P);
+	o11 = T::orient2Dzx(P, A, B);
+	o12 = T::orient2Dzx(Q, B, A);
+	o21 = T::orient2Dzx(A, P, Q);
+	o22 = T::orient2Dzx(B, Q, P);
 	if (o11 || o21 || o12 || o22) return (o11 == o12 && o21 == o22);
 
 	return false;
 }
 
-inline bool genericPoint::segmentsCross(const genericPoint& A, const genericPoint& B, const genericPoint& P, const genericPoint& Q)
+template<class T> bool segmentsCross_t(const T& A, const T& B, const T& P, const T& Q)
 {
 	int o11, o12, o21, o22;
 
-	o11 = orient2Dxy(P, A, B);
-	o12 = orient2Dxy(Q, B, A);
-	o21 = orient2Dxy(A, P, Q);
-	o22 = orient2Dxy(B, Q, P);
+	o11 = T::orient2Dxy(P, A, B);
+	o12 = T::orient2Dxy(Q, B, A);
+	o21 = T::orient2Dxy(A, P, Q);
+	o22 = T::orient2Dxy(B, Q, P);
 	if ((o11 || o12) && (o11 * o12 >= 0) && (o21 || o22) && (o21 * o22 >= 0)) return true;
 
-	o11 = orient2Dyz(P, A, B);
-	o12 = orient2Dyz(Q, B, A);
-	o21 = orient2Dyz(A, P, Q);
-	o22 = orient2Dyz(B, Q, P);
+	o11 = T::orient2Dyz(P, A, B);
+	o12 = T::orient2Dyz(Q, B, A);
+	o21 = T::orient2Dyz(A, P, Q);
+	o22 = T::orient2Dyz(B, Q, P);
 	if ((o11 || o12) && (o11 * o12 >= 0) && (o21 || o22) && (o21 * o22 >= 0)) return true;
 
-	o11 = orient2Dzx(P, A, B);
-	o12 = orient2Dzx(Q, B, A);
-	o21 = orient2Dzx(A, P, Q);
-	o22 = orient2Dzx(B, Q, P);
+	o11 = T::orient2Dzx(P, A, B);
+	o12 = T::orient2Dzx(Q, B, A);
+	o21 = T::orient2Dzx(A, P, Q);
+	o22 = T::orient2Dzx(B, Q, P);
 	if ((o11 || o12) && (o11 * o12 >= 0) && (o21 || o22) && (o21 * o22 >= 0)) return true;
 
 	return false;
 }
 
-inline bool genericPoint::innerSegmentCrossesInnerTriangle(const genericPoint& s1, const genericPoint& s2, const genericPoint& v1, const genericPoint& v2, const genericPoint& v3)
+template<class T> bool innerSegmentCrossesInnerTriangle_t(const T& s1, const T& s2, const T& v1, const T& v2, const T& v3)
 {
-	int o1 = orient3D(s1, v1, v2, v3); if (o1 == 0) return false;
-	int o2 = orient3D(s2, v1, v2, v3); if (o2 == 0) return false;
+	int o1 = T::orient3D(s1, v1, v2, v3); if (o1 == 0) return false;
+	int o2 = T::orient3D(s2, v1, v2, v3); if (o2 == 0) return false;
 
 	if ((o1 > 0 && o2 > 0) || (o1 < 0 && o2 < 0)) return false;
-	o1 = orient3D(s1, s2, v1, v2);
-	o2 = orient3D(s1, s2, v2, v3);
+	o1 = T::orient3D(s1, s2, v1, v2);
+	o2 = T::orient3D(s1, s2, v2, v3);
 	if ((o1 >= 0 && o2 <= 0) || (o1 <= 0 && o2 >= 0)) return false;
-	int o3 = orient3D(s1, s2, v3, v1);
+	int o3 = T::orient3D(s1, s2, v3, v1);
 	if ((o1 >= 0 && o3 <= 0) || (o1 <= 0 && o3 >= 0)) return false;
 	if ((o2 >= 0 && o3 <= 0) || (o2 <= 0 && o3 >= 0)) return false;
 	return true;
 }
 
-inline bool genericPoint::pointInInnerSegment(const genericPoint& p, const genericPoint& v1, const genericPoint& v2)
+template<class T> bool pointInInnerSegment_t(const T& p, const T& v1, const T& v2)
 {
-	if (misaligned(p, v1, v2)) return false;
+	if (T::misaligned(p, v1, v2)) return false;
 
 	int lt2, lt3;
-	lt2 = lessThanOnX(v1, p);
-	lt3 = lessThanOnX(p, v2);
+	lt2 = T::lessThanOnX(v1, p);
+	lt3 = T::lessThanOnX(p, v2);
 	if (lt2) return (lt2 == lt3);
-	lt2 = lessThanOnY(v1, p);
-	lt3 = lessThanOnY(p, v2);
+	lt2 = T::lessThanOnY(v1, p);
+	lt3 = T::lessThanOnY(p, v2);
 	if (lt2) return (lt2 == lt3);
-	lt2 = lessThanOnZ(v1, p);
-	lt3 = lessThanOnZ(p, v2);
+	lt2 = T::lessThanOnZ(v1, p);
+	lt3 = T::lessThanOnZ(p, v2);
 	if (lt2) return (lt2 == lt3);
 	return false;
 }
 
-inline bool genericPoint::pointInSegment(const genericPoint& p, const genericPoint& v1, const genericPoint& v2)
+template<class T> bool pointInSegment_t(const T& p, const T& v1, const T& v2)
 {
-	if (misaligned(p, v1, v2)) return false;
+	if (T::misaligned(p, v1, v2)) return false;
 
-	int lt2x = lessThanOnX(v1, p);
-	int lt3x = lessThanOnX(p, v2);
+	int lt2x = T::lessThanOnX(v1, p);
+	int lt3x = T::lessThanOnX(p, v2);
 	if (lt2x && lt3x) return (lt2x == lt3x);
-	int lt2y = lessThanOnY(v1, p);
-	int lt3y = lessThanOnY(p, v2);
+	int lt2y = T::lessThanOnY(v1, p);
+	int lt3y = T::lessThanOnY(p, v2);
 	if (lt2y && lt3y) return (lt2y == lt3y);
-	int lt2z = lessThanOnZ(v1, p);
-	int lt3z = lessThanOnZ(p, v2);
+	int lt2z = T::lessThanOnZ(v1, p);
+	int lt3z = T::lessThanOnZ(p, v2);
 	if (lt2z && lt3z) return (lt2z == lt3z);
 
 	return ((lt2x == 0 && lt2y == 0 && lt2z == 0) || (lt3x == 0 && lt3y == 0 && lt3z == 0));
 }
 
-inline bool genericPoint::pointInTriangle(const genericPoint& P, const genericPoint& A, const genericPoint& B, const genericPoint& C)
+template<class T> bool pointInTriangle_t(const T& P, const T& A, const T& B, const T& C)
 {
 	int o1, o2, o3;
-	o1 = orient2Dxy(P, A, B);
-	o2 = orient2Dxy(P, B, C);
-	o3 = orient2Dxy(P, C, A);
+	o1 = T::orient2Dxy(P, A, B);
+	o2 = T::orient2Dxy(P, B, C);
+	o3 = T::orient2Dxy(P, C, A);
 	if (o1 || o2 || o3) return ((o1 >= 0 && o2 >= 0 && o3 >= 0) || (o1 <= 0 && o2 <= 0 && o3 <= 0));
-	o1 = orient2Dyz(P, A, B);
-	o2 = orient2Dyz(P, B, C);
-	o3 = orient2Dyz(P, C, A);
+	o1 = T::orient2Dyz(P, A, B);
+	o2 = T::orient2Dyz(P, B, C);
+	o3 = T::orient2Dyz(P, C, A);
 	if (o1 || o2 || o3) return ((o1 >= 0 && o2 >= 0 && o3 >= 0) || (o1 <= 0 && o2 <= 0 && o3 <= 0));
-	o1 = orient2Dzx(P, A, B);
-	o2 = orient2Dzx(P, B, C);
-	o3 = orient2Dzx(P, C, A);
+	o1 = T::orient2Dzx(P, A, B);
+	o2 = T::orient2Dzx(P, B, C);
+	o3 = T::orient2Dzx(P, C, A);
 	return ((o1 >= 0 && o2 >= 0 && o3 >= 0) || (o1 <= 0 && o2 <= 0 && o3 <= 0));
 }
 
-
-inline bool genericPoint::pointInTriangle(const genericPoint& P, const genericPoint& A, const genericPoint& B, const genericPoint& C, int& o1, int& o2, int& o3)
+template<class T> bool pointInTriangle_t(const T& P, const T& A, const T& B, const T& C, int& o1, int& o2, int& o3)
 {
-	o1 = orient2Dxy(P, A, B);
-	o2 = orient2Dxy(P, B, C);
-	o3 = orient2Dxy(P, C, A);
+	o1 = T::orient2Dxy(P, A, B);
+	o2 = T::orient2Dxy(P, B, C);
+	o3 = T::orient2Dxy(P, C, A);
 	if (o1 || o2 || o3) return ((o1 >= 0 && o2 >= 0 && o3 >= 0) || (o1 <= 0 && o2 <= 0 && o3 <= 0));
-	o1 = orient2Dyz(P, A, B);
-	o2 = orient2Dyz(P, B, C);
-	o3 = orient2Dyz(P, C, A);
+	o1 = T::orient2Dyz(P, A, B);
+	o2 = T::orient2Dyz(P, B, C);
+	o3 = T::orient2Dyz(P, C, A);
 	if (o1 || o2 || o3) return ((o1 >= 0 && o2 >= 0 && o3 >= 0) || (o1 <= 0 && o2 <= 0 && o3 <= 0));
-	o1 = orient2Dzx(P, A, B);
-	o2 = orient2Dzx(P, B, C);
-	o3 = orient2Dzx(P, C, A);
+	o1 = T::orient2Dzx(P, A, B);
+	o2 = T::orient2Dzx(P, B, C);
+	o3 = T::orient2Dzx(P, C, A);
 	return ((o1 >= 0 && o2 >= 0 && o3 >= 0) || (o1 <= 0 && o2 <= 0 && o3 <= 0));
 }
 
-inline bool genericPoint::pointInInnerTriangle(const genericPoint& P, const genericPoint& A, const genericPoint& B, const genericPoint& C)
+template<class T> bool pointInInnerTriangle_t(const T& P, const T& A, const T& B, const T& C)
 {
 	int o1, o2, o3;
-	o1 = orient2Dxy(P, A, B);
-	o2 = orient2Dxy(P, B, C);
-	o3 = orient2Dxy(P, C, A);
+	o1 = T::orient2Dxy(P, A, B);
+	o2 = T::orient2Dxy(P, B, C);
+	o3 = T::orient2Dxy(P, C, A);
 	if (o1 || o2 || o3) return ((o1 > 0 && o2 > 0 && o3 > 0) || (o1 < 0 && o2 < 0 && o3 < 0));
-	o1 = orient2Dyz(P, A, B);
-	o2 = orient2Dyz(P, B, C);
-	o3 = orient2Dyz(P, C, A);
+	o1 = T::orient2Dyz(P, A, B);
+	o2 = T::orient2Dyz(P, B, C);
+	o3 = T::orient2Dyz(P, C, A);
 	if (o1 || o2 || o3) return ((o1 > 0 && o2 > 0 && o3 > 0) || (o1 < 0 && o2 < 0 && o3 < 0));
-	o1 = orient2Dzx(P, A, B);
-	o2 = orient2Dzx(P, B, C);
-	o3 = orient2Dzx(P, C, A);
+	o1 = T::orient2Dzx(P, A, B);
+	o2 = T::orient2Dzx(P, B, C);
+	o3 = T::orient2Dzx(P, C, A);
 	return ((o1 > 0 && o2 > 0 && o3 > 0) || (o1 < 0 && o2 < 0 && o3 < 0));
 }
 
-inline bool genericPoint::lineCrossesInnerTriangle(const genericPoint& s1, const genericPoint& s2, const genericPoint& v1, const genericPoint& v2, const genericPoint& v3)
+template<class T> bool lineCrossesInnerTriangle_t(const T& s1, const T& s2, const T& v1, const T& v2, const T& v3)
 {
-	const int o1 = genericPoint::orient3D(s1, s2, v1, v2);
-	const int o2 = genericPoint::orient3D(s1, s2, v2, v3);
+	const int o1 = T::orient3D(s1, s2, v1, v2);
+	const int o2 = T::orient3D(s1, s2, v2, v3);
 	if ((o1 >= 0 && o2 <= 0) || (o1 <= 0 && o2 >= 0)) return false;
-	const int o3 = genericPoint::orient3D(s1, s2, v3, v1);
+	const int o3 = T::orient3D(s1, s2, v3, v1);
 	if ((o1 >= 0 && o3 <= 0) || (o1 <= 0 && o3 >= 0)) return false;
 	if ((o2 >= 0 && o3 <= 0) || (o2 <= 0 && o3 >= 0)) return false;
 	return true;
 }
 
-inline bool genericPoint::lineCrossesTriangle(const genericPoint& s1, const genericPoint& s2, const genericPoint& v1, const genericPoint& v2, const genericPoint& v3)
+template<class T> bool lineCrossesTriangle_t(const T& s1, const T& s2, const T& v1, const T& v2, const T& v3)
 {
-	const int o1 = genericPoint::orient3D(s1, s2, v1, v2);
-	const int o2 = genericPoint::orient3D(s1, s2, v2, v3);
+	const int o1 = T::orient3D(s1, s2, v1, v2);
+	const int o2 = T::orient3D(s1, s2, v2, v3);
 	if ((o1 > 0 && o2 < 0) || (o1 < 0 && o2 > 0)) return false;
-	const int o3 = genericPoint::orient3D(s1, s2, v3, v1);
+	const int o3 = T::orient3D(s1, s2, v3, v1);
 	if ((o1 > 0 && o3 < 0) || (o1 < 0 && o3 > 0)) return false;
 	if ((o2 > 0 && o3 < 0) || (o2 < 0 && o3 > 0)) return false;
 	return true;
 }
 
-inline bool genericPoint::innerSegmentCrossesTriangle(const genericPoint& s1, const genericPoint& s2, const genericPoint& v1, const genericPoint& v2, const genericPoint& v3)
+template<class T> bool innerSegmentCrossesTriangle_t(const T& s1, const T& s2, const T& v1, const T& v2, const T& v3)
 {
-	const int o1 = genericPoint::orient3D(s1, v1, v2, v3); if (o1 == 0) return false;
-	const int o2 = genericPoint::orient3D(s2, v1, v2, v3); if (o2 == 0) return false;
+	const int o1 = T::orient3D(s1, v1, v2, v3); if (o1 == 0) return false;
+	const int o2 = T::orient3D(s2, v1, v2, v3); if (o2 == 0) return false;
 
 	if ((o1 > 0 && o2 > 0) || (o1 < 0 && o2 < 0)) return false;
-	return lineCrossesTriangle(s1, s2, v1, v2, v3);
+	return lineCrossesTriangle_t(s1, s2, v1, v2, v3);
 }
 
+template<class T> int orient2D_t(const T& a, const T& b, const T& c, int n_max)
+{
+	if (n_max == 0) return T::orient2Dyz(a, b, c);
+	else if (n_max == 1) return T::orient2Dzx(a, b, c);
+	else return T::orient2Dxy(a, b, c);
+}
 
+template<class T> bool misaligned_t(const T& A, const T& B, const T& C, int n_max)
+{
+	return ((n_max == 2 && T::orient2Dxy(A, B, C)) || (n_max == 0 && T::orient2Dyz(A, B, C)) || (n_max == 1 && T::orient2Dzx(A, B, C)));
+}
 
-inline bool genericPoint::pointInInnerSegment(const genericPoint& p, const genericPoint& v1, const genericPoint& v2, int xyz)
+template<class T> bool pointInInnerSegment_t(const T& p, const T& v1, const T& v2, int xyz)
 {
 	int lt2, lt3;
 	if (xyz == 0)
 	{
-		if (orient2Dyz(p, v1, v2)) return false;
-		lt2 = lessThanOnY(v1, p);
-		lt3 = lessThanOnY(p, v2);
+		if (T::orient2Dyz(p, v1, v2)) return false;
+		lt2 = T::lessThanOnY(v1, p);
+		lt3 = T::lessThanOnY(p, v2);
 		if (lt2) return (lt2 == lt3);
-		lt2 = lessThanOnZ(v1, p);
-		lt3 = lessThanOnZ(p, v2);
+		lt2 = T::lessThanOnZ(v1, p);
+		lt3 = T::lessThanOnZ(p, v2);
 	}
 	else if (xyz == 1)
 	{
-		if (orient2Dzx(p, v1, v2)) return false;
-		lt2 = lessThanOnX(v1, p);
-		lt3 = lessThanOnX(p, v2);
+		if (T::orient2Dzx(p, v1, v2)) return false;
+		lt2 = T::lessThanOnX(v1, p);
+		lt3 = T::lessThanOnX(p, v2);
 		if (lt2) return (lt2 == lt3);
-		lt2 = lessThanOnZ(v1, p);
-		lt3 = lessThanOnZ(p, v2);
+		lt2 = T::lessThanOnZ(v1, p);
+		lt3 = T::lessThanOnZ(p, v2);
 	}
 	else
 	{
-		if (orient2Dxy(p, v1, v2)) return false;
-		lt2 = lessThanOnX(v1, p);
-		lt3 = lessThanOnX(p, v2);
+		if (T::orient2Dxy(p, v1, v2)) return false;
+		lt2 = T::lessThanOnX(v1, p);
+		lt3 = T::lessThanOnX(p, v2);
 		if (lt2) return (lt2 == lt3);
-		lt2 = lessThanOnY(v1, p);
-		lt3 = lessThanOnY(p, v2);
+		lt2 = T::lessThanOnY(v1, p);
+		lt3 = T::lessThanOnY(p, v2);
 	}
 	return (lt2 && (lt2 == lt3));
 }
 
-inline bool genericPoint::pointInSegment(const genericPoint& p, const genericPoint& v1, const genericPoint& v2, int xyz)
+template<class T> bool pointInSegment_t(const T& p, const T& v1, const T& v2, int xyz)
 {
 	int lt2, lt3, lt4, lt5;
 	if (xyz == 0)
 	{
-		if (orient2Dyz(p, v1, v2)) return false;
-		lt2 = lessThanOnY(v1, p);
-		lt3 = lessThanOnY(p, v2);
+		if (T::orient2Dyz(p, v1, v2)) return false;
+		lt2 = T::lessThanOnY(v1, p);
+		lt3 = T::lessThanOnY(p, v2);
 		if (lt2 && lt3) return (lt2 == lt3);
-		lt4 = lessThanOnZ(v1, p);
-		lt5 = lessThanOnZ(p, v2);
+		lt4 = T::lessThanOnZ(v1, p);
+		lt5 = T::lessThanOnZ(p, v2);
 	}
 	else if (xyz == 1)
 	{
-		if (orient2Dzx(p, v1, v2)) return false;
-		lt2 = lessThanOnX(v1, p);
-		lt3 = lessThanOnX(p, v2);
+		if (T::orient2Dzx(p, v1, v2)) return false;
+		lt2 = T::lessThanOnX(v1, p);
+		lt3 = T::lessThanOnX(p, v2);
 		if (lt2 && lt3) return (lt2 == lt3);
-		lt4 = lessThanOnZ(v1, p);
-		lt5 = lessThanOnZ(p, v2);
+		lt4 = T::lessThanOnZ(v1, p);
+		lt5 = T::lessThanOnZ(p, v2);
 	}
 	else
 	{
-		if (orient2Dxy(p, v1, v2)) return false;
-		lt2 = lessThanOnX(v1, p);
-		lt3 = lessThanOnX(p, v2);
+		if (T::orient2Dxy(p, v1, v2)) return false;
+		lt2 = T::lessThanOnX(v1, p);
+		lt3 = T::lessThanOnX(p, v2);
 		if (lt2 && lt3) return (lt2 == lt3);
-		lt4 = lessThanOnY(v1, p);
-		lt5 = lessThanOnY(p, v2);
+		lt4 = T::lessThanOnY(v1, p);
+		lt5 = T::lessThanOnY(p, v2);
 	}
 	return ((lt2 == 0 && lt4 == 0) || (lt3 == 0 && lt5 == 0));
 }
 
-inline bool genericPoint::pointInInnerTriangle(const genericPoint& P, const genericPoint& A, const genericPoint& B, const genericPoint& C, int xyz)
+template<class T> bool pointInInnerTriangle_t(const T& P, const T& A, const T& B, const T& C, int xyz)
 {
 	int o1, o2, o3;
 	if (xyz == 2)
 	{
-		o1 = genericPoint::orient2Dxy(P, A, B);
-		o2 = genericPoint::orient2Dxy(P, B, C);
-		o3 = genericPoint::orient2Dxy(P, C, A);
+		o1 = T::orient2Dxy(P, A, B);
+		o2 = T::orient2Dxy(P, B, C);
+		o3 = T::orient2Dxy(P, C, A);
 	}
 	else if (xyz == 0)
 	{
-		o1 = genericPoint::orient2Dyz(P, A, B);
-		o2 = genericPoint::orient2Dyz(P, B, C);
-		o3 = genericPoint::orient2Dyz(P, C, A);
+		o1 = T::orient2Dyz(P, A, B);
+		o2 = T::orient2Dyz(P, B, C);
+		o3 = T::orient2Dyz(P, C, A);
 	}
 	else
 	{
-		o1 = genericPoint::orient2Dzx(P, A, B);
-		o2 = genericPoint::orient2Dzx(P, B, C);
-		o3 = genericPoint::orient2Dzx(P, C, A);
+		o1 = T::orient2Dzx(P, A, B);
+		o2 = T::orient2Dzx(P, B, C);
+		o3 = T::orient2Dzx(P, C, A);
 	}
 	return ((o1 > 0 && o2 > 0 && o3 > 0) || (o1 < 0 && o2 < 0 && o3 < 0));
 }
 
-inline bool genericPoint::pointInTriangle(const genericPoint& P, const genericPoint& A, const genericPoint& B, const genericPoint& C, int xyz)
+template<class T> bool pointInTriangle_t(const T& P, const T& A, const T& B, const T& C, int xyz)
 {
 	int o1, o2, o3;
 	if (xyz == 2)
 	{
-		o1 = genericPoint::orient2Dxy(P, A, B);
-		o2 = genericPoint::orient2Dxy(P, B, C);
-		o3 = genericPoint::orient2Dxy(P, C, A);
+		o1 = T::orient2Dxy(P, A, B);
+		o2 = T::orient2Dxy(P, B, C);
+		o3 = T::orient2Dxy(P, C, A);
 	}
 	else if (xyz == 0)
 	{
-		o1 = genericPoint::orient2Dyz(P, A, B);
-		o2 = genericPoint::orient2Dyz(P, B, C);
-		o3 = genericPoint::orient2Dyz(P, C, A);
+		o1 = T::orient2Dyz(P, A, B);
+		o2 = T::orient2Dyz(P, B, C);
+		o3 = T::orient2Dyz(P, C, A);
 	}
 	else
 	{
-		o1 = genericPoint::orient2Dzx(P, A, B);
-		o2 = genericPoint::orient2Dzx(P, B, C);
-		o3 = genericPoint::orient2Dzx(P, C, A);
+		o1 = T::orient2Dzx(P, A, B);
+		o2 = T::orient2Dzx(P, B, C);
+		o3 = T::orient2Dzx(P, C, A);
 	}
 	return ((o1 >= 0 && o2 >= 0 && o3 >= 0) || (o1 <= 0 && o2 <= 0 && o3 <= 0));
 }
 
-inline bool genericPoint::innerSegmentsCross(const genericPoint& A, const genericPoint& B, const genericPoint& P, const genericPoint& Q, int xyz)
+template<class T> bool innerSegmentsCross_t(const T& A, const T& B, const T& P, const T& Q, int xyz)
 {
 	int o11, o12, o21, o22;
 
 	if (xyz == 2)
 	{
-		o11 = orient2Dxy(P, A, B);
-		o12 = orient2Dxy(Q, B, A);
-		o21 = orient2Dxy(A, P, Q);
-		o22 = orient2Dxy(B, Q, P);
+		o11 = T::orient2Dxy(P, A, B);
+		o12 = T::orient2Dxy(Q, B, A);
+		o21 = T::orient2Dxy(A, P, Q);
+		o22 = T::orient2Dxy(B, Q, P);
 	}
 	else if (xyz == 0)
 	{
-		o11 = orient2Dyz(P, A, B);
-		o12 = orient2Dyz(Q, B, A);
-		o21 = orient2Dyz(A, P, Q);
-		o22 = orient2Dyz(B, Q, P);
+		o11 = T::orient2Dyz(P, A, B);
+		o12 = T::orient2Dyz(Q, B, A);
+		o21 = T::orient2Dyz(A, P, Q);
+		o22 = T::orient2Dyz(B, Q, P);
 	}
 	else
 	{
-		o11 = orient2Dzx(P, A, B);
-		o12 = orient2Dzx(Q, B, A);
-		o21 = orient2Dzx(A, P, Q);
-		o22 = orient2Dzx(B, Q, P);
+		o11 = T::orient2Dzx(P, A, B);
+		o12 = T::orient2Dzx(Q, B, A);
+		o21 = T::orient2Dzx(A, P, Q);
+		o22 = T::orient2Dzx(B, Q, P);
 	}
 
 	return (o11 && o21 && o11 == o12 && o21 == o22);
 }
 
-inline bool genericPoint::segmentsCross(const genericPoint& A, const genericPoint& B, const genericPoint& P, const genericPoint& Q, int xyz)
+template<class T> bool segmentsCross_t(const T& A, const T& B, const T& P, const T& Q, int xyz)
 {
 	int o11, o12, o21, o22;
 
 	if (xyz == 2)
 	{
-		o11 = orient2Dxy(P, A, B);
-		o12 = orient2Dxy(Q, B, A);
-		o21 = orient2Dxy(A, P, Q);
-		o22 = orient2Dxy(B, Q, P);
+		o11 = T::orient2Dxy(P, A, B);
+		o12 = T::orient2Dxy(Q, B, A);
+		o21 = T::orient2Dxy(A, P, Q);
+		o22 = T::orient2Dxy(B, Q, P);
 	}
 	else if (xyz == 0)
 	{
-		o11 = orient2Dyz(P, A, B);
-		o12 = orient2Dyz(Q, B, A);
-		o21 = orient2Dyz(A, P, Q);
-		o22 = orient2Dyz(B, Q, P);
+		o11 = T::orient2Dyz(P, A, B);
+		o12 = T::orient2Dyz(Q, B, A);
+		o21 = T::orient2Dyz(A, P, Q);
+		o22 = T::orient2Dyz(B, Q, P);
 	}
 	else
 	{
-		o11 = orient2Dzx(P, A, B);
-		o12 = orient2Dzx(Q, B, A);
-		o21 = orient2Dzx(A, P, Q);
-		o22 = orient2Dzx(B, Q, P);
+		o11 = T::orient2Dzx(P, A, B);
+		o12 = T::orient2Dzx(Q, B, A);
+		o21 = T::orient2Dzx(A, P, Q);
+		o22 = T::orient2Dzx(B, Q, P);
 	}
 
 	return ((o11 || o12) && (o11 * o12 >= 0) && (o21 || o22) && (o21 * o22 >= 0));
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// DERIVED PREDICATE INSTANTIATION FOR GENERIC AND EXPLICIT 3D POINTS
+//
+//////////////////////////////////////////////////////////////////////////////////////////////////
+
+inline bool genericPoint::misaligned(const genericPoint& A, const genericPoint& B, const genericPoint& C) {
+	return misaligned_t<genericPoint>(A, B, C);
+}
+
+inline bool genericPoint::innerSegmentsCross(const genericPoint& A, const genericPoint& B, const genericPoint& P, const genericPoint& Q) {
+	return innerSegmentsCross_t<genericPoint>(A, B, P, Q);
+}
+
+inline bool genericPoint::segmentsCross(const genericPoint& A, const genericPoint& B, const genericPoint& P, const genericPoint& Q) {
+	return segmentsCross_t<genericPoint>(A, B, P, Q);
+}
+
+inline bool genericPoint::innerSegmentCrossesInnerTriangle(const genericPoint& s1, const genericPoint& s2, const genericPoint& v1, const genericPoint& v2, const genericPoint& v3) {
+	return innerSegmentCrossesInnerTriangle_t<genericPoint>(s1, s2, v1, v2, v3);
+}
+
+inline bool genericPoint::pointInInnerSegment(const genericPoint& p, const genericPoint& v1, const genericPoint& v2) {
+	return pointInInnerSegment_t<genericPoint>(p, v1, v2);
+}
+
+inline bool genericPoint::pointInSegment(const genericPoint& p, const genericPoint& v1, const genericPoint& v2) {
+	return pointInSegment_t<genericPoint>(p, v1, v2);
+}
+
+inline bool genericPoint::pointInTriangle(const genericPoint& p, const genericPoint& a, const genericPoint& b, const genericPoint& c) {
+	return pointInTriangle_t<genericPoint>(p, a, b, c);
+}
+
+inline bool genericPoint::pointInTriangle(const genericPoint& p, const genericPoint& a, const genericPoint& b, const genericPoint& c, int& o1, int& o2, int& o3) {
+	return pointInTriangle_t<genericPoint>(p, a, b, c, o1, o2, o3);
+}
+
+inline bool genericPoint::pointInInnerTriangle(const genericPoint& p, const genericPoint& a, const genericPoint& b, const genericPoint& c) {
+	return pointInInnerTriangle_t<genericPoint>(p, a, b, c);
+}
+
+inline bool genericPoint::lineCrossesInnerTriangle(const genericPoint& s1, const genericPoint& s2, const genericPoint& v1, const genericPoint& v2, const genericPoint& v3) {
+	return lineCrossesInnerTriangle_t<genericPoint>(s1, s2, v1, v2, v3);
+}
+
+inline bool genericPoint::lineCrossesTriangle(const genericPoint& s1, const genericPoint& s2, const genericPoint& v1, const genericPoint& v2, const genericPoint& v3) {
+	return lineCrossesTriangle_t<genericPoint>(s1, s2, v1, v2, v3);
+}
+
+inline bool genericPoint::innerSegmentCrossesTriangle(const genericPoint& s1, const genericPoint& s2, const genericPoint& v1, const genericPoint& v2, const genericPoint& v3) {
+	return innerSegmentCrossesTriangle_t<genericPoint>(s1, s2, v1, v2, v3);
+}
+
+inline int genericPoint::orient2D(const genericPoint& a, const genericPoint& b, const genericPoint& c, int n_max) {
+	return orient2D_t(a, b, c, n_max);
+}
+
+inline bool genericPoint::misaligned(const genericPoint& A, const genericPoint& B, const genericPoint& C, int n_max) {
+	return misaligned_t(A, B, C, n_max);
+}
+
+inline bool genericPoint::pointInInnerSegment(const genericPoint& p, const genericPoint& v1, const genericPoint& v2, int xyz) {
+	return pointInInnerSegment_t<genericPoint>(p, v1, v2, xyz);
+}
+
+inline bool genericPoint::pointInSegment(const genericPoint& p, const genericPoint& v1, const genericPoint& v2, int xyz) {
+	return pointInSegment_t<genericPoint>(p, v1, v2, xyz);
+}
+
+inline bool genericPoint::pointInInnerTriangle(const genericPoint& p, const genericPoint& a, const genericPoint& b, const genericPoint& c, int xyz) {
+	return pointInInnerTriangle_t<genericPoint>(p, a, b, c, xyz);
+}
+
+inline bool genericPoint::pointInTriangle(const genericPoint& p, const genericPoint& a, const genericPoint& b, const genericPoint& c, int xyz) {
+	return pointInTriangle_t<genericPoint>(p, a, b, c, xyz);
+}
+
+inline bool genericPoint::innerSegmentsCross(const genericPoint& A, const genericPoint& B, const genericPoint& P, const genericPoint& Q, int xyz) {
+	return innerSegmentsCross_t<genericPoint>(A, B, P, Q, xyz);
+}
+
+inline bool genericPoint::segmentsCross(const genericPoint& A, const genericPoint& B, const genericPoint& P, const genericPoint& Q, int xyz) {
+	return segmentsCross_t<genericPoint>(A, B, P, Q, xyz);
+}
+
+
+
+
+inline bool explicitPoint3D::misaligned(const explicitPoint3D& A, const explicitPoint3D& B, const explicitPoint3D& C) {
+	return misaligned_t<explicitPoint3D>(A, B, C);
+}
+
+inline bool explicitPoint3D::innerSegmentsCross(const explicitPoint3D& A, const explicitPoint3D& B, const explicitPoint3D& P, const explicitPoint3D& Q) {
+	return innerSegmentsCross_t<explicitPoint3D>(A, B, P, Q);
+}
+
+inline bool explicitPoint3D::segmentsCross(const explicitPoint3D& A, const explicitPoint3D& B, const explicitPoint3D& P, const explicitPoint3D& Q) {
+	return segmentsCross_t<explicitPoint3D>(A, B, P, Q);
+}
+
+inline bool explicitPoint3D::innerSegmentCrossesInnerTriangle(const explicitPoint3D& s1, const explicitPoint3D& s2, const explicitPoint3D& v1, const explicitPoint3D& v2, const explicitPoint3D& v3) {
+	return innerSegmentCrossesInnerTriangle_t<explicitPoint3D>(s1, s2, v1, v2, v3);
+}
+
+inline bool explicitPoint3D::pointInInnerSegment(const explicitPoint3D& p, const explicitPoint3D& v1, const explicitPoint3D& v2) {
+	return pointInInnerSegment_t<explicitPoint3D>(p, v1, v2);
+}
+
+inline bool explicitPoint3D::pointInSegment(const explicitPoint3D& p, const explicitPoint3D& v1, const explicitPoint3D& v2) {
+	return pointInSegment_t<explicitPoint3D>(p, v1, v2);
+}
+
+inline bool explicitPoint3D::pointInTriangle(const explicitPoint3D& p, const explicitPoint3D& a, const explicitPoint3D& b, const explicitPoint3D& c) {
+	return pointInTriangle_t<explicitPoint3D>(p, a, b, c);
+}
+
+inline bool explicitPoint3D::pointInTriangle(const explicitPoint3D& p, const explicitPoint3D& a, const explicitPoint3D& b, const explicitPoint3D& c, int& o1, int& o2, int& o3) {
+	return pointInTriangle_t<explicitPoint3D>(p, a, b, c, o1, o2, o3);
+}
+
+inline bool explicitPoint3D::pointInInnerTriangle(const explicitPoint3D& p, const explicitPoint3D& a, const explicitPoint3D& b, const explicitPoint3D& c) {
+	return pointInInnerTriangle_t<explicitPoint3D>(p, a, b, c);
+}
+
+inline bool explicitPoint3D::lineCrossesInnerTriangle(const explicitPoint3D& s1, const explicitPoint3D& s2, const explicitPoint3D& v1, const explicitPoint3D& v2, const explicitPoint3D& v3) {
+	return lineCrossesInnerTriangle_t<explicitPoint3D>(s1, s2, v1, v2, v3);
+}
+
+inline bool explicitPoint3D::lineCrossesTriangle(const explicitPoint3D& s1, const explicitPoint3D& s2, const explicitPoint3D& v1, const explicitPoint3D& v2, const explicitPoint3D& v3) {
+	return lineCrossesTriangle_t<explicitPoint3D>(s1, s2, v1, v2, v3);
+}
+
+inline bool explicitPoint3D::innerSegmentCrossesTriangle(const explicitPoint3D& s1, const explicitPoint3D& s2, const explicitPoint3D& v1, const explicitPoint3D& v2, const explicitPoint3D& v3) {
+	return innerSegmentCrossesTriangle_t<explicitPoint3D>(s1, s2, v1, v2, v3);
+}
+
+inline int explicitPoint3D::orient2D(const explicitPoint3D& a, const explicitPoint3D& b, const explicitPoint3D& c, int n_max) {
+	return orient2D_t(a, b, c, n_max);
+}
+
+inline bool explicitPoint3D::misaligned(const explicitPoint3D& A, const explicitPoint3D& B, const explicitPoint3D& C, int n_max) {
+	return misaligned_t(A, B, C, n_max);
+}
+
+inline bool explicitPoint3D::pointInInnerSegment(const explicitPoint3D& p, const explicitPoint3D& v1, const explicitPoint3D& v2, int xyz) {
+	return pointInInnerSegment_t<explicitPoint3D>(p, v1, v2, xyz);
+}
+
+inline bool explicitPoint3D::pointInSegment(const explicitPoint3D& p, const explicitPoint3D& v1, const explicitPoint3D& v2, int xyz) {
+	return pointInSegment_t<explicitPoint3D>(p, v1, v2, xyz);
+}
+
+inline bool explicitPoint3D::pointInInnerTriangle(const explicitPoint3D& p, const explicitPoint3D& a, const explicitPoint3D& b, const explicitPoint3D& c, int xyz) {
+	return pointInInnerTriangle_t<explicitPoint3D>(p, a, b, c, xyz);
+}
+
+inline bool explicitPoint3D::pointInTriangle(const explicitPoint3D& p, const explicitPoint3D& a, const explicitPoint3D& b, const explicitPoint3D& c, int xyz) {
+	return pointInTriangle_t<explicitPoint3D>(p, a, b, c, xyz);
+}
+
+inline bool explicitPoint3D::innerSegmentsCross(const explicitPoint3D& A, const explicitPoint3D& B, const explicitPoint3D& P, const explicitPoint3D& Q, int xyz) {
+	return innerSegmentsCross_t<explicitPoint3D>(A, B, P, Q, xyz);
+}
+
+inline bool explicitPoint3D::segmentsCross(const explicitPoint3D& A, const explicitPoint3D& B, const explicitPoint3D& P, const explicitPoint3D& Q, int xyz) {
+	return segmentsCross_t<explicitPoint3D>(A, B, P, Q, xyz);
 }
