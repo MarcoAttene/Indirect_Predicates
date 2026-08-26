@@ -936,7 +936,11 @@ inline bool implicitPoint3D_LNC::getIntervalLambda(interval_number& lx, interval
 	ly = dfilter_lambda_y;
 	lz = dfilter_lambda_z;
 	d = dfilter_denominator;
+#ifdef CASCADED_IMPLICIT_POINTS
 	return (dfilter_denominator.signIsReliable());
+#else
+	return true;
+#endif
 }
 
 inline implicitPoint3D_LNC::implicitPoint3D_LNC(const genericPoint& _p, const genericPoint& _q,
@@ -947,12 +951,14 @@ inline implicitPoint3D_LNC::implicitPoint3D_LNC(const genericPoint& _p, const ge
 	ip.getIntervalLambda(p[0], p[1], p[2], p[3]);
 	iq.getIntervalLambda(q[0], q[1], q[2], q[3]);
 	lambda3d_LNC<interval_number, interval_number, interval_number>(p, q, t, dfilter_lambda_x, dfilter_lambda_y, dfilter_lambda_z, dfilter_denominator);
+#ifdef CASCADED_IMPLICIT_POINTS
 	if (dfilter_denominator.isNegative()) {
 		dfilter_lambda_x.negate();
 		dfilter_lambda_y.negate();
 		dfilter_lambda_z.negate();
 		dfilter_denominator.negate();
 	}
+#endif
 }
 
 inline bool implicitPoint3D_BPT::getIntervalLambda(interval_number& lx, interval_number& ly, interval_number& lz, interval_number& d) const
@@ -961,7 +967,11 @@ inline bool implicitPoint3D_BPT::getIntervalLambda(interval_number& lx, interval
 	ly = dfilter_lambda_y;
 	lz = dfilter_lambda_z;
 	d = dfilter_denominator;
+#ifdef CASCADED_IMPLICIT_POINTS
 	return (dfilter_denominator.signIsReliable());
+#else
+	return true;
+#endif
 }
 
 inline implicitPoint3D_BPT::implicitPoint3D_BPT(const genericPoint& _p, const genericPoint& _q, const genericPoint& _r,
@@ -973,12 +983,14 @@ inline implicitPoint3D_BPT::implicitPoint3D_BPT(const genericPoint& _p, const ge
 	iq.getIntervalLambda(q[0], q[1], q[2], q[3]);
 	ir.getIntervalLambda(r[0], r[1], r[2], r[3]);
 	lambda3d_BPT<interval_number, interval_number, interval_number>(p, q, r, u, v, dfilter_lambda_x, dfilter_lambda_y, dfilter_lambda_z, dfilter_denominator);
+#ifdef CASCADED_IMPLICIT_POINTS
 	if (dfilter_denominator.isNegative()) {
 		dfilter_lambda_x.negate();
 		dfilter_lambda_y.negate();
 		dfilter_lambda_z.negate();
 		dfilter_denominator.negate();
 	}
+#endif
 }
 
 inline bool implicitPoint3D_TBC::getIntervalLambda(interval_number& lx, interval_number& ly, interval_number& lz, interval_number& d) const
@@ -987,7 +999,11 @@ inline bool implicitPoint3D_TBC::getIntervalLambda(interval_number& lx, interval
 	ly = dfilter_lambda_y;
 	lz = dfilter_lambda_z;
 	d = dfilter_denominator;
+#ifdef CASCADED_IMPLICIT_POINTS
 	return (dfilter_denominator.signIsReliable());
+#else
+	return true;
+#endif
 }
 
 inline implicitPoint3D_TBC::implicitPoint3D_TBC(const genericPoint& _p, const genericPoint& _q, const genericPoint& _r, const genericPoint& _s)
@@ -999,12 +1015,14 @@ inline implicitPoint3D_TBC::implicitPoint3D_TBC(const genericPoint& _p, const ge
 	ir.getIntervalLambda(r[0], r[1], r[2], r[3]);
 	is.getIntervalLambda(s[0], s[1], s[2], s[3]);
 	lambda3d_TBC<interval_number, interval_number>(p, q, r, s, dfilter_lambda_x, dfilter_lambda_y, dfilter_lambda_z, dfilter_denominator);
+#ifdef CASCADED_IMPLICIT_POINTS
 	if (dfilter_denominator.isNegative()) {
 		dfilter_lambda_x.negate();
 		dfilter_lambda_y.negate();
 		dfilter_lambda_z.negate();
 		dfilter_denominator.negate();
 	}
+#endif
 }
 
 
@@ -1457,11 +1475,17 @@ inline bool implicitPoint3D_LNC::getExactXYZCoordinates(bigrational& x, bigratio
 {
 	bigfloat lx, ly, lz, d;
 	getBigfloatLambda(lx, ly, lz, d);
+#ifdef CASCADED_IMPLICIT_POINTS
 	if (sgn(d) == 0) return false;
 	const bigrational rd(d);
 	x = bigrational(lx) / rd;
 	y = bigrational(ly) / rd;
 	z = bigrational(lz) / rd;
+#else
+	x = bigrational(lx);
+	y = bigrational(ly);
+	z = bigrational(lz);
+#endif
 	return true;
 }
 
@@ -1469,11 +1493,17 @@ inline bool implicitPoint3D_BPT::getExactXYZCoordinates(bigrational& x, bigratio
 {
 	bigfloat lx, ly, lz, d;
 	getBigfloatLambda(lx, ly, lz, d);
+#ifdef CASCADED_IMPLICIT_POINTS
 	if (sgn(d) == 0) return false;
 	const bigrational rd(d);
 	x = bigrational(lx) / rd;
 	y = bigrational(ly) / rd;
 	z = bigrational(lz) / rd;
+#else
+	x = bigrational(lx);
+	y = bigrational(ly);
+	z = bigrational(lz);
+#endif
 	return true;
 }
 
@@ -1481,11 +1511,17 @@ inline bool implicitPoint3D_TBC::getExactXYZCoordinates(bigrational& x, bigratio
 {
 	bigfloat lx, ly, lz, d;
 	getBigfloatLambda(lx, ly, lz, d);
+#ifdef CASCADED_IMPLICIT_POINTS
 	if (sgn(d) == 0) return false;
 	const bigrational rd(d);
 	x = bigrational(lx) / rd;
 	y = bigrational(ly) / rd;
 	z = bigrational(lz) / rd;
+#else
+	x = bigrational(lx);
+	y = bigrational(ly);
+	z = bigrational(lz);
+#endif
 	return true;
 }
 
@@ -1603,362 +1639,6 @@ inline int genericPoint::maxComponentInTriangleNormal(double ov1x, double ov1y, 
 // Derived predicates
 //
 /////////////////////////////////////////////
-
-//inline bool genericPoint::innerSegmentsCross(const genericPoint& A, const genericPoint& B, const genericPoint& P, const genericPoint& Q)
-//{
-//	int o11, o12, o21, o22;
-//
-//	o11 = orient2Dxy(P, A, B);
-//	o12 = orient2Dxy(Q, B, A);
-//	o21 = orient2Dxy(A, P, Q);
-//	o22 = orient2Dxy(B, Q, P);
-//	if (o11 || o21 || o12 || o22) return (o11 == o12 && o21 == o22);
-//
-//	o11 = orient2Dyz(P, A, B);
-//	o12 = orient2Dyz(Q, B, A);
-//	o21 = orient2Dyz(A, P, Q);
-//	o22 = orient2Dyz(B, Q, P);
-//	if (o11 || o21 || o12 || o22) return (o11 == o12 && o21 == o22);
-//
-//	o11 = orient2Dzx(P, A, B);
-//	o12 = orient2Dzx(Q, B, A);
-//	o21 = orient2Dzx(A, P, Q);
-//	o22 = orient2Dzx(B, Q, P);
-//	if (o11 || o21 || o12 || o22) return (o11 == o12 && o21 == o22);
-//
-//	return false;
-//}
-//
-//inline bool genericPoint::segmentsCross(const genericPoint& A, const genericPoint& B, const genericPoint& P, const genericPoint& Q)
-//{
-//	int o11, o12, o21, o22;
-//
-//	o11 = orient2Dxy(P, A, B);
-//	o12 = orient2Dxy(Q, B, A);
-//	o21 = orient2Dxy(A, P, Q);
-//	o22 = orient2Dxy(B, Q, P);
-//	if ((o11 || o12) && (o11 * o12 >= 0) && (o21 || o22) && (o21 * o22 >= 0)) return true;
-//
-//	o11 = orient2Dyz(P, A, B);
-//	o12 = orient2Dyz(Q, B, A);
-//	o21 = orient2Dyz(A, P, Q);
-//	o22 = orient2Dyz(B, Q, P);
-//	if ((o11 || o12) && (o11 * o12 >= 0) && (o21 || o22) && (o21 * o22 >= 0)) return true;
-//
-//	o11 = orient2Dzx(P, A, B);
-//	o12 = orient2Dzx(Q, B, A);
-//	o21 = orient2Dzx(A, P, Q);
-//	o22 = orient2Dzx(B, Q, P);
-//	if ((o11 || o12) && (o11 * o12 >= 0) && (o21 || o22) && (o21 * o22 >= 0)) return true;
-//
-//	return false;
-//}
-//
-//inline bool genericPoint::innerSegmentCrossesInnerTriangle(const genericPoint& s1, const genericPoint& s2, const genericPoint& v1, const genericPoint& v2, const genericPoint& v3)
-//{
-//	int o1 = orient3D(s1, v1, v2, v3); if (o1 == 0) return false;
-//	int o2 = orient3D(s2, v1, v2, v3); if (o2 == 0) return false;
-//
-//	if ((o1 > 0 && o2 > 0) || (o1 < 0 && o2 < 0)) return false;
-//	o1 = orient3D(s1, s2, v1, v2);
-//	o2 = orient3D(s1, s2, v2, v3);
-//	if ((o1 >= 0 && o2 <= 0) || (o1 <= 0 && o2 >= 0)) return false;
-//	int o3 = orient3D(s1, s2, v3, v1);
-//	if ((o1 >= 0 && o3 <= 0) || (o1 <= 0 && o3 >= 0)) return false;
-//	if ((o2 >= 0 && o3 <= 0) || (o2 <= 0 && o3 >= 0)) return false;
-//	return true;
-//}
-//
-//inline bool genericPoint::pointInInnerSegment(const genericPoint& p, const genericPoint& v1, const genericPoint& v2)
-//{
-//	if (misaligned(p, v1, v2)) return false;
-//
-//	int lt2, lt3;
-//	lt2 = lessThanOnX(v1, p);
-//	lt3 = lessThanOnX(p, v2);
-//	if (lt2) return (lt2 == lt3);
-//	lt2 = lessThanOnY(v1, p);
-//	lt3 = lessThanOnY(p, v2);
-//	if (lt2) return (lt2 == lt3);
-//	lt2 = lessThanOnZ(v1, p);
-//	lt3 = lessThanOnZ(p, v2);
-//	if (lt2) return (lt2 == lt3);
-//	return false;
-//}
-//
-//inline bool genericPoint::pointInSegment(const genericPoint& p, const genericPoint& v1, const genericPoint& v2)
-//{
-//	if (misaligned(p, v1, v2)) return false;
-//
-//	int lt2x = lessThanOnX(v1, p);
-//	int lt3x = lessThanOnX(p, v2);
-//	if (lt2x && lt3x) return (lt2x == lt3x);
-//	int lt2y = lessThanOnY(v1, p);
-//	int lt3y = lessThanOnY(p, v2);
-//	if (lt2y && lt3y) return (lt2y == lt3y);
-//	int lt2z = lessThanOnZ(v1, p);
-//	int lt3z = lessThanOnZ(p, v2);
-//	if (lt2z && lt3z) return (lt2z == lt3z);
-//
-//	return ((lt2x == 0 && lt2y == 0 && lt2z == 0) || (lt3x == 0 && lt3y == 0 && lt3z == 0));
-//}
-//
-//inline bool genericPoint::pointInTriangle(const genericPoint& P, const genericPoint& A, const genericPoint& B, const genericPoint& C)
-//{
-//	int o1, o2, o3;
-//	o1 = orient2Dxy(P, A, B);
-//	o2 = orient2Dxy(P, B, C);
-//	o3 = orient2Dxy(P, C, A);
-//	if (o1 || o2 || o3) return ((o1 >= 0 && o2 >= 0 && o3 >= 0) || (o1 <= 0 && o2 <= 0 && o3 <= 0));
-//	o1 = orient2Dyz(P, A, B);
-//	o2 = orient2Dyz(P, B, C);
-//	o3 = orient2Dyz(P, C, A);
-//	if (o1 || o2 || o3) return ((o1 >= 0 && o2 >= 0 && o3 >= 0) || (o1 <= 0 && o2 <= 0 && o3 <= 0));
-//	o1 = orient2Dzx(P, A, B);
-//	o2 = orient2Dzx(P, B, C);
-//	o3 = orient2Dzx(P, C, A);
-//	return ((o1 >= 0 && o2 >= 0 && o3 >= 0) || (o1 <= 0 && o2 <= 0 && o3 <= 0));
-//}
-//
-//
-//inline bool genericPoint::pointInTriangle(const genericPoint& P, const genericPoint& A, const genericPoint& B, const genericPoint& C, int& o1, int& o2, int& o3)
-//{
-//	o1 = orient2Dxy(P, A, B);
-//	o2 = orient2Dxy(P, B, C);
-//	o3 = orient2Dxy(P, C, A);
-//	if (o1 || o2 || o3) return ((o1 >= 0 && o2 >= 0 && o3 >= 0) || (o1 <= 0 && o2 <= 0 && o3 <= 0));
-//	o1 = orient2Dyz(P, A, B);
-//	o2 = orient2Dyz(P, B, C);
-//	o3 = orient2Dyz(P, C, A);
-//	if (o1 || o2 || o3) return ((o1 >= 0 && o2 >= 0 && o3 >= 0) || (o1 <= 0 && o2 <= 0 && o3 <= 0));
-//	o1 = orient2Dzx(P, A, B);
-//	o2 = orient2Dzx(P, B, C);
-//	o3 = orient2Dzx(P, C, A);
-//	return ((o1 >= 0 && o2 >= 0 && o3 >= 0) || (o1 <= 0 && o2 <= 0 && o3 <= 0));
-//}
-//
-//inline bool genericPoint::pointInInnerTriangle(const genericPoint& P, const genericPoint& A, const genericPoint& B, const genericPoint& C)
-//{
-//	int o1, o2, o3;
-//	o1 = orient2Dxy(P, A, B);
-//	o2 = orient2Dxy(P, B, C);
-//	o3 = orient2Dxy(P, C, A);
-//	if (o1 || o2 || o3) return ((o1 > 0 && o2 > 0 && o3 > 0) || (o1 < 0 && o2 < 0 && o3 < 0));
-//	o1 = orient2Dyz(P, A, B);
-//	o2 = orient2Dyz(P, B, C);
-//	o3 = orient2Dyz(P, C, A);
-//	if (o1 || o2 || o3) return ((o1 > 0 && o2 > 0 && o3 > 0) || (o1 < 0 && o2 < 0 && o3 < 0));
-//	o1 = orient2Dzx(P, A, B);
-//	o2 = orient2Dzx(P, B, C);
-//	o3 = orient2Dzx(P, C, A);
-//	return ((o1 > 0 && o2 > 0 && o3 > 0) || (o1 < 0 && o2 < 0 && o3 < 0));
-//}
-//
-//inline bool genericPoint::lineCrossesInnerTriangle(const genericPoint& s1, const genericPoint& s2, const genericPoint& v1, const genericPoint& v2, const genericPoint& v3)
-//{
-//	const int o1 = genericPoint::orient3D(s1, s2, v1, v2);
-//	const int o2 = genericPoint::orient3D(s1, s2, v2, v3);
-//	if ((o1 >= 0 && o2 <= 0) || (o1 <= 0 && o2 >= 0)) return false;
-//	const int o3 = genericPoint::orient3D(s1, s2, v3, v1);
-//	if ((o1 >= 0 && o3 <= 0) || (o1 <= 0 && o3 >= 0)) return false;
-//	if ((o2 >= 0 && o3 <= 0) || (o2 <= 0 && o3 >= 0)) return false;
-//	return true;
-//}
-//
-//inline bool genericPoint::lineCrossesTriangle(const genericPoint& s1, const genericPoint& s2, const genericPoint& v1, const genericPoint& v2, const genericPoint& v3)
-//{
-//	const int o1 = genericPoint::orient3D(s1, s2, v1, v2);
-//	const int o2 = genericPoint::orient3D(s1, s2, v2, v3);
-//	if ((o1 > 0 && o2 < 0) || (o1 < 0 && o2 > 0)) return false;
-//	const int o3 = genericPoint::orient3D(s1, s2, v3, v1);
-//	if ((o1 > 0 && o3 < 0) || (o1 < 0 && o3 > 0)) return false;
-//	if ((o2 > 0 && o3 < 0) || (o2 < 0 && o3 > 0)) return false;
-//	return true;
-//}
-//
-//inline bool genericPoint::innerSegmentCrossesTriangle(const genericPoint& s1, const genericPoint& s2, const genericPoint& v1, const genericPoint& v2, const genericPoint& v3)
-//{
-//	const int o1 = genericPoint::orient3D(s1, v1, v2, v3); if (o1 == 0) return false;
-//	const int o2 = genericPoint::orient3D(s2, v1, v2, v3); if (o2 == 0) return false;
-//
-//	if ((o1 > 0 && o2 > 0) || (o1 < 0 && o2 < 0)) return false;
-//	return lineCrossesTriangle(s1, s2, v1, v2, v3);
-//}
-//
-//
-//
-//inline bool genericPoint::pointInInnerSegment(const genericPoint& p, const genericPoint& v1, const genericPoint& v2, int xyz)
-//{
-//	int lt2, lt3;
-//	if (xyz == 0)
-//	{
-//		if (orient2Dyz(p, v1, v2)) return false;
-//		lt2 = lessThanOnY(v1, p);
-//		lt3 = lessThanOnY(p, v2);
-//		if (lt2) return (lt2 == lt3);
-//		lt2 = lessThanOnZ(v1, p);
-//		lt3 = lessThanOnZ(p, v2);
-//	}
-//	else if (xyz == 1)
-//	{
-//		if (orient2Dzx(p, v1, v2)) return false;
-//		lt2 = lessThanOnX(v1, p);
-//		lt3 = lessThanOnX(p, v2);
-//		if (lt2) return (lt2 == lt3);
-//		lt2 = lessThanOnZ(v1, p);
-//		lt3 = lessThanOnZ(p, v2);
-//	}
-//	else
-//	{
-//		if (orient2Dxy(p, v1, v2)) return false;
-//		lt2 = lessThanOnX(v1, p);
-//		lt3 = lessThanOnX(p, v2);
-//		if (lt2) return (lt2 == lt3);
-//		lt2 = lessThanOnY(v1, p);
-//		lt3 = lessThanOnY(p, v2);
-//	}
-//	return (lt2 && (lt2 == lt3));
-//}
-//
-//inline bool genericPoint::pointInSegment(const genericPoint& p, const genericPoint& v1, const genericPoint& v2, int xyz)
-//{
-//	int lt2, lt3, lt4, lt5;
-//	if (xyz == 0)
-//	{
-//		if (orient2Dyz(p, v1, v2)) return false;
-//		lt2 = lessThanOnY(v1, p);
-//		lt3 = lessThanOnY(p, v2);
-//		if (lt2 && lt3) return (lt2 == lt3);
-//		lt4 = lessThanOnZ(v1, p);
-//		lt5 = lessThanOnZ(p, v2);
-//	}
-//	else if (xyz == 1)
-//	{
-//		if (orient2Dzx(p, v1, v2)) return false;
-//		lt2 = lessThanOnX(v1, p);
-//		lt3 = lessThanOnX(p, v2);
-//		if (lt2 && lt3) return (lt2 == lt3);
-//		lt4 = lessThanOnZ(v1, p);
-//		lt5 = lessThanOnZ(p, v2);
-//	}
-//	else
-//	{
-//		if (orient2Dxy(p, v1, v2)) return false;
-//		lt2 = lessThanOnX(v1, p);
-//		lt3 = lessThanOnX(p, v2);
-//		if (lt2 && lt3) return (lt2 == lt3);
-//		lt4 = lessThanOnY(v1, p);
-//		lt5 = lessThanOnY(p, v2);
-//	}
-//	return ((lt2 == 0 && lt4 == 0) || (lt3 == 0 && lt5 == 0));
-//}
-//
-//inline bool genericPoint::pointInInnerTriangle(const genericPoint& P, const genericPoint& A, const genericPoint& B, const genericPoint& C, int xyz)
-//{
-//	int o1, o2, o3;
-//	if (xyz == 2)
-//	{
-//		o1 = genericPoint::orient2Dxy(P, A, B);
-//		o2 = genericPoint::orient2Dxy(P, B, C);
-//		o3 = genericPoint::orient2Dxy(P, C, A);
-//	}
-//	else if (xyz == 0)
-//	{
-//		o1 = genericPoint::orient2Dyz(P, A, B);
-//		o2 = genericPoint::orient2Dyz(P, B, C);
-//		o3 = genericPoint::orient2Dyz(P, C, A);
-//	}
-//	else
-//	{
-//		o1 = genericPoint::orient2Dzx(P, A, B);
-//		o2 = genericPoint::orient2Dzx(P, B, C);
-//		o3 = genericPoint::orient2Dzx(P, C, A);
-//	}
-//	return ((o1 > 0 && o2 > 0 && o3 > 0) || (o1 < 0 && o2 < 0 && o3 < 0));
-//}
-//
-//inline bool genericPoint::pointInTriangle(const genericPoint& P, const genericPoint& A, const genericPoint& B, const genericPoint& C, int xyz)
-//{
-//	int o1, o2, o3;
-//	if (xyz == 2)
-//	{
-//		o1 = genericPoint::orient2Dxy(P, A, B);
-//		o2 = genericPoint::orient2Dxy(P, B, C);
-//		o3 = genericPoint::orient2Dxy(P, C, A);
-//	}
-//	else if (xyz == 0)
-//	{
-//		o1 = genericPoint::orient2Dyz(P, A, B);
-//		o2 = genericPoint::orient2Dyz(P, B, C);
-//		o3 = genericPoint::orient2Dyz(P, C, A);
-//	}
-//	else
-//	{
-//		o1 = genericPoint::orient2Dzx(P, A, B);
-//		o2 = genericPoint::orient2Dzx(P, B, C);
-//		o3 = genericPoint::orient2Dzx(P, C, A);
-//	}
-//	return ((o1 >= 0 && o2 >= 0 && o3 >= 0) || (o1 <= 0 && o2 <= 0 && o3 <= 0));
-//}
-//
-//inline bool genericPoint::innerSegmentsCross(const genericPoint& A, const genericPoint& B, const genericPoint& P, const genericPoint& Q, int xyz)
-//{
-//	int o11, o12, o21, o22;
-//
-//	if (xyz == 2)
-//	{
-//		o11 = orient2Dxy(P, A, B);
-//		o12 = orient2Dxy(Q, B, A);
-//		o21 = orient2Dxy(A, P, Q);
-//		o22 = orient2Dxy(B, Q, P);
-//	}
-//	else if (xyz == 0)
-//	{
-//		o11 = orient2Dyz(P, A, B);
-//		o12 = orient2Dyz(Q, B, A);
-//		o21 = orient2Dyz(A, P, Q);
-//		o22 = orient2Dyz(B, Q, P);
-//	}
-//	else
-//	{
-//		o11 = orient2Dzx(P, A, B);
-//		o12 = orient2Dzx(Q, B, A);
-//		o21 = orient2Dzx(A, P, Q);
-//		o22 = orient2Dzx(B, Q, P);
-//	}
-//
-//	return (o11 && o21 && o11 == o12 && o21 == o22);
-//}
-//
-//inline bool genericPoint::segmentsCross(const genericPoint& A, const genericPoint& B, const genericPoint& P, const genericPoint& Q, int xyz)
-//{
-//	int o11, o12, o21, o22;
-//
-//	if (xyz == 2)
-//	{
-//		o11 = orient2Dxy(P, A, B);
-//		o12 = orient2Dxy(Q, B, A);
-//		o21 = orient2Dxy(A, P, Q);
-//		o22 = orient2Dxy(B, Q, P);
-//	}
-//	else if (xyz == 0)
-//	{
-//		o11 = orient2Dyz(P, A, B);
-//		o12 = orient2Dyz(Q, B, A);
-//		o21 = orient2Dyz(A, P, Q);
-//		o22 = orient2Dyz(B, Q, P);
-//	}
-//	else
-//	{
-//		o11 = orient2Dzx(P, A, B);
-//		o12 = orient2Dzx(Q, B, A);
-//		o21 = orient2Dzx(A, P, Q);
-//		o22 = orient2Dzx(B, Q, P);
-//	}
-//
-//	return ((o11 || o12) && (o11 * o12 >= 0) && (o21 || o22) && (o21 * o22 >= 0));
-//}
-
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
