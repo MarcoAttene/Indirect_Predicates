@@ -31,8 +31,6 @@
 #include "numerics.h"
 #include <iostream>
 
-#define CASCADED_IMPLICIT_POINTS
-
 // An indirect predicate can assume one of the following values.
 // UNDEFINED means that input parameters are degenerate and do not define an
 // implicit point.
@@ -313,7 +311,7 @@ public:
 };
 
 
-#ifdef CASCADED_IMPLICIT_POINTS
+#ifndef NO_CASCADED_IMPLICIT_POINTS
 typedef genericPoint	basePointType2D;
 #else
 typedef explicitPoint2D	basePointType2D;
@@ -407,7 +405,7 @@ public:
 };
 
 
-#ifdef CASCADED_IMPLICIT_POINTS
+#ifndef NO_CASCADED_IMPLICIT_POINTS
 typedef genericPoint	basePointType3D;
 #else
 typedef explicitPoint3D	basePointType3D;
