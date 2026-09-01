@@ -91,22 +91,25 @@ include(FetchContent)
 if(EXISTS ../.local.cmake)
 	set(nfg_SOURCE_DIR "../NFG/")
 else()
-	FetchContent_Declare(
-		nfg
-		URL https://github.com/MarcoAttene/nfg/archive/refs/heads/master.zip)
-	FetchContent_Populate(nfg)
-	message(STATUS "NFG is available in " ${nfg_SOURCE_DIR})
+	FetchContent_Declare(nfg
+		GIT_REPOSITORY https://github.com/MarcoAttene/nfg.git
+		GIT_TAG main
+		SOURCE_SUBDIR do-not-configure
+	)
+	FetchContent_MakeAvailable(nfg)
 
+	message(STATUS "NFG is available in " ${nfg_SOURCE_DIR})
 endif()
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${nfg_SOURCE_DIR}/include)
 
 
 if(ENABLE_ARMNEON)
-	FetchContent_Declare(
-		simde
-		URL https://github.com/simd-everywhere/simde/archive/refs/heads/master.zip)
-	FetchContent_Populate(simde)
+	FetchContent_Declare(simde
+		GIT_REPOSITORY https://github.com/simd-everywhere/simde.git
+		GIT_TAG v0.8.2
+	)
+	FetchContent_MakeAvailable(simde)
 	message(STATUS "simde is available in " ${simde_SOURCE_DIR})
 
 	target_include_directories(${PROJECT_NAME} PUBLIC ${simde_SOURCE_DIR}/simde)
