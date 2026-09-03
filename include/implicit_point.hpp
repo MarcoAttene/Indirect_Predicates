@@ -1525,7 +1525,7 @@ inline bool implicitPoint3D_TBC::getExactXYZCoordinates(bigrational& x, bigratio
 	return true;
 }
 
-inline ostream& operator<<(ostream& os, const genericPoint& p)
+inline std::ostream& operator<<(std::ostream& os, const genericPoint& p)
 {
 	if (p.isExplicit2D()) return os << p.toExplicit2D();
 	else if (p.isExplicit3D()) return os << p.toExplicit3D();
