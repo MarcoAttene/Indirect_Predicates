@@ -31,6 +31,8 @@
 #include "numerics.h"
 #include <iostream>
 
+namespace IPs {
+
 // An indirect predicate can assume one of the following values.
 // UNDEFINED means that input parameters are degenerate and do not define an
 // implicit point.
@@ -123,8 +125,8 @@ public:
 	bool getApproxXYZCoordinates(double& x, double& y, double& z, bool apap = false) const;
 
 	// Calculates the two/three cartesian coordinates exactly.
-	bool getExactXYCoordinates(bigrational& x, bigrational& y) const;
-	bool getExactXYZCoordinates(bigrational& x, bigrational& y, bigrational& z) const;
+	bool getExactXYCoordinates(NFG::bigrational& x, NFG::bigrational& y) const;
+	bool getExactXYZCoordinates(NFG::bigrational& x, NFG::bigrational& y, NFG::bigrational& z) const;
 
 	// These are the indirect predicates supported up to now.
 	// In each predicate, it is assumed that input points are either all 2D or all 3D
@@ -262,22 +264,22 @@ public:
 	bool apapExplicit(explicitPoint2D&) const;
 	bool apapExplicit(explicitPoint3D&) const;
 
-	bool getIntervalLambda(interval_number& lx, interval_number& ly, interval_number& d) const;
-	void getBigfloatLambda(bigfloat& lx, bigfloat& ly, bigfloat& d) const;
-	void getExpansionLambda(expansion& lx, expansion& ly, expansion& d) const;
-	bool getIntervalLambda(interval_number& lx, interval_number& ly, interval_number& lz, interval_number& d) const;
-	void getBigfloatLambda(bigfloat& lx, bigfloat& ly, bigfloat& lz, bigfloat& d) const;
-	void getExpansionLambda(expansion& lx, expansion& ly, expansion& lz, expansion& d) const;
+	bool getIntervalLambda(NFG::interval_number& lx, NFG::interval_number& ly, NFG::interval_number& d) const;
+	void getBigfloatLambda(NFG::bigfloat& lx, NFG::bigfloat& ly, NFG::bigfloat& d) const;
+	void getExpansionLambda(NFG::expansion& lx, NFG::expansion& ly, NFG::expansion& d) const;
+	bool getIntervalLambda(NFG::interval_number& lx, NFG::interval_number& ly, NFG::interval_number& lz, NFG::interval_number& d) const;
+	void getBigfloatLambda(NFG::bigfloat& lx, NFG::bigfloat& ly, NFG::bigfloat& lz, NFG::bigfloat& d) const;
+	void getExpansionLambda(NFG::expansion& lx, NFG::expansion& ly, NFG::expansion& lz, NFG::expansion& d) const;
 
-	bool getLambda2D(interval_number& lx, interval_number& ly, interval_number& d) const { return getIntervalLambda(lx, ly, d); }
-	bool getLambda3D(interval_number& lx, interval_number& ly, interval_number& lz, interval_number& d) const { return getIntervalLambda(lx, ly, lz, d); }
-	bool getLambda2D(bigfloat& lx, bigfloat& ly, bigfloat& d) const { getBigfloatLambda(lx, ly, d); return true; }
-	bool getLambda3D(bigfloat& lx, bigfloat& ly, bigfloat& lz, bigfloat& d) const { getBigfloatLambda(lx, ly, lz, d); return true; }
-	bool getLambda2D(expansion& lx, expansion& ly, expansion& d) const { getExpansionLambda(lx, ly, d); return true; }
-	bool getLambda3D(expansion& lx, expansion& ly, expansion& lz, expansion& d) const { getExpansionLambda(lx, ly, lz, d); return true; }
+	bool getLambda2D(NFG::interval_number& lx, NFG::interval_number& ly, NFG::interval_number& d) const { return getIntervalLambda(lx, ly, d); }
+	bool getLambda3D(NFG::interval_number& lx, NFG::interval_number& ly, NFG::interval_number& lz, NFG::interval_number& d) const { return getIntervalLambda(lx, ly, lz, d); }
+	bool getLambda2D(NFG::bigfloat& lx, NFG::bigfloat& ly, NFG::bigfloat& d) const { getBigfloatLambda(lx, ly, d); return true; }
+	bool getLambda3D(NFG::bigfloat& lx, NFG::bigfloat& ly, NFG::bigfloat& lz, NFG::bigfloat& d) const { getBigfloatLambda(lx, ly, lz, d); return true; }
+	bool getLambda2D(NFG::expansion& lx, NFG::expansion& ly, NFG::expansion& d) const { getExpansionLambda(lx, ly, d); return true; }
+	bool getLambda3D(NFG::expansion& lx, NFG::expansion& ly, NFG::expansion& lz, NFG::expansion& d) const { getExpansionLambda(lx, ly, lz, d); return true; }
 
 	std::string get_str() const {
-		bigrational x, y, z;
+		NFG::bigrational x, y, z;
 		if (!getExactXYZCoordinates(x, y, z)) return "UNDEFINED_GENERIC_POINT";
 		return x.get_str() + " " + y.get_str() + " " + z.get_str();
 	}
@@ -307,7 +309,7 @@ public:
 
 	const double* ptr() const { return &x; }
 
-	bool getExactXYCoordinates(bigrational& _x, bigrational& _y) const { _x = bigfloat(x); _y = bigfloat(y); return true; }
+	bool getExactXYCoordinates(NFG::bigrational& _x, NFG::bigrational& _y) const { _x = NFG::bigfloat(x); _y = NFG::bigfloat(y); return true; }
 };
 
 
@@ -331,14 +333,14 @@ public:
 	const basePointType2D& L2_2() const { return l2_2.toExplicit2D(); }
 
 private: // Cached values
-	mutable interval_number dfilter_lambda_x, dfilter_lambda_y, dfilter_denominator;
+	mutable NFG::interval_number dfilter_lambda_x, dfilter_lambda_y, dfilter_denominator;
 	bool needsIntervalLambda() const { return (dfilter_denominator.isNAN()); } // TRUE if NAN
 
 public:
-	bool getIntervalLambda(interval_number& lx, interval_number& ly, interval_number &d) const;
-	void getExpansionLambda(expansion& lx, expansion& ly, expansion& d) const;
-	void getBigfloatLambda(bigfloat& lx, bigfloat& ly, bigfloat& d) const;
-	bool getExactXYCoordinates(bigrational& x, bigrational& y) const;
+	bool getIntervalLambda(NFG::interval_number& lx, NFG::interval_number& ly, NFG::interval_number &d) const;
+	void getExpansionLambda(NFG::expansion& lx, NFG::expansion& ly, NFG::expansion& d) const;
+	void getBigfloatLambda(NFG::bigfloat& lx, NFG::bigfloat& ly, NFG::bigfloat& d) const;
+	bool getExactXYCoordinates(NFG::bigrational& x, NFG::bigrational& y) const;
 };
 
 
@@ -367,7 +369,7 @@ public:
 	const double* ptr() const { return &x; }
 
 	// When all points are known to be explicit we may use slightly faster versions of the same predicates defined for genericPoints
-	bool getExactXYZCoordinates(bigrational& _x, bigrational& _y, bigrational& _z) const { _x = bigfloat(x); _y = bigfloat(y); _z = bigfloat(z); return true; }
+	bool getExactXYZCoordinates(NFG::bigrational& _x, NFG::bigrational& _y, NFG::bigrational& _z) const { _x = NFG::bigfloat(x); _y = NFG::bigfloat(y); _z = NFG::bigfloat(z); return true; }
 	bool getApproxXYZCoordinates(double& _x, double& _y, double& _z, bool apap = true) const { _x = x; _y = y; _z = z; return true; };
 	static int orient2Dxy(const explicitPoint3D& a, const explicitPoint3D& b, const explicitPoint3D& c);
 	static int orient2Dyz(const explicitPoint3D& a, const explicitPoint3D& b, const explicitPoint3D& c);
@@ -427,13 +429,13 @@ public:
 	const basePointType3D& T() const { return it.toExplicit3D(); }
 
 private: // Cached values
-	interval_number dfilter_lambda_x, dfilter_lambda_y, dfilter_lambda_z, dfilter_denominator;
+	NFG::interval_number dfilter_lambda_x, dfilter_lambda_y, dfilter_lambda_z, dfilter_denominator;
 
 public:
-	bool getIntervalLambda(interval_number& lx, interval_number& ly, interval_number& lz, interval_number &d) const;
-	void getExpansionLambda(expansion& lx, expansion& ly, expansion& lz, expansion& d) const;
-	void getBigfloatLambda(bigfloat& lx, bigfloat& ly, bigfloat& lz, bigfloat& d) const;
-	bool getExactXYZCoordinates(bigrational& x, bigrational& y, bigrational& z) const;
+	bool getIntervalLambda(NFG::interval_number& lx, NFG::interval_number& ly, NFG::interval_number& lz, NFG::interval_number &d) const;
+	void getExpansionLambda(NFG::expansion& lx, NFG::expansion& ly, NFG::expansion& lz, NFG::expansion& d) const;
+	void getBigfloatLambda(NFG::bigfloat& lx, NFG::bigfloat& ly, NFG::bigfloat& lz, NFG::bigfloat& d) const;
+	bool getExactXYZCoordinates(NFG::bigrational& x, NFG::bigrational& y, NFG::bigrational& z) const;
 };
 
 
@@ -459,13 +461,13 @@ public:
 	const basePointType3D& U3() const { return iu3.toExplicit3D(); }
 
 private: // Cached values
-	interval_number dfilter_lambda_x, dfilter_lambda_y, dfilter_lambda_z, dfilter_denominator;
+	NFG::interval_number dfilter_lambda_x, dfilter_lambda_y, dfilter_lambda_z, dfilter_denominator;
 
 public:
-	bool getIntervalLambda(interval_number& lx, interval_number& ly, interval_number& lz, interval_number &d) const;
-	void getExpansionLambda(expansion& lx, expansion& ly, expansion& lz, expansion& d) const;
-	void getBigfloatLambda(bigfloat& lx, bigfloat& ly, bigfloat& lz, bigfloat& d) const;
-	bool getExactXYZCoordinates(bigrational& x, bigrational& y, bigrational& z) const;
+	bool getIntervalLambda(NFG::interval_number& lx, NFG::interval_number& ly, NFG::interval_number& lz, NFG::interval_number &d) const;
+	void getExpansionLambda(NFG::expansion& lx, NFG::expansion& ly, NFG::expansion& lz, NFG::expansion& d) const;
+	void getBigfloatLambda(NFG::bigfloat& lx, NFG::bigfloat& ly, NFG::bigfloat& lz, NFG::bigfloat& d) const;
+	bool getExactXYZCoordinates(NFG::bigrational& x, NFG::bigrational& y, NFG::bigrational& z) const;
 };
 
 
@@ -483,13 +485,13 @@ public:
 	const double T() const { return t; }
 
 private: // Cached values
-	interval_number dfilter_lambda_x, dfilter_lambda_y, dfilter_lambda_z, dfilter_denominator;
+	NFG::interval_number dfilter_lambda_x, dfilter_lambda_y, dfilter_lambda_z, dfilter_denominator;
 
 public:
-	bool getIntervalLambda(interval_number& lx, interval_number& ly, interval_number& lz, interval_number& d) const;
-	void getExpansionLambda(expansion& lx, expansion& ly, expansion& lz, expansion& d) const;
-	void getBigfloatLambda(bigfloat& lx, bigfloat& ly, bigfloat& lz, bigfloat& d) const;
-	bool getExactXYZCoordinates(bigrational& x, bigrational& y, bigrational& z) const;
+	bool getIntervalLambda(NFG::interval_number& lx, NFG::interval_number& ly, NFG::interval_number& lz, NFG::interval_number& d) const;
+	void getExpansionLambda(NFG::expansion& lx, NFG::expansion& ly, NFG::expansion& lz, NFG::expansion& d) const;
+	void getBigfloatLambda(NFG::bigfloat& lx, NFG::bigfloat& ly, NFG::bigfloat& lz, NFG::bigfloat& d) const;
+	bool getExactXYZCoordinates(NFG::bigrational& x, NFG::bigrational& y, NFG::bigrational& z) const;
 };
 
 
@@ -509,13 +511,13 @@ public:
 	const double V() const { return v; }
 
 private: // Cached values
-	interval_number dfilter_lambda_x, dfilter_lambda_y, dfilter_lambda_z, dfilter_denominator;
+	NFG::interval_number dfilter_lambda_x, dfilter_lambda_y, dfilter_lambda_z, dfilter_denominator;
 
 public:
-	bool getIntervalLambda(interval_number& lx, interval_number& ly, interval_number& lz, interval_number& d) const;
-	void getExpansionLambda(expansion& lx, expansion& ly, expansion& lz, expansion& d) const;
-	void getBigfloatLambda(bigfloat& lx, bigfloat& ly, bigfloat& lz, bigfloat& d) const;
-	bool getExactXYZCoordinates(bigrational& x, bigrational& y, bigrational& z) const;
+	bool getIntervalLambda(NFG::interval_number& lx, NFG::interval_number& ly, NFG::interval_number& lz, NFG::interval_number& d) const;
+	void getExpansionLambda(NFG::expansion& lx, NFG::expansion& ly, NFG::expansion& lz, NFG::expansion& d) const;
+	void getBigfloatLambda(NFG::bigfloat& lx, NFG::bigfloat& ly, NFG::bigfloat& lz, NFG::bigfloat& d) const;
+	bool getExactXYZCoordinates(NFG::bigrational& x, NFG::bigrational& y, NFG::bigrational& z) const;
 };
 
 
@@ -532,13 +534,13 @@ public:
 	const basePointType3D& S() const { return is.toExplicit3D(); }
 
 private: // Cached values
-	interval_number dfilter_lambda_x, dfilter_lambda_y, dfilter_lambda_z, dfilter_denominator;
+	NFG::interval_number dfilter_lambda_x, dfilter_lambda_y, dfilter_lambda_z, dfilter_denominator;
 
 public:
-	bool getIntervalLambda(interval_number& lx, interval_number& ly, interval_number& lz, interval_number& d) const;
-	void getExpansionLambda(expansion& lx, expansion& ly, expansion& lz, expansion& d) const;
-	void getBigfloatLambda(bigfloat& lx, bigfloat& ly, bigfloat& lz, bigfloat& d) const;
-	bool getExactXYZCoordinates(bigrational& x, bigrational& y, bigrational& z) const;
+	bool getIntervalLambda(NFG::interval_number& lx, NFG::interval_number& ly, NFG::interval_number& lz, NFG::interval_number& d) const;
+	void getExpansionLambda(NFG::expansion& lx, NFG::expansion& ly, NFG::expansion& lz, NFG::expansion& d) const;
+	void getBigfloatLambda(NFG::bigfloat& lx, NFG::bigfloat& ly, NFG::bigfloat& lz, NFG::bigfloat& d) const;
+	bool getExactXYZCoordinates(NFG::bigrational& x, NFG::bigrational& y, NFG::bigrational& z) const;
 };
 
 
@@ -602,6 +604,8 @@ inline ostream& operator<<(ostream& os, const implicitPoint3D_TBC& p)
 	explicitPoint3D e;
 	if (p.apapExplicit(e)) return os << e;
 	else return os << "UNDEF_TBC";
+}
+
 }
 
 #include "hand_optimized_predicates.hpp"

@@ -54,20 +54,20 @@ inline int orient2d_exact(double p1x, double p1y, double p2x, double p2y, double
 	acy[1] = (p1y - p3y);
 	bcy[1] = (p2y - p3y);
 
-	expansionObject::Two_Prod(acx[1], bcy[1], dtl);
-	expansionObject::Two_Prod(acy[1], bcx[1], dtr);
-	expansionObject::Two_Two_Diff(dtl, dtr, B);
+	NFG::expansionObject::Two_Prod(acx[1], bcy[1], dtl);
+	NFG::expansionObject::Two_Prod(acy[1], bcx[1], dtr);
+	NFG::expansionObject::Two_Two_Diff(dtl, dtr, B);
 
 	double dsm = (fabs(dtl[1]) + fabs(dtr[1]));
-	double det = expansionObject::To_Double(4, B);
+	double det = NFG::expansionObject::To_Double(4, B);
 	double eb = 2.2204460492503146e-16 * dsm;
 	Dl = ((det >= eb) - (-det >= eb));
 	if (Dl) return Dl;
 
-	expansionObject::Two_Diff_Back(p1x, p3x, acx);
-	expansionObject::Two_Diff_Back(p2x, p3x, bcx);
-	expansionObject::Two_Diff_Back(p1y, p3y, acy);
-	expansionObject::Two_Diff_Back(p2y, p3y, bcy);
+	NFG::expansionObject::Two_Diff_Back(p1x, p3x, acx);
+	NFG::expansionObject::Two_Diff_Back(p2x, p3x, bcx);
+	NFG::expansionObject::Two_Diff_Back(p1y, p3y, acy);
+	NFG::expansionObject::Two_Diff_Back(p2y, p3y, bcy);
 
 	if ((acx[0] == 0.0) && (acy[0] == 0.0) && (bcx[0] == 0.0) && (bcy[0] == 0.0)) return ((det > 0) - (det < 0));
 
@@ -76,20 +76,20 @@ inline int orient2d_exact(double p1x, double p1y, double p2x, double p2y, double
 	Dl = ((det >= eb) - (-det >= eb));
 	if (Dl) return Dl;
 
-	expansionObject::Two_Prod(acx[0], bcy[1], s);
-	expansionObject::Two_Prod(acy[0], bcx[1], t);
-	expansionObject::Two_Two_Diff(s, t, u);
-	C1l = expansionObject::Gen_Sum(4, B, 4, u, C1);
+	NFG::expansionObject::Two_Prod(acx[0], bcy[1], s);
+	NFG::expansionObject::Two_Prod(acy[0], bcx[1], t);
+	NFG::expansionObject::Two_Two_Diff(s, t, u);
+	C1l = NFG::expansionObject::Gen_Sum(4, B, 4, u, C1);
 
-	expansionObject::Two_Prod(acx[1], bcy[0], s);
-	expansionObject::Two_Prod(acy[1], bcx[0], t);
-	expansionObject::Two_Two_Diff(s, t, u);
-	C2l = expansionObject::Gen_Sum(C1l, C1, 4, u, C2);
+	NFG::expansionObject::Two_Prod(acx[1], bcy[0], s);
+	NFG::expansionObject::Two_Prod(acy[1], bcx[0], t);
+	NFG::expansionObject::Two_Two_Diff(s, t, u);
+	C2l = NFG::expansionObject::Gen_Sum(C1l, C1, 4, u, C2);
 
-	expansionObject::Two_Prod(acx[0], bcy[0], s);
-	expansionObject::Two_Prod(acy[0], bcx[0], t);
-	expansionObject::Two_Two_Diff(s, t, u);
-	Dl = expansionObject::Gen_Sum(C2l, C2, 4, u, D);
+	NFG::expansionObject::Two_Prod(acx[0], bcy[0], s);
+	NFG::expansionObject::Two_Prod(acy[0], bcx[0], t);
+	NFG::expansionObject::Two_Two_Diff(s, t, u);
+	Dl = NFG::expansionObject::Gen_Sum(C2l, C2, 4, u, D);
 
 	det = D[Dl - 1];
 	return ((det > 0) - (det < 0));
@@ -120,17 +120,17 @@ inline int orient3d_filtered(double px, double py, double pz, double qx, double 
 	return ((det >= eb) - (-det >= eb));
 }
 
-inline int orient3d_bigfloat(const bigfloat px, const bigfloat py, const bigfloat pz, const bigfloat qx, const bigfloat qy, const bigfloat qz, const bigfloat rx, const bigfloat ry, const bigfloat rz, const bigfloat sx, const bigfloat sy, const bigfloat sz)
+inline int orient3d_bigfloat(const NFG::bigfloat px, const NFG::bigfloat py, const NFG::bigfloat pz, const NFG::bigfloat qx, const NFG::bigfloat qy, const NFG::bigfloat qz, const NFG::bigfloat rx, const NFG::bigfloat ry, const NFG::bigfloat rz, const NFG::bigfloat sx, const NFG::bigfloat sy, const NFG::bigfloat sz)
 {
-	bigfloat fadx = qx - px; bigfloat fbdx = rx - px; bigfloat fcdx = sx - px;
-	bigfloat fady = qy - py; bigfloat fbdy = ry - py; bigfloat fcdy = sy - py;
-	bigfloat fadz = qz - pz; bigfloat fbdz = rz - pz; bigfloat fcdz = sz - pz;
+	NFG::bigfloat fadx = qx - px; NFG::bigfloat fbdx = rx - px; NFG::bigfloat fcdx = sx - px;
+	NFG::bigfloat fady = qy - py; NFG::bigfloat fbdy = ry - py; NFG::bigfloat fcdy = sy - py;
+	NFG::bigfloat fadz = qz - pz; NFG::bigfloat fbdz = rz - pz; NFG::bigfloat fcdz = sz - pz;
 
-	bigfloat fbdxcdy = fbdx * fcdy; bigfloat fcdxbdy = fcdx * fbdy;
-	bigfloat fcdxady = fcdx * fady; bigfloat fadxcdy = fadx * fcdy;
-	bigfloat fadxbdy = fadx * fbdy; bigfloat fbdxady = fbdx * fady;
+	NFG::bigfloat fbdxcdy = fbdx * fcdy; NFG::bigfloat fcdxbdy = fcdx * fbdy;
+	NFG::bigfloat fcdxady = fcdx * fady; NFG::bigfloat fadxcdy = fadx * fcdy;
+	NFG::bigfloat fadxbdy = fadx * fbdy; NFG::bigfloat fbdxady = fbdx * fady;
 
-	bigfloat det = (fbdxcdy - fcdxbdy) * fadz + (fcdxady - fadxcdy) * fbdz + (fadxbdy - fbdxady) * fcdz;
+	NFG::bigfloat det = (fbdxcdy - fcdxbdy) * fadz + (fcdxady - fadxcdy) * fbdz + (fadxbdy - fbdxady) * fcdz;
 	return sgn(det);
 }
 
@@ -157,43 +157,43 @@ inline int orient3d_exact(double pdx, double pdy, double pdz, double pax, double
 	bdz[1] = pbz - pdz;
 	cdz[1] = pcz - pdz;
 
-	expansionObject::Two_Prod(bdx[1], cdy[1], bdxcdy);
-	expansionObject::Two_Prod(cdx[1], bdy[1], cdxbdy);
-	expansionObject::Two_Two_Diff(bdxcdy, cdxbdy, bc);
-	alen = expansionObject::Gen_Scale(4, bc, adz[1], adet);
+	NFG::expansionObject::Two_Prod(bdx[1], cdy[1], bdxcdy);
+	NFG::expansionObject::Two_Prod(cdx[1], bdy[1], cdxbdy);
+	NFG::expansionObject::Two_Two_Diff(bdxcdy, cdxbdy, bc);
+	alen = NFG::expansionObject::Gen_Scale(4, bc, adz[1], adet);
 
-	expansionObject::Two_Prod(cdx[1], ady[1], cdxady);
-	expansionObject::Two_Prod(adx[1], cdy[1], adxcdy);
-	expansionObject::Two_Two_Diff(cdxady, adxcdy, ca);
-	blen = expansionObject::Gen_Scale(4, ca, bdz[1], bdet);
+	NFG::expansionObject::Two_Prod(cdx[1], ady[1], cdxady);
+	NFG::expansionObject::Two_Prod(adx[1], cdy[1], adxcdy);
+	NFG::expansionObject::Two_Two_Diff(cdxady, adxcdy, ca);
+	blen = NFG::expansionObject::Gen_Scale(4, ca, bdz[1], bdet);
 
-	expansionObject::Two_Prod(adx[1], bdy[1], adxbdy);
-	expansionObject::Two_Prod(bdx[1], ady[1], bdxady);
-	expansionObject::Two_Two_Diff(adxbdy, bdxady, ab);
-	clen = expansionObject::Gen_Scale(4, ab, cdz[1], cdet);
+	NFG::expansionObject::Two_Prod(adx[1], bdy[1], adxbdy);
+	NFG::expansionObject::Two_Prod(bdx[1], ady[1], bdxady);
+	NFG::expansionObject::Two_Two_Diff(adxbdy, bdxady, ab);
+	clen = NFG::expansionObject::Gen_Scale(4, ab, cdz[1], cdet);
 
-	ablen = expansionObject::Gen_Sum(alen, adet, blen, bdet, abdet);
-	finlen = expansionObject::Gen_Sum(ablen, abdet, clen, cdet, fin[wh]);
+	ablen = NFG::expansionObject::Gen_Sum(alen, adet, blen, bdet, abdet);
+	finlen = NFG::expansionObject::Gen_Sum(ablen, abdet, clen, cdet, fin[wh]);
 
 	double xx1 = bdxcdy[1] * adz[1]; double xx2 = cdxbdy[1] * adz[1];
 	double yy1 = cdxady[1] * bdz[1]; double yy2 = adxcdy[1] * bdz[1];
 	double zz1 = adxbdy[1] * cdz[1]; double zz2 = bdxady[1] * cdz[1];
 	double pm = fabs(xx1) + fabs(xx2) + fabs(yy1) + fabs(yy2) + fabs(zz1) + fabs(zz2);
 
-	det = expansionObject::To_Double(finlen, fin[wh]);
+	det = NFG::expansionObject::To_Double(finlen, fin[wh]);
 	eb = 3.3306690738754731e-016 * pm;
 	ri = (det >= eb) - (-det >= eb);
 	if (ri) return ri;
 
-	expansionObject::Two_Diff_Back(pax, pdx, adx);
-	expansionObject::Two_Diff_Back(pbx, pdx, bdx);
-	expansionObject::Two_Diff_Back(pcx, pdx, cdx);
-	expansionObject::Two_Diff_Back(pay, pdy, ady);
-	expansionObject::Two_Diff_Back(pby, pdy, bdy);
-	expansionObject::Two_Diff_Back(pcy, pdy, cdy);
-	expansionObject::Two_Diff_Back(paz, pdz, adz);
-	expansionObject::Two_Diff_Back(pbz, pdz, bdz);
-	expansionObject::Two_Diff_Back(pcz, pdz, cdz);
+	NFG::expansionObject::Two_Diff_Back(pax, pdx, adx);
+	NFG::expansionObject::Two_Diff_Back(pbx, pdx, bdx);
+	NFG::expansionObject::Two_Diff_Back(pcx, pdx, cdx);
+	NFG::expansionObject::Two_Diff_Back(pay, pdy, ady);
+	NFG::expansionObject::Two_Diff_Back(pby, pdy, bdy);
+	NFG::expansionObject::Two_Diff_Back(pcy, pdy, cdy);
+	NFG::expansionObject::Two_Diff_Back(paz, pdz, adz);
+	NFG::expansionObject::Two_Diff_Back(pbz, pdz, bdz);
+	NFG::expansionObject::Two_Diff_Back(pcz, pdz, cdz);
 
 	if ((adx[0] == 0.0) && (bdx[0] == 0.0) && (cdx[0] == 0.0) &&
 		(ady[0] == 0.0) && (bdy[0] == 0.0) && (cdy[0] == 0.0) &&

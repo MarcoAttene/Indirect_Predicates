@@ -34,28 +34,30 @@
 
 #pragma intrinsic(fabs)
 
+namespace IPs {
+
 static inline double ipow2(const double& d) { return d * d; }
 static inline double ipow3(const double& d) { return d * ipow2(d); }
 
-static inline interval_number ipow2(const interval_number& d) { return d.pow2(); }
-static inline interval_number ipow3(const interval_number& d) { return d.pow3(); }
+static inline NFG::interval_number ipow2(const NFG::interval_number& d) { return d.pow2(); }
+static inline NFG::interval_number ipow3(const NFG::interval_number& d) { return d.pow3(); }
 
-static inline expansion ipow2(const expansion& d) { return d.sqr(); }
-static inline expansion ipow3(const expansion& d) { return d.sqr()*d; }
+static inline NFG::expansion ipow2(const NFG::expansion& d) { return d.sqr(); }
+static inline NFG::expansion ipow3(const NFG::expansion& d) { return d.sqr()*d; }
 
-static inline bigfloat ipow2(const bigfloat& d) { return d * d; }
-static inline bigfloat ipow3(const bigfloat& d) { return d * ipow2(d); }
+static inline NFG::bigfloat ipow2(const NFG::bigfloat& d) { return d * d; }
+static inline NFG::bigfloat ipow3(const NFG::bigfloat& d) { return d * ipow2(d); }
 
-inline int sgn(const interval_number& p) { return (p.isPositive()) ? (1) : ((p.isNegative()) ? (-1) : (0)); }
+inline int sgn(const NFG::interval_number& p) { return (p.isPositive()) ? (1) : ((p.isNegative()) ? (-1) : (0)); }
 
 
 template<class PT, class T> static inline int dotProductSign2D_t(const PT& px, const PT& py, const PT& rx, const PT& ry, const PT& qx, const PT& qy) {
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundUP();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundUP();
 
-	std::conditional_t<(std::is_same<expansion, T>::value), expansionPool, char> pool;
+	std::conditional_t<(std::is_same<NFG::expansion, T>::value), NFG::expansionPool, char> pool;
 
-	if constexpr (std::is_same<expansion, T>::value) {
-		expansion::initPool(&pool);
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
+		NFG::expansion::initPool(&pool);
 		feclearexcept(FE_ALL_EXCEPT);
 	}
 
@@ -65,9 +67,9 @@ template<class PT, class T> static inline int dotProductSign2D_t(const PT& px, c
 	const T gy = (ry-qy);
 	const T d = ((lx*gx)+(ly*gy));
 
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 
-	if constexpr (std::is_same<expansion, T>::value) {
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
 		if (fetestexcept(FE_UNDERFLOW | FE_OVERFLOW)) return INT_MAX;
 	}
 
@@ -94,18 +96,18 @@ template<class PT, class T> static inline int dotProductSign2D_t(const PT& px, c
 inline int dotProductSign2D(const double& px, const double& py, const double& rx, const double& ry, const double& qx, const double& qy) {
 	int ret;
 	if ((ret = dotProductSign2D_t<double, double>(px, py, rx, ry, qx, qy)) != 0) return ret;
-	if ((ret = dotProductSign2D_t<s_expansion, expansion>(px, py, rx, ry, qx, qy)) != INT_MAX) return ret;
-	return dotProductSign2D_t<bigfloat, bigfloat>(px, py, rx, ry, qx, qy);
+	if ((ret = dotProductSign2D_t<NFG::s_expansion, NFG::expansion>(px, py, rx, ry, qx, qy)) != INT_MAX) return ret;
+	return dotProductSign2D_t<NFG::bigfloat, NFG::bigfloat>(px, py, rx, ry, qx, qy);
 }
 
 
 template<class PT, class T> static inline int dotProductSign3D_t(const PT& px, const PT& py, const PT& pz, const PT& rx, const PT& ry, const PT& rz, const PT& qx, const PT& qy, const PT& qz) {
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundUP();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundUP();
 
-	std::conditional_t<(std::is_same<expansion, T>::value), expansionPool, char> pool;
+	std::conditional_t<(std::is_same<NFG::expansion, T>::value), NFG::expansionPool, char> pool;
 
-	if constexpr (std::is_same<expansion, T>::value) {
-		expansion::initPool(&pool);
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
+		NFG::expansion::initPool(&pool);
 		feclearexcept(FE_ALL_EXCEPT);
 	}
 
@@ -117,9 +119,9 @@ template<class PT, class T> static inline int dotProductSign3D_t(const PT& px, c
 	const T gz = (rz-qz);
 	const T d = ((lx*gx)+((ly*gy)+(lz*gz)));
 
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 
-	if constexpr (std::is_same<expansion, T>::value) {
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
 		if (fetestexcept(FE_UNDERFLOW | FE_OVERFLOW)) return INT_MAX;
 	}
 
@@ -148,18 +150,18 @@ template<class PT, class T> static inline int dotProductSign3D_t(const PT& px, c
 inline int dotProductSign3D(const double& px, const double& py, const double& pz, const double& rx, const double& ry, const double& rz, const double& qx, const double& qy, const double& qz) {
 	int ret;
 	if ((ret = dotProductSign3D_t<double, double>(px, py, pz, rx, ry, rz, qx, qy, qz)) != 0) return ret;
-	if ((ret = dotProductSign3D_t<s_expansion, expansion>(px, py, pz, rx, ry, rz, qx, qy, qz)) != INT_MAX) return ret;
-	return dotProductSign3D_t<bigfloat, bigfloat>(px, py, pz, rx, ry, rz, qx, qy, qz);
+	if ((ret = dotProductSign3D_t<NFG::s_expansion, NFG::expansion>(px, py, pz, rx, ry, rz, qx, qy, qz)) != INT_MAX) return ret;
+	return dotProductSign3D_t<NFG::bigfloat, NFG::bigfloat>(px, py, pz, rx, ry, rz, qx, qy, qz);
 }
 
 
 template<class PT, class T> static inline int incircle_t(const PT& pax, const PT& pay, const PT& pbx, const PT& pby, const PT& pcx, const PT& pcy, const PT& pdx, const PT& pdy) {
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundUP();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundUP();
 
-	std::conditional_t<(std::is_same<expansion, T>::value), expansionPool, char> pool;
+	std::conditional_t<(std::is_same<NFG::expansion, T>::value), NFG::expansionPool, char> pool;
 
-	if constexpr (std::is_same<expansion, T>::value) {
-		expansion::initPool(&pool);
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
+		NFG::expansion::initPool(&pool);
 		feclearexcept(FE_ALL_EXCEPT);
 	}
 
@@ -177,9 +179,9 @@ template<class PT, class T> static inline int incircle_t(const PT& pax, const PT
 	const T clift = (ipow2(cdx)+ipow2(cdy));
 	const T L = ((alift*bcdet)+((blift*cadet)+(clift*abdet)));
 
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 
-	if constexpr (std::is_same<expansion, T>::value) {
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
 		if (fetestexcept(FE_UNDERFLOW | FE_OVERFLOW)) return INT_MAX;
 	}
 
@@ -209,18 +211,18 @@ template<class PT, class T> static inline int incircle_t(const PT& pax, const PT
 inline int incircle(const double& pax, const double& pay, const double& pbx, const double& pby, const double& pcx, const double& pcy, const double& pdx, const double& pdy) {
 	int ret;
 	if ((ret = incircle_t<double, double>(pax, pay, pbx, pby, pcx, pcy, pdx, pdy)) != 0) return ret;
-	if ((ret = incircle_t<s_expansion, expansion>(pax, pay, pbx, pby, pcx, pcy, pdx, pdy)) != INT_MAX) return ret;
-	return incircle_t<bigfloat, bigfloat>(pax, pay, pbx, pby, pcx, pcy, pdx, pdy);
+	if ((ret = incircle_t<NFG::s_expansion, NFG::expansion>(pax, pay, pbx, pby, pcx, pcy, pdx, pdy)) != INT_MAX) return ret;
+	return incircle_t<NFG::bigfloat, NFG::bigfloat>(pax, pay, pbx, pby, pcx, pcy, pdx, pdy);
 }
 
 
 template<class PT, class T> static inline int inGabrielSphere_t(const PT& qx, const PT& qy, const PT& qz, const PT& ax, const PT& ay, const PT& az, const PT& bx, const PT& by, const PT& bz, const PT& cx, const PT& cy, const PT& cz) {
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundUP();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundUP();
 
-	std::conditional_t<(std::is_same<expansion, T>::value), expansionPool, char> pool;
+	std::conditional_t<(std::is_same<NFG::expansion, T>::value), NFG::expansionPool, char> pool;
 
-	if constexpr (std::is_same<expansion, T>::value) {
-		expansion::initPool(&pool);
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
+		NFG::expansion::initPool(&pool);
 		feclearexcept(FE_ALL_EXCEPT);
 	}
 
@@ -247,9 +249,9 @@ template<class PT, class T> static inline int inGabrielSphere_t(const PT& qx, co
 	const T c2 = (ipow2(crossbcx)+(ipow2(crossbcy)+ipow2(crossbcz)));
 	const T ret = ((qax*((qax*c2)-ccax))+((qay*((qay*c2)-ccay))+(qaz*((qaz*c2)-ccaz))));
 
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 
-	if constexpr (std::is_same<expansion, T>::value) {
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
 		if (fetestexcept(FE_UNDERFLOW | FE_OVERFLOW)) return INT_MAX;
 	}
 
@@ -284,17 +286,17 @@ template<class PT, class T> static inline int inGabrielSphere_t(const PT& qx, co
 inline int inGabrielSphere(const double& qx, const double& qy, const double& qz, const double& ax, const double& ay, const double& az, const double& bx, const double& by, const double& bz, const double& cx, const double& cy, const double& cz) {
 	int ret;
 	if ((ret = inGabrielSphere_t<double, double>(qx, qy, qz, ax, ay, az, bx, by, bz, cx, cy, cz)) != 0) return ret;
-	return inGabrielSphere_t<bigfloat, bigfloat>(qx, qy, qz, ax, ay, az, bx, by, bz, cx, cy, cz);
+	return inGabrielSphere_t<NFG::bigfloat, NFG::bigfloat>(qx, qy, qz, ax, ay, az, bx, by, bz, cx, cy, cz);
 }
 
 
 template<class PT, class T> static inline int inSphere_t(const PT& pax, const PT& pay, const PT& paz, const PT& pbx, const PT& pby, const PT& pbz, const PT& pcx, const PT& pcy, const PT& pcz, const PT& pdx, const PT& pdy, const PT& pdz, const PT& pex, const PT& pey, const PT& pez) {
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundUP();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundUP();
 
-	std::conditional_t<(std::is_same<expansion, T>::value), expansionPool, char> pool;
+	std::conditional_t<(std::is_same<NFG::expansion, T>::value), NFG::expansionPool, char> pool;
 
-	if constexpr (std::is_same<expansion, T>::value) {
-		expansion::initPool(&pool);
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
+		NFG::expansion::initPool(&pool);
 		feclearexcept(FE_ALL_EXCEPT);
 	}
 
@@ -326,9 +328,9 @@ template<class PT, class T> static inline int inSphere_t(const PT& pax, const PT
 	const T dab = ((dez*ab)+((aez*bd)+(bez*da)));
 	const T d = (((clift*dab)-(dlift*abc))+((alift*bcd)-(blift*cda)));
 
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 
-	if constexpr (std::is_same<expansion, T>::value) {
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
 		if (fetestexcept(FE_UNDERFLOW | FE_OVERFLOW)) return INT_MAX;
 	}
 
@@ -365,23 +367,23 @@ template<class PT, class T> static inline int inSphere_t(const PT& pax, const PT
 inline int inSphere(const double& pax, const double& pay, const double& paz, const double& pbx, const double& pby, const double& pbz, const double& pcx, const double& pcy, const double& pcz, const double& pdx, const double& pdy, const double& pdz, const double& pex, const double& pey, const double& pez) {
 	int ret;
 	if ((ret = inSphere_t<double, double>(pax, pay, paz, pbx, pby, pbz, pcx, pcy, pcz, pdx, pdy, pdz, pex, pey, pez)) != 0) return ret;
-	return inSphere_t<bigfloat, bigfloat>(pax, pay, paz, pbx, pby, pbz, pcx, pcy, pcz, pdx, pdy, pdz, pex, pey, pez);
+	return inSphere_t<NFG::bigfloat, NFG::bigfloat>(pax, pay, paz, pbx, pby, pbz, pcx, pcy, pcz, pdx, pdy, pdz, pex, pey, pez);
 }
 
 
 template<class PT, class T> static inline int dotProductSign2D_EEI_t(const genericPoint& q, const PT& px, const PT& py, const PT& rx, const PT& ry) {
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundUP();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundUP();
 
-	std::conditional_t<(std::is_same<expansion, T>::value), expansionPool, char> pool;
+	std::conditional_t<(std::is_same<NFG::expansion, T>::value), NFG::expansionPool, char> pool;
 
-	if constexpr (std::is_same<expansion, T>::value) {
-		expansion::initPool(&pool);
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
+		NFG::expansion::initPool(&pool);
 		feclearexcept(FE_ALL_EXCEPT);
 	}
 
 	T lqx, lqy, dq;
 	if (!q.getLambda2D(lqx, lqy, dq)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
@@ -397,9 +399,9 @@ template<class PT, class T> static inline int dotProductSign2D_EEI_t(const gener
 	const T dy = (ly*gy);
 	const T d = (dx+dy);
 
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 
-	if constexpr (std::is_same<expansion, T>::value) {
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
 		if (fetestexcept(FE_UNDERFLOW | FE_OVERFLOW)) return INT_MAX;
 	}
 	return sgn(d);
@@ -407,24 +409,24 @@ template<class PT, class T> static inline int dotProductSign2D_EEI_t(const gener
 
 inline int dotProductSign2D_EEI(const genericPoint& q, const double& px, const double& py, const double& rx, const double& ry) {
 	int ret;
-	if ((ret = dotProductSign2D_EEI_t<interval_number, interval_number>(q, px, py, rx, ry)) != 0) return ret;
-	return dotProductSign2D_EEI_t<bigfloat, bigfloat>(q, px, py, rx, ry);
+	if ((ret = dotProductSign2D_EEI_t<NFG::interval_number, NFG::interval_number>(q, px, py, rx, ry)) != 0) return ret;
+	return dotProductSign2D_EEI_t<NFG::bigfloat, NFG::bigfloat>(q, px, py, rx, ry);
 }
 
 
 template<class PT, class T> static inline int dotProductSign2D_IEE_t(const genericPoint& p, const PT& rx, const PT& ry, const PT& qx, const PT& qy) {
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundUP();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundUP();
 
-	std::conditional_t<(std::is_same<expansion, T>::value), expansionPool, char> pool;
+	std::conditional_t<(std::is_same<NFG::expansion, T>::value), NFG::expansionPool, char> pool;
 
-	if constexpr (std::is_same<expansion, T>::value) {
-		expansion::initPool(&pool);
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
+		NFG::expansion::initPool(&pool);
 		feclearexcept(FE_ALL_EXCEPT);
 	}
 
 	T lpx, lpy, dp;
 	if (!p.getLambda2D(lpx, lpy, dp)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
@@ -438,9 +440,9 @@ template<class PT, class T> static inline int dotProductSign2D_IEE_t(const gener
 	const T dy = (ly*gy);
 	const T d = (dx+dy);
 
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 
-	if constexpr (std::is_same<expansion, T>::value) {
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
 		if (fetestexcept(FE_UNDERFLOW | FE_OVERFLOW)) return INT_MAX;
 	}
 	return sgn(d);
@@ -448,30 +450,30 @@ template<class PT, class T> static inline int dotProductSign2D_IEE_t(const gener
 
 inline int dotProductSign2D_IEE(const genericPoint& p, const double& rx, const double& ry, const double& qx, const double& qy) {
 	int ret;
-	if ((ret = dotProductSign2D_IEE_t<interval_number, interval_number>(p, rx, ry, qx, qy)) != 0) return ret;
-	return dotProductSign2D_IEE_t<bigfloat, bigfloat>(p, rx, ry, qx, qy);
+	if ((ret = dotProductSign2D_IEE_t<NFG::interval_number, NFG::interval_number>(p, rx, ry, qx, qy)) != 0) return ret;
+	return dotProductSign2D_IEE_t<NFG::bigfloat, NFG::bigfloat>(p, rx, ry, qx, qy);
 }
 
 
 template<class PT, class T> static inline int dotProductSign2D_IEI_t(const genericPoint& p, const genericPoint& q, const PT& rx, const PT& ry) {
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundUP();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundUP();
 
-	std::conditional_t<(std::is_same<expansion, T>::value), expansionPool, char> pool;
+	std::conditional_t<(std::is_same<NFG::expansion, T>::value), NFG::expansionPool, char> pool;
 
-	if constexpr (std::is_same<expansion, T>::value) {
-		expansion::initPool(&pool);
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
+		NFG::expansion::initPool(&pool);
 		feclearexcept(FE_ALL_EXCEPT);
 	}
 
 	T lpx, lpy, dp;
 	if (!p.getLambda2D(lpx, lpy, dp)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
 	T lqx, lqy, dq;
 	if (!q.getLambda2D(lqx, lqy, dq)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
@@ -481,9 +483,9 @@ template<class PT, class T> static inline int dotProductSign2D_IEI_t(const gener
 	const T gy = ((dq*ry)-lqy);
 	const T d = ((lx*gx)+(ly*gy));
 
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 
-	if constexpr (std::is_same<expansion, T>::value) {
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
 		if (fetestexcept(FE_UNDERFLOW | FE_OVERFLOW)) return INT_MAX;
 	}
 	return sgn(d);
@@ -491,30 +493,30 @@ template<class PT, class T> static inline int dotProductSign2D_IEI_t(const gener
 
 inline int dotProductSign2D_IEI(const genericPoint& p, const genericPoint& q, const double& rx, const double& ry) {
 	int ret;
-	if ((ret = dotProductSign2D_IEI_t<interval_number, interval_number>(p, q, rx, ry)) != 0) return ret;
-	return dotProductSign2D_IEI_t<bigfloat, bigfloat>(p, q, rx, ry);
+	if ((ret = dotProductSign2D_IEI_t<NFG::interval_number, NFG::interval_number>(p, q, rx, ry)) != 0) return ret;
+	return dotProductSign2D_IEI_t<NFG::bigfloat, NFG::bigfloat>(p, q, rx, ry);
 }
 
 
 template<class PT, class T> static inline int dotProductSign2D_IIE_t(const genericPoint& p, const genericPoint& r, const PT& qx, const PT& qy) {
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundUP();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundUP();
 
-	std::conditional_t<(std::is_same<expansion, T>::value), expansionPool, char> pool;
+	std::conditional_t<(std::is_same<NFG::expansion, T>::value), NFG::expansionPool, char> pool;
 
-	if constexpr (std::is_same<expansion, T>::value) {
-		expansion::initPool(&pool);
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
+		NFG::expansion::initPool(&pool);
 		feclearexcept(FE_ALL_EXCEPT);
 	}
 
 	T lpx, lpy, dp;
 	if (!p.getLambda2D(lpx, lpy, dp)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
 	T lrx, lry, dr;
 	if (!r.getLambda2D(lrx, lry, dr)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
@@ -530,9 +532,9 @@ template<class PT, class T> static inline int dotProductSign2D_IIE_t(const gener
 	const T dy = (ly*gy);
 	const T d = (dx+dy);
 
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 
-	if constexpr (std::is_same<expansion, T>::value) {
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
 		if (fetestexcept(FE_UNDERFLOW | FE_OVERFLOW)) return INT_MAX;
 	}
 	return sgn(d);
@@ -540,36 +542,36 @@ template<class PT, class T> static inline int dotProductSign2D_IIE_t(const gener
 
 inline int dotProductSign2D_IIE(const genericPoint& p, const genericPoint& r, const double& qx, const double& qy) {
 	int ret;
-	if ((ret = dotProductSign2D_IIE_t<interval_number, interval_number>(p, r, qx, qy)) != 0) return ret;
-	return dotProductSign2D_IIE_t<bigfloat, bigfloat>(p, r, qx, qy);
+	if ((ret = dotProductSign2D_IIE_t<NFG::interval_number, NFG::interval_number>(p, r, qx, qy)) != 0) return ret;
+	return dotProductSign2D_IIE_t<NFG::bigfloat, NFG::bigfloat>(p, r, qx, qy);
 }
 
 
 template<class PT, class T> static inline int dotProductSign2D_III_t(const genericPoint& p, const genericPoint& r, const genericPoint& q) {
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundUP();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundUP();
 
-	std::conditional_t<(std::is_same<expansion, T>::value), expansionPool, char> pool;
+	std::conditional_t<(std::is_same<NFG::expansion, T>::value), NFG::expansionPool, char> pool;
 
-	if constexpr (std::is_same<expansion, T>::value) {
-		expansion::initPool(&pool);
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
+		NFG::expansion::initPool(&pool);
 		feclearexcept(FE_ALL_EXCEPT);
 	}
 
 	T lpx, lpy, dp;
 	if (!p.getLambda2D(lpx, lpy, dp)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
 	T lrx, lry, dr;
 	if (!r.getLambda2D(lrx, lry, dr)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
 	T lqx, lqy, dq;
 	if (!q.getLambda2D(lqx, lqy, dq)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
@@ -589,9 +591,9 @@ template<class PT, class T> static inline int dotProductSign2D_III_t(const gener
 	const T dy = (ly*gy);
 	const T d = (dx+dy);
 
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 
-	if constexpr (std::is_same<expansion, T>::value) {
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
 		if (fetestexcept(FE_UNDERFLOW | FE_OVERFLOW)) return INT_MAX;
 	}
 	return sgn(d);
@@ -599,24 +601,24 @@ template<class PT, class T> static inline int dotProductSign2D_III_t(const gener
 
 inline int dotProductSign2D_III(const genericPoint& p, const genericPoint& r, const genericPoint& q) {
 	int ret;
-	if ((ret = dotProductSign2D_III_t<interval_number, interval_number>(p, r, q)) != 0) return ret;
-	return dotProductSign2D_III_t<bigfloat, bigfloat>(p, r, q);
+	if ((ret = dotProductSign2D_III_t<NFG::interval_number, NFG::interval_number>(p, r, q)) != 0) return ret;
+	return dotProductSign2D_III_t<NFG::bigfloat, NFG::bigfloat>(p, r, q);
 }
 
 
 template<class PT, class T> static inline int dotProductSign3D_EEI_t(const genericPoint& q, const PT& px, const PT& py, const PT& pz, const PT& rx, const PT& ry, const PT& rz) {
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundUP();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundUP();
 
-	std::conditional_t<(std::is_same<expansion, T>::value), expansionPool, char> pool;
+	std::conditional_t<(std::is_same<NFG::expansion, T>::value), NFG::expansionPool, char> pool;
 
-	if constexpr (std::is_same<expansion, T>::value) {
-		expansion::initPool(&pool);
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
+		NFG::expansion::initPool(&pool);
 		feclearexcept(FE_ALL_EXCEPT);
 	}
 
 	T lqx, lqy, lqz, dq;
 	if (!q.getLambda3D(lqx, lqy, lqz, dq)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
@@ -638,9 +640,9 @@ template<class PT, class T> static inline int dotProductSign3D_EEI_t(const gener
 	const T d1 = (dx+dy);
 	const T d = (d1+dz);
 
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 
-	if constexpr (std::is_same<expansion, T>::value) {
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
 		if (fetestexcept(FE_UNDERFLOW | FE_OVERFLOW)) return INT_MAX;
 	}
 	return sgn(d);
@@ -648,24 +650,24 @@ template<class PT, class T> static inline int dotProductSign3D_EEI_t(const gener
 
 inline int dotProductSign3D_EEI(const genericPoint& q, const double& px, const double& py, const double& pz, const double& rx, const double& ry, const double& rz) {
 	int ret;
-	if ((ret = dotProductSign3D_EEI_t<interval_number, interval_number>(q, px, py, pz, rx, ry, rz)) != 0) return ret;
-	return dotProductSign3D_EEI_t<bigfloat, bigfloat>(q, px, py, pz, rx, ry, rz);
+	if ((ret = dotProductSign3D_EEI_t<NFG::interval_number, NFG::interval_number>(q, px, py, pz, rx, ry, rz)) != 0) return ret;
+	return dotProductSign3D_EEI_t<NFG::bigfloat, NFG::bigfloat>(q, px, py, pz, rx, ry, rz);
 }
 
 
 template<class PT, class T> static inline int dotProductSign3D_IEE_t(const genericPoint& p, const PT& rx, const PT& ry, const PT& rz, const PT& qx, const PT& qy, const PT& qz) {
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundUP();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundUP();
 
-	std::conditional_t<(std::is_same<expansion, T>::value), expansionPool, char> pool;
+	std::conditional_t<(std::is_same<NFG::expansion, T>::value), NFG::expansionPool, char> pool;
 
-	if constexpr (std::is_same<expansion, T>::value) {
-		expansion::initPool(&pool);
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
+		NFG::expansion::initPool(&pool);
 		feclearexcept(FE_ALL_EXCEPT);
 	}
 
 	T lpx, lpy, lpz, dp;
 	if (!p.getLambda3D(lpx, lpy, lpz, dp)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
@@ -684,9 +686,9 @@ template<class PT, class T> static inline int dotProductSign3D_IEE_t(const gener
 	const T d1 = (dx+dy);
 	const T d = (d1+dz);
 
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 
-	if constexpr (std::is_same<expansion, T>::value) {
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
 		if (fetestexcept(FE_UNDERFLOW | FE_OVERFLOW)) return INT_MAX;
 	}
 	return sgn(d);
@@ -694,30 +696,30 @@ template<class PT, class T> static inline int dotProductSign3D_IEE_t(const gener
 
 inline int dotProductSign3D_IEE(const genericPoint& p, const double& rx, const double& ry, const double& rz, const double& qx, const double& qy, const double& qz) {
 	int ret;
-	if ((ret = dotProductSign3D_IEE_t<interval_number, interval_number>(p, rx, ry, rz, qx, qy, qz)) != 0) return ret;
-	return dotProductSign3D_IEE_t<bigfloat, bigfloat>(p, rx, ry, rz, qx, qy, qz);
+	if ((ret = dotProductSign3D_IEE_t<NFG::interval_number, NFG::interval_number>(p, rx, ry, rz, qx, qy, qz)) != 0) return ret;
+	return dotProductSign3D_IEE_t<NFG::bigfloat, NFG::bigfloat>(p, rx, ry, rz, qx, qy, qz);
 }
 
 
 template<class PT, class T> static inline int dotProductSign3D_IEI_t(const genericPoint& p, const genericPoint& q, const PT& rx, const PT& ry, const PT& rz) {
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundUP();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundUP();
 
-	std::conditional_t<(std::is_same<expansion, T>::value), expansionPool, char> pool;
+	std::conditional_t<(std::is_same<NFG::expansion, T>::value), NFG::expansionPool, char> pool;
 
-	if constexpr (std::is_same<expansion, T>::value) {
-		expansion::initPool(&pool);
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
+		NFG::expansion::initPool(&pool);
 		feclearexcept(FE_ALL_EXCEPT);
 	}
 
 	T lpx, lpy, lpz, dp;
 	if (!p.getLambda3D(lpx, lpy, lpz, dp)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
 	T lqx, lqy, lqz, dq;
 	if (!q.getLambda3D(lqx, lqy, lqz, dq)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
@@ -729,9 +731,9 @@ template<class PT, class T> static inline int dotProductSign3D_IEI_t(const gener
 	const T gz = ((dq*rz)-lqz);
 	const T d = ((lx*gx)+((ly*gy)+(lz*gz)));
 
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 
-	if constexpr (std::is_same<expansion, T>::value) {
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
 		if (fetestexcept(FE_UNDERFLOW | FE_OVERFLOW)) return INT_MAX;
 	}
 	return sgn(d);
@@ -739,30 +741,30 @@ template<class PT, class T> static inline int dotProductSign3D_IEI_t(const gener
 
 inline int dotProductSign3D_IEI(const genericPoint& p, const genericPoint& q, const double& rx, const double& ry, const double& rz) {
 	int ret;
-	if ((ret = dotProductSign3D_IEI_t<interval_number, interval_number>(p, q, rx, ry, rz)) != 0) return ret;
-	return dotProductSign3D_IEI_t<bigfloat, bigfloat>(p, q, rx, ry, rz);
+	if ((ret = dotProductSign3D_IEI_t<NFG::interval_number, NFG::interval_number>(p, q, rx, ry, rz)) != 0) return ret;
+	return dotProductSign3D_IEI_t<NFG::bigfloat, NFG::bigfloat>(p, q, rx, ry, rz);
 }
 
 
 template<class PT, class T> static inline int dotProductSign3D_IIE_t(const genericPoint& p, const genericPoint& r, const PT& qx, const PT& qy, const PT& qz) {
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundUP();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundUP();
 
-	std::conditional_t<(std::is_same<expansion, T>::value), expansionPool, char> pool;
+	std::conditional_t<(std::is_same<NFG::expansion, T>::value), NFG::expansionPool, char> pool;
 
-	if constexpr (std::is_same<expansion, T>::value) {
-		expansion::initPool(&pool);
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
+		NFG::expansion::initPool(&pool);
 		feclearexcept(FE_ALL_EXCEPT);
 	}
 
 	T lpx, lpy, lpz, dp;
 	if (!p.getLambda3D(lpx, lpy, lpz, dp)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
 	T lrx, lry, lrz, dr;
 	if (!r.getLambda3D(lrx, lry, lrz, dr)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
@@ -784,9 +786,9 @@ template<class PT, class T> static inline int dotProductSign3D_IIE_t(const gener
 	const T d1 = (dx+dy);
 	const T d = (d1+dz);
 
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 
-	if constexpr (std::is_same<expansion, T>::value) {
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
 		if (fetestexcept(FE_UNDERFLOW | FE_OVERFLOW)) return INT_MAX;
 	}
 	return sgn(d);
@@ -794,36 +796,36 @@ template<class PT, class T> static inline int dotProductSign3D_IIE_t(const gener
 
 inline int dotProductSign3D_IIE(const genericPoint& p, const genericPoint& r, const double& qx, const double& qy, const double& qz) {
 	int ret;
-	if ((ret = dotProductSign3D_IIE_t<interval_number, interval_number>(p, r, qx, qy, qz)) != 0) return ret;
-	return dotProductSign3D_IIE_t<bigfloat, bigfloat>(p, r, qx, qy, qz);
+	if ((ret = dotProductSign3D_IIE_t<NFG::interval_number, NFG::interval_number>(p, r, qx, qy, qz)) != 0) return ret;
+	return dotProductSign3D_IIE_t<NFG::bigfloat, NFG::bigfloat>(p, r, qx, qy, qz);
 }
 
 
 template<class PT, class T> static inline int dotProductSign3D_III_t(const genericPoint& p, const genericPoint& r, const genericPoint& q) {
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundUP();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundUP();
 
-	std::conditional_t<(std::is_same<expansion, T>::value), expansionPool, char> pool;
+	std::conditional_t<(std::is_same<NFG::expansion, T>::value), NFG::expansionPool, char> pool;
 
-	if constexpr (std::is_same<expansion, T>::value) {
-		expansion::initPool(&pool);
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
+		NFG::expansion::initPool(&pool);
 		feclearexcept(FE_ALL_EXCEPT);
 	}
 
 	T lpx, lpy, lpz, dp;
 	if (!p.getLambda3D(lpx, lpy, lpz, dp)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
 	T lrx, lry, lrz, dr;
 	if (!r.getLambda3D(lrx, lry, lrz, dr)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
 	T lqx, lqy, lqz, dq;
 	if (!q.getLambda3D(lqx, lqy, lqz, dq)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
@@ -851,9 +853,9 @@ template<class PT, class T> static inline int dotProductSign3D_III_t(const gener
 	const T d1 = (dx+dy);
 	const T d = (d1+dz);
 
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 
-	if constexpr (std::is_same<expansion, T>::value) {
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
 		if (fetestexcept(FE_UNDERFLOW | FE_OVERFLOW)) return INT_MAX;
 	}
 	return sgn(d);
@@ -861,24 +863,24 @@ template<class PT, class T> static inline int dotProductSign3D_III_t(const gener
 
 inline int dotProductSign3D_III(const genericPoint& p, const genericPoint& r, const genericPoint& q) {
 	int ret;
-	if ((ret = dotProductSign3D_III_t<interval_number, interval_number>(p, r, q)) != 0) return ret;
-	return dotProductSign3D_III_t<bigfloat, bigfloat>(p, r, q);
+	if ((ret = dotProductSign3D_III_t<NFG::interval_number, NFG::interval_number>(p, r, q)) != 0) return ret;
+	return dotProductSign3D_III_t<NFG::bigfloat, NFG::bigfloat>(p, r, q);
 }
 
 
 template<class PT, class T> static inline int incirclexy_indirect_IEEE_t(const genericPoint& p1, const PT& pbx, const PT& pby, const PT& pcx, const PT& pcy, const PT& pdx, const PT& pdy) {
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundUP();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundUP();
 
-	std::conditional_t<(std::is_same<expansion, T>::value), expansionPool, char> pool;
+	std::conditional_t<(std::is_same<NFG::expansion, T>::value), NFG::expansionPool, char> pool;
 
-	if constexpr (std::is_same<expansion, T>::value) {
-		expansion::initPool(&pool);
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
+		NFG::expansion::initPool(&pool);
 		feclearexcept(FE_ALL_EXCEPT);
 	}
 
 	T l1x, l1y, l1z, d1;
 	if (!p1.getLambda3D(l1x, l1y, l1z, d1)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
@@ -916,9 +918,9 @@ template<class PT, class T> static inline int incirclexy_indirect_IEEE_t(const g
 	const T lab = (la+lb);
 	const T L = (lab+lc);
 
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 
-	if constexpr (std::is_same<expansion, T>::value) {
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
 		if (fetestexcept(FE_UNDERFLOW | FE_OVERFLOW)) return INT_MAX;
 	}
 	return sgn(L);
@@ -926,30 +928,30 @@ template<class PT, class T> static inline int incirclexy_indirect_IEEE_t(const g
 
 inline int incirclexy_indirect_IEEE(const genericPoint& p1, const double& pbx, const double& pby, const double& pcx, const double& pcy, const double& pdx, const double& pdy) {
 	int ret;
-	if ((ret = incirclexy_indirect_IEEE_t<interval_number, interval_number>(p1, pbx, pby, pcx, pcy, pdx, pdy)) != 0) return ret;
-	return incirclexy_indirect_IEEE_t<bigfloat, bigfloat>(p1, pbx, pby, pcx, pcy, pdx, pdy);
+	if ((ret = incirclexy_indirect_IEEE_t<NFG::interval_number, NFG::interval_number>(p1, pbx, pby, pcx, pcy, pdx, pdy)) != 0) return ret;
+	return incirclexy_indirect_IEEE_t<NFG::bigfloat, NFG::bigfloat>(p1, pbx, pby, pcx, pcy, pdx, pdy);
 }
 
 
 template<class PT, class T> static inline int incirclexy_indirect_IIEE_t(const genericPoint& p1, const genericPoint& p2, const PT& pcx, const PT& pcy, const PT& pdx, const PT& pdy) {
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundUP();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundUP();
 
-	std::conditional_t<(std::is_same<expansion, T>::value), expansionPool, char> pool;
+	std::conditional_t<(std::is_same<NFG::expansion, T>::value), NFG::expansionPool, char> pool;
 
-	if constexpr (std::is_same<expansion, T>::value) {
-		expansion::initPool(&pool);
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
+		NFG::expansion::initPool(&pool);
 		feclearexcept(FE_ALL_EXCEPT);
 	}
 
 	T l1x, l1y, l1z, d1;
 	if (!p1.getLambda3D(l1x, l1y, l1z, d1)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
 	T l2x, l2y, l2z, d2;
 	if (!p2.getLambda3D(l2x, l2y, l2z, d2)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
@@ -990,9 +992,9 @@ template<class PT, class T> static inline int incirclexy_indirect_IIEE_t(const g
 	const T lab2 = (lab*d1);
 	const T L = (lab2+la);
 
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 
-	if constexpr (std::is_same<expansion, T>::value) {
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
 		if (fetestexcept(FE_UNDERFLOW | FE_OVERFLOW)) return INT_MAX;
 	}
 	return sgn(L);
@@ -1000,36 +1002,36 @@ template<class PT, class T> static inline int incirclexy_indirect_IIEE_t(const g
 
 inline int incirclexy_indirect_IIEE(const genericPoint& p1, const genericPoint& p2, const double& pcx, const double& pcy, const double& pdx, const double& pdy) {
 	int ret;
-	if ((ret = incirclexy_indirect_IIEE_t<interval_number, interval_number>(p1, p2, pcx, pcy, pdx, pdy)) != 0) return ret;
-	return incirclexy_indirect_IIEE_t<bigfloat, bigfloat>(p1, p2, pcx, pcy, pdx, pdy);
+	if ((ret = incirclexy_indirect_IIEE_t<NFG::interval_number, NFG::interval_number>(p1, p2, pcx, pcy, pdx, pdy)) != 0) return ret;
+	return incirclexy_indirect_IIEE_t<NFG::bigfloat, NFG::bigfloat>(p1, p2, pcx, pcy, pdx, pdy);
 }
 
 
 template<class PT, class T> static inline int incirclexy_indirect_IIIE_t(const genericPoint& p1, const genericPoint& p2, const genericPoint& p3, const PT& pdx, const PT& pdy) {
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundUP();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundUP();
 
-	std::conditional_t<(std::is_same<expansion, T>::value), expansionPool, char> pool;
+	std::conditional_t<(std::is_same<NFG::expansion, T>::value), NFG::expansionPool, char> pool;
 
-	if constexpr (std::is_same<expansion, T>::value) {
-		expansion::initPool(&pool);
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
+		NFG::expansion::initPool(&pool);
 		feclearexcept(FE_ALL_EXCEPT);
 	}
 
 	T l1x, l1y, l1z, d1;
 	if (!p1.getLambda3D(l1x, l1y, l1z, d1)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
 	T l2x, l2y, l2z, d2;
 	if (!p2.getLambda3D(l2x, l2y, l2z, d2)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
 	T l3x, l3y, l3z, d3;
 	if (!p3.getLambda3D(l3x, l3y, l3z, d3)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
@@ -1074,9 +1076,9 @@ template<class PT, class T> static inline int incirclexy_indirect_IIIE_t(const g
 	const T lab = (lab2*d1);
 	const T L = (lab+la);
 
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 
-	if constexpr (std::is_same<expansion, T>::value) {
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
 		if (fetestexcept(FE_UNDERFLOW | FE_OVERFLOW)) return INT_MAX;
 	}
 	return sgn(L);
@@ -1084,42 +1086,42 @@ template<class PT, class T> static inline int incirclexy_indirect_IIIE_t(const g
 
 inline int incirclexy_indirect_IIIE(const genericPoint& p1, const genericPoint& p2, const genericPoint& p3, const double& pdx, const double& pdy) {
 	int ret;
-	if ((ret = incirclexy_indirect_IIIE_t<interval_number, interval_number>(p1, p2, p3, pdx, pdy)) != 0) return ret;
-	return incirclexy_indirect_IIIE_t<bigfloat, bigfloat>(p1, p2, p3, pdx, pdy);
+	if ((ret = incirclexy_indirect_IIIE_t<NFG::interval_number, NFG::interval_number>(p1, p2, p3, pdx, pdy)) != 0) return ret;
+	return incirclexy_indirect_IIIE_t<NFG::bigfloat, NFG::bigfloat>(p1, p2, p3, pdx, pdy);
 }
 
 
 template<class PT, class T> static inline int incirclexy_indirect_IIII_t(const genericPoint& p1, const genericPoint& p2, const genericPoint& p3, const genericPoint& p4) {
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundUP();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundUP();
 
-	std::conditional_t<(std::is_same<expansion, T>::value), expansionPool, char> pool;
+	std::conditional_t<(std::is_same<NFG::expansion, T>::value), NFG::expansionPool, char> pool;
 
-	if constexpr (std::is_same<expansion, T>::value) {
-		expansion::initPool(&pool);
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
+		NFG::expansion::initPool(&pool);
 		feclearexcept(FE_ALL_EXCEPT);
 	}
 
 	T l1x, l1y, l1z, d1;
 	if (!p1.getLambda3D(l1x, l1y, l1z, d1)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
 	T l2x, l2y, l2z, d2;
 	if (!p2.getLambda3D(l2x, l2y, l2z, d2)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
 	T l3x, l3y, l3z, d3;
 	if (!p3.getLambda3D(l3x, l3y, l3z, d3)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
 	T l4x, l4y, l4z, d4;
 	if (!p4.getLambda3D(l4x, l4y, l4z, d4)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
@@ -1170,9 +1172,9 @@ template<class PT, class T> static inline int incirclexy_indirect_IIII_t(const g
 	const T lab = (lab2*d1);
 	const T L = (lab+la);
 
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 
-	if constexpr (std::is_same<expansion, T>::value) {
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
 		if (fetestexcept(FE_UNDERFLOW | FE_OVERFLOW)) return INT_MAX;
 	}
 	return sgn(L);
@@ -1180,24 +1182,24 @@ template<class PT, class T> static inline int incirclexy_indirect_IIII_t(const g
 
 inline int incirclexy_indirect_IIII(const genericPoint& p1, const genericPoint& p2, const genericPoint& p3, const genericPoint& p4) {
 	int ret;
-	if ((ret = incirclexy_indirect_IIII_t<interval_number, interval_number>(p1, p2, p3, p4)) != 0) return ret;
-	return incirclexy_indirect_IIII_t<bigfloat, bigfloat>(p1, p2, p3, p4);
+	if ((ret = incirclexy_indirect_IIII_t<NFG::interval_number, NFG::interval_number>(p1, p2, p3, p4)) != 0) return ret;
+	return incirclexy_indirect_IIII_t<NFG::bigfloat, NFG::bigfloat>(p1, p2, p3, p4);
 }
 
 
 template<class PT, class T> static inline int incircle_indirect_IEEE_t(const genericPoint& p1, const PT& pbx, const PT& pby, const PT& pcx, const PT& pcy, const PT& pdx, const PT& pdy) {
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundUP();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundUP();
 
-	std::conditional_t<(std::is_same<expansion, T>::value), expansionPool, char> pool;
+	std::conditional_t<(std::is_same<NFG::expansion, T>::value), NFG::expansionPool, char> pool;
 
-	if constexpr (std::is_same<expansion, T>::value) {
-		expansion::initPool(&pool);
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
+		NFG::expansion::initPool(&pool);
 		feclearexcept(FE_ALL_EXCEPT);
 	}
 
 	T l1x, l1y, d1;
 	if (!p1.getLambda2D(l1x, l1y, d1)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
@@ -1235,9 +1237,9 @@ template<class PT, class T> static inline int incircle_indirect_IEEE_t(const gen
 	const T lab = (la+lb);
 	const T L = (lab+lc);
 
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 
-	if constexpr (std::is_same<expansion, T>::value) {
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
 		if (fetestexcept(FE_UNDERFLOW | FE_OVERFLOW)) return INT_MAX;
 	}
 	return sgn(L);
@@ -1245,30 +1247,30 @@ template<class PT, class T> static inline int incircle_indirect_IEEE_t(const gen
 
 inline int incircle_indirect_IEEE(const genericPoint& p1, const double& pbx, const double& pby, const double& pcx, const double& pcy, const double& pdx, const double& pdy) {
 	int ret;
-	if ((ret = incircle_indirect_IEEE_t<interval_number, interval_number>(p1, pbx, pby, pcx, pcy, pdx, pdy)) != 0) return ret;
-	return incircle_indirect_IEEE_t<bigfloat, bigfloat>(p1, pbx, pby, pcx, pcy, pdx, pdy);
+	if ((ret = incircle_indirect_IEEE_t<NFG::interval_number, NFG::interval_number>(p1, pbx, pby, pcx, pcy, pdx, pdy)) != 0) return ret;
+	return incircle_indirect_IEEE_t<NFG::bigfloat, NFG::bigfloat>(p1, pbx, pby, pcx, pcy, pdx, pdy);
 }
 
 
 template<class PT, class T> static inline int incircle_indirect_IIEE_t(const genericPoint& p1, const genericPoint& p2, const PT& pcx, const PT& pcy, const PT& pdx, const PT& pdy) {
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundUP();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundUP();
 
-	std::conditional_t<(std::is_same<expansion, T>::value), expansionPool, char> pool;
+	std::conditional_t<(std::is_same<NFG::expansion, T>::value), NFG::expansionPool, char> pool;
 
-	if constexpr (std::is_same<expansion, T>::value) {
-		expansion::initPool(&pool);
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
+		NFG::expansion::initPool(&pool);
 		feclearexcept(FE_ALL_EXCEPT);
 	}
 
 	T l1x, l1y, d1;
 	if (!p1.getLambda2D(l1x, l1y, d1)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
 	T l2x, l2y, d2;
 	if (!p2.getLambda2D(l2x, l2y, d2)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
@@ -1309,9 +1311,9 @@ template<class PT, class T> static inline int incircle_indirect_IIEE_t(const gen
 	const T lab2 = (lab*d1);
 	const T L = (lab2+la);
 
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 
-	if constexpr (std::is_same<expansion, T>::value) {
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
 		if (fetestexcept(FE_UNDERFLOW | FE_OVERFLOW)) return INT_MAX;
 	}
 	return sgn(L);
@@ -1319,36 +1321,36 @@ template<class PT, class T> static inline int incircle_indirect_IIEE_t(const gen
 
 inline int incircle_indirect_IIEE(const genericPoint& p1, const genericPoint& p2, const double& pcx, const double& pcy, const double& pdx, const double& pdy) {
 	int ret;
-	if ((ret = incircle_indirect_IIEE_t<interval_number, interval_number>(p1, p2, pcx, pcy, pdx, pdy)) != 0) return ret;
-	return incircle_indirect_IIEE_t<bigfloat, bigfloat>(p1, p2, pcx, pcy, pdx, pdy);
+	if ((ret = incircle_indirect_IIEE_t<NFG::interval_number, NFG::interval_number>(p1, p2, pcx, pcy, pdx, pdy)) != 0) return ret;
+	return incircle_indirect_IIEE_t<NFG::bigfloat, NFG::bigfloat>(p1, p2, pcx, pcy, pdx, pdy);
 }
 
 
 template<class PT, class T> static inline int incircle_indirect_IIIE_t(const genericPoint& p1, const genericPoint& p2, const genericPoint& p3, const PT& pdx, const PT& pdy) {
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundUP();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundUP();
 
-	std::conditional_t<(std::is_same<expansion, T>::value), expansionPool, char> pool;
+	std::conditional_t<(std::is_same<NFG::expansion, T>::value), NFG::expansionPool, char> pool;
 
-	if constexpr (std::is_same<expansion, T>::value) {
-		expansion::initPool(&pool);
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
+		NFG::expansion::initPool(&pool);
 		feclearexcept(FE_ALL_EXCEPT);
 	}
 
 	T l1x, l1y, d1;
 	if (!p1.getLambda2D(l1x, l1y, d1)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
 	T l2x, l2y, d2;
 	if (!p2.getLambda2D(l2x, l2y, d2)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
 	T l3x, l3y, d3;
 	if (!p3.getLambda2D(l3x, l3y, d3)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
@@ -1393,9 +1395,9 @@ template<class PT, class T> static inline int incircle_indirect_IIIE_t(const gen
 	const T lab = (lab2*d1);
 	const T L = (lab+la);
 
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 
-	if constexpr (std::is_same<expansion, T>::value) {
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
 		if (fetestexcept(FE_UNDERFLOW | FE_OVERFLOW)) return INT_MAX;
 	}
 	return sgn(L);
@@ -1403,42 +1405,42 @@ template<class PT, class T> static inline int incircle_indirect_IIIE_t(const gen
 
 inline int incircle_indirect_IIIE(const genericPoint& p1, const genericPoint& p2, const genericPoint& p3, const double& pdx, const double& pdy) {
 	int ret;
-	if ((ret = incircle_indirect_IIIE_t<interval_number, interval_number>(p1, p2, p3, pdx, pdy)) != 0) return ret;
-	return incircle_indirect_IIIE_t<bigfloat, bigfloat>(p1, p2, p3, pdx, pdy);
+	if ((ret = incircle_indirect_IIIE_t<NFG::interval_number, NFG::interval_number>(p1, p2, p3, pdx, pdy)) != 0) return ret;
+	return incircle_indirect_IIIE_t<NFG::bigfloat, NFG::bigfloat>(p1, p2, p3, pdx, pdy);
 }
 
 
 template<class PT, class T> static inline int incircle_indirect_IIII_t(const genericPoint& p1, const genericPoint& p2, const genericPoint& p3, const genericPoint& p4) {
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundUP();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundUP();
 
-	std::conditional_t<(std::is_same<expansion, T>::value), expansionPool, char> pool;
+	std::conditional_t<(std::is_same<NFG::expansion, T>::value), NFG::expansionPool, char> pool;
 
-	if constexpr (std::is_same<expansion, T>::value) {
-		expansion::initPool(&pool);
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
+		NFG::expansion::initPool(&pool);
 		feclearexcept(FE_ALL_EXCEPT);
 	}
 
 	T l1x, l1y, d1;
 	if (!p1.getLambda2D(l1x, l1y, d1)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
 	T l2x, l2y, d2;
 	if (!p2.getLambda2D(l2x, l2y, d2)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
 	T l3x, l3y, d3;
 	if (!p3.getLambda2D(l3x, l3y, d3)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
 	T l4x, l4y, d4;
 	if (!p4.getLambda2D(l4x, l4y, d4)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
@@ -1489,9 +1491,9 @@ template<class PT, class T> static inline int incircle_indirect_IIII_t(const gen
 	const T lab = (lab2*d1);
 	const T L = (lab+la);
 
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 
-	if constexpr (std::is_same<expansion, T>::value) {
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
 		if (fetestexcept(FE_UNDERFLOW | FE_OVERFLOW)) return INT_MAX;
 	}
 	return sgn(L);
@@ -1499,24 +1501,24 @@ template<class PT, class T> static inline int incircle_indirect_IIII_t(const gen
 
 inline int incircle_indirect_IIII(const genericPoint& p1, const genericPoint& p2, const genericPoint& p3, const genericPoint& p4) {
 	int ret;
-	if ((ret = incircle_indirect_IIII_t<interval_number, interval_number>(p1, p2, p3, p4)) != 0) return ret;
-	return incircle_indirect_IIII_t<bigfloat, bigfloat>(p1, p2, p3, p4);
+	if ((ret = incircle_indirect_IIII_t<NFG::interval_number, NFG::interval_number>(p1, p2, p3, p4)) != 0) return ret;
+	return incircle_indirect_IIII_t<NFG::bigfloat, NFG::bigfloat>(p1, p2, p3, p4);
 }
 
 
 template<class PT, class T> static inline int inGabrielSphere_EIEE_t(const genericPoint& a, const PT& qx, const PT& qy, const PT& qz, const PT& bx, const PT& by, const PT& bz, const PT& cx, const PT& cy, const PT& cz) {
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundUP();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundUP();
 
-	std::conditional_t<(std::is_same<expansion, T>::value), expansionPool, char> pool;
+	std::conditional_t<(std::is_same<NFG::expansion, T>::value), NFG::expansionPool, char> pool;
 
-	if constexpr (std::is_same<expansion, T>::value) {
-		expansion::initPool(&pool);
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
+		NFG::expansion::initPool(&pool);
 		feclearexcept(FE_ALL_EXCEPT);
 	}
 
 	T l2x, l2y, l2z, d2;
 	if (!a.getLambda3D(l2x, l2y, l2z, d2)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
@@ -1543,9 +1545,9 @@ template<class PT, class T> static inline int inGabrielSphere_EIEE_t(const gener
 	const T c2 = (ipow2(crossbcx)+(ipow2(crossbcy)+ipow2(crossbcz)));
 	const T ret = ((qax*((qax*c2)-ccax))+((qay*((qay*c2)-ccay))+(qaz*((qaz*c2)-ccaz))));
 
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 
-	if constexpr (std::is_same<expansion, T>::value) {
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
 		if (fetestexcept(FE_UNDERFLOW | FE_OVERFLOW)) return INT_MAX;
 	}
 	return sgn(ret);
@@ -1553,30 +1555,30 @@ template<class PT, class T> static inline int inGabrielSphere_EIEE_t(const gener
 
 inline int inGabrielSphere_EIEE(const genericPoint& a, const double& qx, const double& qy, const double& qz, const double& bx, const double& by, const double& bz, const double& cx, const double& cy, const double& cz) {
 	int ret;
-	if ((ret = inGabrielSphere_EIEE_t<interval_number, interval_number>(a, qx, qy, qz, bx, by, bz, cx, cy, cz)) != 0) return ret;
-	return inGabrielSphere_EIEE_t<bigfloat, bigfloat>(a, qx, qy, qz, bx, by, bz, cx, cy, cz);
+	if ((ret = inGabrielSphere_EIEE_t<NFG::interval_number, NFG::interval_number>(a, qx, qy, qz, bx, by, bz, cx, cy, cz)) != 0) return ret;
+	return inGabrielSphere_EIEE_t<NFG::bigfloat, NFG::bigfloat>(a, qx, qy, qz, bx, by, bz, cx, cy, cz);
 }
 
 
 template<class PT, class T> static inline int inGabrielSphere_EIIE_t(const genericPoint& a, const genericPoint& b, const PT& qx, const PT& qy, const PT& qz, const PT& cx, const PT& cy, const PT& cz) {
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundUP();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundUP();
 
-	std::conditional_t<(std::is_same<expansion, T>::value), expansionPool, char> pool;
+	std::conditional_t<(std::is_same<NFG::expansion, T>::value), NFG::expansionPool, char> pool;
 
-	if constexpr (std::is_same<expansion, T>::value) {
-		expansion::initPool(&pool);
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
+		NFG::expansion::initPool(&pool);
 		feclearexcept(FE_ALL_EXCEPT);
 	}
 
 	T l2x, l2y, l2z, d2;
 	if (!a.getLambda3D(l2x, l2y, l2z, d2)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
 	T l3x, l3y, l3z, d3;
 	if (!b.getLambda3D(l3x, l3y, l3z, d3)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
@@ -1603,9 +1605,9 @@ template<class PT, class T> static inline int inGabrielSphere_EIIE_t(const gener
 	const T c2 = ((ipow2(crossbcx)+(ipow2(crossbcy)+ipow2(crossbcz)))*d3);
 	const T ret = ((qax*((qax*c2)-ccax))+((qay*((qay*c2)-ccay))+(qaz*((qaz*c2)-ccaz))));
 
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 
-	if constexpr (std::is_same<expansion, T>::value) {
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
 		if (fetestexcept(FE_UNDERFLOW | FE_OVERFLOW)) return INT_MAX;
 	}
 	return sgn(ret);
@@ -1613,36 +1615,36 @@ template<class PT, class T> static inline int inGabrielSphere_EIIE_t(const gener
 
 inline int inGabrielSphere_EIIE(const genericPoint& a, const genericPoint& b, const double& qx, const double& qy, const double& qz, const double& cx, const double& cy, const double& cz) {
 	int ret;
-	if ((ret = inGabrielSphere_EIIE_t<interval_number, interval_number>(a, b, qx, qy, qz, cx, cy, cz)) != 0) return ret;
-	return inGabrielSphere_EIIE_t<bigfloat, bigfloat>(a, b, qx, qy, qz, cx, cy, cz);
+	if ((ret = inGabrielSphere_EIIE_t<NFG::interval_number, NFG::interval_number>(a, b, qx, qy, qz, cx, cy, cz)) != 0) return ret;
+	return inGabrielSphere_EIIE_t<NFG::bigfloat, NFG::bigfloat>(a, b, qx, qy, qz, cx, cy, cz);
 }
 
 
 template<class PT, class T> static inline int inGabrielSphere_EIII_t(const genericPoint& a, const genericPoint& b, const genericPoint& c, const PT& qx, const PT& qy, const PT& qz) {
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundUP();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundUP();
 
-	std::conditional_t<(std::is_same<expansion, T>::value), expansionPool, char> pool;
+	std::conditional_t<(std::is_same<NFG::expansion, T>::value), NFG::expansionPool, char> pool;
 
-	if constexpr (std::is_same<expansion, T>::value) {
-		expansion::initPool(&pool);
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
+		NFG::expansion::initPool(&pool);
 		feclearexcept(FE_ALL_EXCEPT);
 	}
 
 	T l2x, l2y, l2z, d2;
 	if (!a.getLambda3D(l2x, l2y, l2z, d2)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
 	T l3x, l3y, l3z, d3;
 	if (!b.getLambda3D(l3x, l3y, l3z, d3)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
 	T l4x, l4y, l4z, d4;
 	if (!c.getLambda3D(l4x, l4y, l4z, d4)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
@@ -1669,9 +1671,9 @@ template<class PT, class T> static inline int inGabrielSphere_EIII_t(const gener
 	const T c2 = ((ipow2(crossbcx)+(ipow2(crossbcy)+ipow2(crossbcz)))*(d3*d4));
 	const T ret = ((qax*((qax*c2)-ccax))+((qay*((qay*c2)-ccay))+(qaz*((qaz*c2)-ccaz))));
 
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 
-	if constexpr (std::is_same<expansion, T>::value) {
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
 		if (fetestexcept(FE_UNDERFLOW | FE_OVERFLOW)) return INT_MAX;
 	}
 	return sgn(ret);
@@ -1679,24 +1681,24 @@ template<class PT, class T> static inline int inGabrielSphere_EIII_t(const gener
 
 inline int inGabrielSphere_EIII(const genericPoint& a, const genericPoint& b, const genericPoint& c, const double& qx, const double& qy, const double& qz) {
 	int ret;
-	if ((ret = inGabrielSphere_EIII_t<interval_number, interval_number>(a, b, c, qx, qy, qz)) != 0) return ret;
-	return inGabrielSphere_EIII_t<bigfloat, bigfloat>(a, b, c, qx, qy, qz);
+	if ((ret = inGabrielSphere_EIII_t<NFG::interval_number, NFG::interval_number>(a, b, c, qx, qy, qz)) != 0) return ret;
+	return inGabrielSphere_EIII_t<NFG::bigfloat, NFG::bigfloat>(a, b, c, qx, qy, qz);
 }
 
 
 template<class PT, class T> static inline int inGabrielSphere_IEEE_t(const genericPoint& q, const PT& ax, const PT& ay, const PT& az, const PT& bx, const PT& by, const PT& bz, const PT& cx, const PT& cy, const PT& cz) {
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundUP();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundUP();
 
-	std::conditional_t<(std::is_same<expansion, T>::value), expansionPool, char> pool;
+	std::conditional_t<(std::is_same<NFG::expansion, T>::value), NFG::expansionPool, char> pool;
 
-	if constexpr (std::is_same<expansion, T>::value) {
-		expansion::initPool(&pool);
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
+		NFG::expansion::initPool(&pool);
 		feclearexcept(FE_ALL_EXCEPT);
 	}
 
 	T l1x, l1y, l1z, d1;
 	if (!q.getLambda3D(l1x, l1y, l1z, d1)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
@@ -1729,9 +1731,9 @@ template<class PT, class T> static inline int inGabrielSphere_IEEE_t(const gener
 	const T qaz = (l1z-(az*d1));
 	const T ret = ((qax*((qax*c2)-(ccax*d1)))+((qay*((qay*c2)-(ccay*d1)))+(qaz*((qaz*c2)-(ccaz*d1)))));
 
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 
-	if constexpr (std::is_same<expansion, T>::value) {
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
 		if (fetestexcept(FE_UNDERFLOW | FE_OVERFLOW)) return INT_MAX;
 	}
 	return sgn(ret);
@@ -1739,30 +1741,30 @@ template<class PT, class T> static inline int inGabrielSphere_IEEE_t(const gener
 
 inline int inGabrielSphere_IEEE(const genericPoint& q, const double& ax, const double& ay, const double& az, const double& bx, const double& by, const double& bz, const double& cx, const double& cy, const double& cz) {
 	int ret;
-	if ((ret = inGabrielSphere_IEEE_t<interval_number, interval_number>(q, ax, ay, az, bx, by, bz, cx, cy, cz)) != 0) return ret;
-	return inGabrielSphere_IEEE_t<bigfloat, bigfloat>(q, ax, ay, az, bx, by, bz, cx, cy, cz);
+	if ((ret = inGabrielSphere_IEEE_t<NFG::interval_number, NFG::interval_number>(q, ax, ay, az, bx, by, bz, cx, cy, cz)) != 0) return ret;
+	return inGabrielSphere_IEEE_t<NFG::bigfloat, NFG::bigfloat>(q, ax, ay, az, bx, by, bz, cx, cy, cz);
 }
 
 
 template<class PT, class T> static inline int inGabrielSphere_IIEE_t(const genericPoint& q, const genericPoint& a, const PT& bx, const PT& by, const PT& bz, const PT& cx, const PT& cy, const PT& cz) {
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundUP();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundUP();
 
-	std::conditional_t<(std::is_same<expansion, T>::value), expansionPool, char> pool;
+	std::conditional_t<(std::is_same<NFG::expansion, T>::value), NFG::expansionPool, char> pool;
 
-	if constexpr (std::is_same<expansion, T>::value) {
-		expansion::initPool(&pool);
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
+		NFG::expansion::initPool(&pool);
 		feclearexcept(FE_ALL_EXCEPT);
 	}
 
 	T l1x, l1y, l1z, d1;
 	if (!q.getLambda3D(l1x, l1y, l1z, d1)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
 	T l2x, l2y, l2z, d2;
 	if (!a.getLambda3D(l2x, l2y, l2z, d2)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
@@ -1795,9 +1797,9 @@ template<class PT, class T> static inline int inGabrielSphere_IIEE_t(const gener
 	const T qaz = ((l1z*d2)-(l2z*d1));
 	const T ret = ((qax*((qax*c2)-(ccax*d1)))+((qay*((qay*c2)-(ccay*d1)))+(qaz*((qaz*c2)-(ccaz*d1)))));
 
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 
-	if constexpr (std::is_same<expansion, T>::value) {
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
 		if (fetestexcept(FE_UNDERFLOW | FE_OVERFLOW)) return INT_MAX;
 	}
 	return sgn(ret);
@@ -1805,36 +1807,36 @@ template<class PT, class T> static inline int inGabrielSphere_IIEE_t(const gener
 
 inline int inGabrielSphere_IIEE(const genericPoint& q, const genericPoint& a, const double& bx, const double& by, const double& bz, const double& cx, const double& cy, const double& cz) {
 	int ret;
-	if ((ret = inGabrielSphere_IIEE_t<interval_number, interval_number>(q, a, bx, by, bz, cx, cy, cz)) != 0) return ret;
-	return inGabrielSphere_IIEE_t<bigfloat, bigfloat>(q, a, bx, by, bz, cx, cy, cz);
+	if ((ret = inGabrielSphere_IIEE_t<NFG::interval_number, NFG::interval_number>(q, a, bx, by, bz, cx, cy, cz)) != 0) return ret;
+	return inGabrielSphere_IIEE_t<NFG::bigfloat, NFG::bigfloat>(q, a, bx, by, bz, cx, cy, cz);
 }
 
 
 template<class PT, class T> static inline int inGabrielSphere_IIIE_t(const genericPoint& q, const genericPoint& a, const genericPoint& b, const PT& cx, const PT& cy, const PT& cz) {
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundUP();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundUP();
 
-	std::conditional_t<(std::is_same<expansion, T>::value), expansionPool, char> pool;
+	std::conditional_t<(std::is_same<NFG::expansion, T>::value), NFG::expansionPool, char> pool;
 
-	if constexpr (std::is_same<expansion, T>::value) {
-		expansion::initPool(&pool);
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
+		NFG::expansion::initPool(&pool);
 		feclearexcept(FE_ALL_EXCEPT);
 	}
 
 	T l1x, l1y, l1z, d1;
 	if (!q.getLambda3D(l1x, l1y, l1z, d1)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
 	T l2x, l2y, l2z, d2;
 	if (!a.getLambda3D(l2x, l2y, l2z, d2)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
 	T l3x, l3y, l3z, d3;
 	if (!b.getLambda3D(l3x, l3y, l3z, d3)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
@@ -1867,9 +1869,9 @@ template<class PT, class T> static inline int inGabrielSphere_IIIE_t(const gener
 	const T qaz = ((l1z*d2)-(l2z*d1));
 	const T ret = ((qax*((qax*c2)-(ccax*d1)))+((qay*((qay*c2)-(ccay*d1)))+(qaz*((qaz*c2)-(ccaz*d1)))));
 
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 
-	if constexpr (std::is_same<expansion, T>::value) {
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
 		if (fetestexcept(FE_UNDERFLOW | FE_OVERFLOW)) return INT_MAX;
 	}
 	return sgn(ret);
@@ -1877,42 +1879,42 @@ template<class PT, class T> static inline int inGabrielSphere_IIIE_t(const gener
 
 inline int inGabrielSphere_IIIE(const genericPoint& q, const genericPoint& a, const genericPoint& b, const double& cx, const double& cy, const double& cz) {
 	int ret;
-	if ((ret = inGabrielSphere_IIIE_t<interval_number, interval_number>(q, a, b, cx, cy, cz)) != 0) return ret;
-	return inGabrielSphere_IIIE_t<bigfloat, bigfloat>(q, a, b, cx, cy, cz);
+	if ((ret = inGabrielSphere_IIIE_t<NFG::interval_number, NFG::interval_number>(q, a, b, cx, cy, cz)) != 0) return ret;
+	return inGabrielSphere_IIIE_t<NFG::bigfloat, NFG::bigfloat>(q, a, b, cx, cy, cz);
 }
 
 
 template<class PT, class T> static inline int inGabrielSphere_IIII_t(const genericPoint& q, const genericPoint& a, const genericPoint& b, const genericPoint& c) {
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundUP();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundUP();
 
-	std::conditional_t<(std::is_same<expansion, T>::value), expansionPool, char> pool;
+	std::conditional_t<(std::is_same<NFG::expansion, T>::value), NFG::expansionPool, char> pool;
 
-	if constexpr (std::is_same<expansion, T>::value) {
-		expansion::initPool(&pool);
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
+		NFG::expansion::initPool(&pool);
 		feclearexcept(FE_ALL_EXCEPT);
 	}
 
 	T l1x, l1y, l1z, d1;
 	if (!q.getLambda3D(l1x, l1y, l1z, d1)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
 	T l2x, l2y, l2z, d2;
 	if (!a.getLambda3D(l2x, l2y, l2z, d2)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
 	T l3x, l3y, l3z, d3;
 	if (!b.getLambda3D(l3x, l3y, l3z, d3)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
 	T l4x, l4y, l4z, d4;
 	if (!c.getLambda3D(l4x, l4y, l4z, d4)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
@@ -1945,9 +1947,9 @@ template<class PT, class T> static inline int inGabrielSphere_IIII_t(const gener
 	const T qaz = ((l1z*d2)-(l2z*d1));
 	const T ret = ((qax*((qax*c2)-(ccax*d1)))+((qay*((qay*c2)-(ccay*d1)))+(qaz*((qaz*c2)-(ccaz*d1)))));
 
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 
-	if constexpr (std::is_same<expansion, T>::value) {
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
 		if (fetestexcept(FE_UNDERFLOW | FE_OVERFLOW)) return INT_MAX;
 	}
 	return sgn(ret);
@@ -1955,24 +1957,24 @@ template<class PT, class T> static inline int inGabrielSphere_IIII_t(const gener
 
 inline int inGabrielSphere_IIII(const genericPoint& q, const genericPoint& a, const genericPoint& b, const genericPoint& c) {
 	int ret;
-	if ((ret = inGabrielSphere_IIII_t<interval_number, interval_number>(q, a, b, c)) != 0) return ret;
-	return inGabrielSphere_IIII_t<bigfloat, bigfloat>(q, a, b, c);
+	if ((ret = inGabrielSphere_IIII_t<NFG::interval_number, NFG::interval_number>(q, a, b, c)) != 0) return ret;
+	return inGabrielSphere_IIII_t<NFG::bigfloat, NFG::bigfloat>(q, a, b, c);
 }
 
 
 template<class PT, class T> static inline int inSphere_IEEEE_t(const genericPoint& p1, const PT& pbx, const PT& pby, const PT& pbz, const PT& pcx, const PT& pcy, const PT& pcz, const PT& pdx, const PT& pdy, const PT& pdz, const PT& pex, const PT& pey, const PT& pez) {
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundUP();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundUP();
 
-	std::conditional_t<(std::is_same<expansion, T>::value), expansionPool, char> pool;
+	std::conditional_t<(std::is_same<NFG::expansion, T>::value), NFG::expansionPool, char> pool;
 
-	if constexpr (std::is_same<expansion, T>::value) {
-		expansion::initPool(&pool);
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
+		NFG::expansion::initPool(&pool);
 		feclearexcept(FE_ALL_EXCEPT);
 	}
 
 	T l1x, l1y, l1z, d1;
 	if (!p1.getLambda3D(l1x, l1y, l1z, d1)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
@@ -2004,9 +2006,9 @@ template<class PT, class T> static inline int inSphere_IEEEE_t(const genericPoin
 	const T dab = ((dez*ab)+((aez*bd)+(bez*da)));
 	const T d = (((clift*dab)-(dlift*abc))+((alift*bcd)-(blift*cda)));
 
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 
-	if constexpr (std::is_same<expansion, T>::value) {
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
 		if (fetestexcept(FE_UNDERFLOW | FE_OVERFLOW)) return INT_MAX;
 	}
 	return sgn(d);
@@ -2014,30 +2016,30 @@ template<class PT, class T> static inline int inSphere_IEEEE_t(const genericPoin
 
 inline int inSphere_IEEEE(const genericPoint& p1, const double& pbx, const double& pby, const double& pbz, const double& pcx, const double& pcy, const double& pcz, const double& pdx, const double& pdy, const double& pdz, const double& pex, const double& pey, const double& pez) {
 	int ret;
-	if ((ret = inSphere_IEEEE_t<interval_number, interval_number>(p1, pbx, pby, pbz, pcx, pcy, pcz, pdx, pdy, pdz, pex, pey, pez)) != 0) return ret;
-	return inSphere_IEEEE_t<bigfloat, bigfloat>(p1, pbx, pby, pbz, pcx, pcy, pcz, pdx, pdy, pdz, pex, pey, pez);
+	if ((ret = inSphere_IEEEE_t<NFG::interval_number, NFG::interval_number>(p1, pbx, pby, pbz, pcx, pcy, pcz, pdx, pdy, pdz, pex, pey, pez)) != 0) return ret;
+	return inSphere_IEEEE_t<NFG::bigfloat, NFG::bigfloat>(p1, pbx, pby, pbz, pcx, pcy, pcz, pdx, pdy, pdz, pex, pey, pez);
 }
 
 
 template<class PT, class T> static inline int inSphere_IIEEE_t(const genericPoint& p1, const genericPoint& p2, const PT& pcx, const PT& pcy, const PT& pcz, const PT& pdx, const PT& pdy, const PT& pdz, const PT& pex, const PT& pey, const PT& pez) {
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundUP();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundUP();
 
-	std::conditional_t<(std::is_same<expansion, T>::value), expansionPool, char> pool;
+	std::conditional_t<(std::is_same<NFG::expansion, T>::value), NFG::expansionPool, char> pool;
 
-	if constexpr (std::is_same<expansion, T>::value) {
-		expansion::initPool(&pool);
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
+		NFG::expansion::initPool(&pool);
 		feclearexcept(FE_ALL_EXCEPT);
 	}
 
 	T l1x, l1y, l1z, d1;
 	if (!p1.getLambda3D(l1x, l1y, l1z, d1)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
 	T l2x, l2y, l2z, d2;
 	if (!p2.getLambda3D(l2x, l2y, l2z, d2)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
@@ -2069,9 +2071,9 @@ template<class PT, class T> static inline int inSphere_IIEEE_t(const genericPoin
 	const T dab = ((dez*ab)+((aez*bd)+(bez*da)));
 	const T d = (((clift*dab)-(dlift*abc))+((alift*bcd)-(blift*cda)));
 
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 
-	if constexpr (std::is_same<expansion, T>::value) {
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
 		if (fetestexcept(FE_UNDERFLOW | FE_OVERFLOW)) return INT_MAX;
 	}
 	return sgn(d);
@@ -2079,36 +2081,36 @@ template<class PT, class T> static inline int inSphere_IIEEE_t(const genericPoin
 
 inline int inSphere_IIEEE(const genericPoint& p1, const genericPoint& p2, const double& pcx, const double& pcy, const double& pcz, const double& pdx, const double& pdy, const double& pdz, const double& pex, const double& pey, const double& pez) {
 	int ret;
-	if ((ret = inSphere_IIEEE_t<interval_number, interval_number>(p1, p2, pcx, pcy, pcz, pdx, pdy, pdz, pex, pey, pez)) != 0) return ret;
-	return inSphere_IIEEE_t<bigfloat, bigfloat>(p1, p2, pcx, pcy, pcz, pdx, pdy, pdz, pex, pey, pez);
+	if ((ret = inSphere_IIEEE_t<NFG::interval_number, NFG::interval_number>(p1, p2, pcx, pcy, pcz, pdx, pdy, pdz, pex, pey, pez)) != 0) return ret;
+	return inSphere_IIEEE_t<NFG::bigfloat, NFG::bigfloat>(p1, p2, pcx, pcy, pcz, pdx, pdy, pdz, pex, pey, pez);
 }
 
 
 template<class PT, class T> static inline int inSphere_IIIEE_t(const genericPoint& p1, const genericPoint& p2, const genericPoint& p3, const PT& pdx, const PT& pdy, const PT& pdz, const PT& pex, const PT& pey, const PT& pez) {
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundUP();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundUP();
 
-	std::conditional_t<(std::is_same<expansion, T>::value), expansionPool, char> pool;
+	std::conditional_t<(std::is_same<NFG::expansion, T>::value), NFG::expansionPool, char> pool;
 
-	if constexpr (std::is_same<expansion, T>::value) {
-		expansion::initPool(&pool);
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
+		NFG::expansion::initPool(&pool);
 		feclearexcept(FE_ALL_EXCEPT);
 	}
 
 	T l1x, l1y, l1z, d1;
 	if (!p1.getLambda3D(l1x, l1y, l1z, d1)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
 	T l2x, l2y, l2z, d2;
 	if (!p2.getLambda3D(l2x, l2y, l2z, d2)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
 	T l3x, l3y, l3z, d3;
 	if (!p3.getLambda3D(l3x, l3y, l3z, d3)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
@@ -2140,9 +2142,9 @@ template<class PT, class T> static inline int inSphere_IIIEE_t(const genericPoin
 	const T dab = ((dez*ab)+((aez*bd)+(bez*da)));
 	const T d = (((clift*dab)-(dlift*abc))+((alift*bcd)-(blift*cda)));
 
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 
-	if constexpr (std::is_same<expansion, T>::value) {
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
 		if (fetestexcept(FE_UNDERFLOW | FE_OVERFLOW)) return INT_MAX;
 	}
 	return sgn(d);
@@ -2150,42 +2152,42 @@ template<class PT, class T> static inline int inSphere_IIIEE_t(const genericPoin
 
 inline int inSphere_IIIEE(const genericPoint& p1, const genericPoint& p2, const genericPoint& p3, const double& pdx, const double& pdy, const double& pdz, const double& pex, const double& pey, const double& pez) {
 	int ret;
-	if ((ret = inSphere_IIIEE_t<interval_number, interval_number>(p1, p2, p3, pdx, pdy, pdz, pex, pey, pez)) != 0) return ret;
-	return inSphere_IIIEE_t<bigfloat, bigfloat>(p1, p2, p3, pdx, pdy, pdz, pex, pey, pez);
+	if ((ret = inSphere_IIIEE_t<NFG::interval_number, NFG::interval_number>(p1, p2, p3, pdx, pdy, pdz, pex, pey, pez)) != 0) return ret;
+	return inSphere_IIIEE_t<NFG::bigfloat, NFG::bigfloat>(p1, p2, p3, pdx, pdy, pdz, pex, pey, pez);
 }
 
 
 template<class PT, class T> static inline int inSphere_IIIIE_t(const genericPoint& p1, const genericPoint& p2, const genericPoint& p3, const genericPoint& p4, const PT& pex, const PT& pey, const PT& pez) {
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundUP();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundUP();
 
-	std::conditional_t<(std::is_same<expansion, T>::value), expansionPool, char> pool;
+	std::conditional_t<(std::is_same<NFG::expansion, T>::value), NFG::expansionPool, char> pool;
 
-	if constexpr (std::is_same<expansion, T>::value) {
-		expansion::initPool(&pool);
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
+		NFG::expansion::initPool(&pool);
 		feclearexcept(FE_ALL_EXCEPT);
 	}
 
 	T l1x, l1y, l1z, d1;
 	if (!p1.getLambda3D(l1x, l1y, l1z, d1)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
 	T l2x, l2y, l2z, d2;
 	if (!p2.getLambda3D(l2x, l2y, l2z, d2)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
 	T l3x, l3y, l3z, d3;
 	if (!p3.getLambda3D(l3x, l3y, l3z, d3)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
 	T l4x, l4y, l4z, d4;
 	if (!p4.getLambda3D(l4x, l4y, l4z, d4)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
@@ -2217,9 +2219,9 @@ template<class PT, class T> static inline int inSphere_IIIIE_t(const genericPoin
 	const T dab = ((dez*ab)+((aez*bd)+(bez*da)));
 	const T d = (((clift*dab)-(dlift*abc))+((alift*bcd)-(blift*cda)));
 
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 
-	if constexpr (std::is_same<expansion, T>::value) {
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
 		if (fetestexcept(FE_UNDERFLOW | FE_OVERFLOW)) return INT_MAX;
 	}
 	return sgn(d);
@@ -2227,48 +2229,48 @@ template<class PT, class T> static inline int inSphere_IIIIE_t(const genericPoin
 
 inline int inSphere_IIIIE(const genericPoint& p1, const genericPoint& p2, const genericPoint& p3, const genericPoint& p4, const double& pex, const double& pey, const double& pez) {
 	int ret;
-	if ((ret = inSphere_IIIIE_t<interval_number, interval_number>(p1, p2, p3, p4, pex, pey, pez)) != 0) return ret;
-	return inSphere_IIIIE_t<bigfloat, bigfloat>(p1, p2, p3, p4, pex, pey, pez);
+	if ((ret = inSphere_IIIIE_t<NFG::interval_number, NFG::interval_number>(p1, p2, p3, p4, pex, pey, pez)) != 0) return ret;
+	return inSphere_IIIIE_t<NFG::bigfloat, NFG::bigfloat>(p1, p2, p3, p4, pex, pey, pez);
 }
 
 
 template<class PT, class T> static inline int inSphere_IIIII_t(const genericPoint& p1, const genericPoint& p2, const genericPoint& p3, const genericPoint& p4, const genericPoint& p5) {
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundUP();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundUP();
 
-	std::conditional_t<(std::is_same<expansion, T>::value), expansionPool, char> pool;
+	std::conditional_t<(std::is_same<NFG::expansion, T>::value), NFG::expansionPool, char> pool;
 
-	if constexpr (std::is_same<expansion, T>::value) {
-		expansion::initPool(&pool);
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
+		NFG::expansion::initPool(&pool);
 		feclearexcept(FE_ALL_EXCEPT);
 	}
 
 	T l1x, l1y, l1z, d1;
 	if (!p1.getLambda3D(l1x, l1y, l1z, d1)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
 	T l2x, l2y, l2z, d2;
 	if (!p2.getLambda3D(l2x, l2y, l2z, d2)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
 	T l3x, l3y, l3z, d3;
 	if (!p3.getLambda3D(l3x, l3y, l3z, d3)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
 	T l4x, l4y, l4z, d4;
 	if (!p4.getLambda3D(l4x, l4y, l4z, d4)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
 	T l5x, l5y, l5z, d5;
 	if (!p5.getLambda3D(l5x, l5y, l5z, d5)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
@@ -2300,9 +2302,9 @@ template<class PT, class T> static inline int inSphere_IIIII_t(const genericPoin
 	const T dab = ((dez*ab)+((aez*bd)+(bez*da)));
 	const T d = (((clift*dab)-(dlift*abc))+((alift*bcd)-(blift*cda)));
 
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 
-	if constexpr (std::is_same<expansion, T>::value) {
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
 		if (fetestexcept(FE_UNDERFLOW | FE_OVERFLOW)) return INT_MAX;
 	}
 	return sgn(d);
@@ -2310,33 +2312,33 @@ template<class PT, class T> static inline int inSphere_IIIII_t(const genericPoin
 
 inline int inSphere_IIIII(const genericPoint& p1, const genericPoint& p2, const genericPoint& p3, const genericPoint& p4, const genericPoint& p5) {
 	int ret;
-	if ((ret = inSphere_IIIII_t<interval_number, interval_number>(p1, p2, p3, p4, p5)) != 0) return ret;
-	return inSphere_IIIII_t<bigfloat, bigfloat>(p1, p2, p3, p4, p5);
+	if ((ret = inSphere_IIIII_t<NFG::interval_number, NFG::interval_number>(p1, p2, p3, p4, p5)) != 0) return ret;
+	return inSphere_IIIII_t<NFG::bigfloat, NFG::bigfloat>(p1, p2, p3, p4, p5);
 }
 
 
 template<class PT, class T> static inline int lessThanOnX_IE_t(const genericPoint& p1, const PT& bx) {
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundUP();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundUP();
 
-	std::conditional_t<(std::is_same<expansion, T>::value), expansionPool, char> pool;
+	std::conditional_t<(std::is_same<NFG::expansion, T>::value), NFG::expansionPool, char> pool;
 
-	if constexpr (std::is_same<expansion, T>::value) {
-		expansion::initPool(&pool);
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
+		NFG::expansion::initPool(&pool);
 		feclearexcept(FE_ALL_EXCEPT);
 	}
 
 	T l1x, l1y, l1z, d1;
 	if (!p1.getLambda3D(l1x, l1y, l1z, d1)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
 	const T dbx = (bx*d1);
 	const T kx = (l1x-dbx);
 
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 
-	if constexpr (std::is_same<expansion, T>::value) {
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
 		if (fetestexcept(FE_UNDERFLOW | FE_OVERFLOW)) return INT_MAX;
 	}
 	return sgn(kx);
@@ -2344,30 +2346,30 @@ template<class PT, class T> static inline int lessThanOnX_IE_t(const genericPoin
 
 inline int lessThanOnX_IE(const genericPoint& p1, const double& bx) {
 	int ret;
-	if ((ret = lessThanOnX_IE_t<interval_number, interval_number>(p1, bx)) != 0) return ret;
-	return lessThanOnX_IE_t<bigfloat, bigfloat>(p1, bx);
+	if ((ret = lessThanOnX_IE_t<NFG::interval_number, NFG::interval_number>(p1, bx)) != 0) return ret;
+	return lessThanOnX_IE_t<NFG::bigfloat, NFG::bigfloat>(p1, bx);
 }
 
 
 template<class PT, class T> static inline int lessThanOnX_II_t(const genericPoint& p1, const genericPoint& p2) {
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundUP();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundUP();
 
-	std::conditional_t<(std::is_same<expansion, T>::value), expansionPool, char> pool;
+	std::conditional_t<(std::is_same<NFG::expansion, T>::value), NFG::expansionPool, char> pool;
 
-	if constexpr (std::is_same<expansion, T>::value) {
-		expansion::initPool(&pool);
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
+		NFG::expansion::initPool(&pool);
 		feclearexcept(FE_ALL_EXCEPT);
 	}
 
 	T l1x, l1y, l1z, d1;
 	if (!p1.getLambda3D(l1x, l1y, l1z, d1)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
 	T l2x, l2y, l2z, d2;
 	if (!p2.getLambda3D(l2x, l2y, l2z, d2)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
@@ -2375,9 +2377,9 @@ template<class PT, class T> static inline int lessThanOnX_II_t(const genericPoin
 	const T k2 = (d1*l2x);
 	const T kx = (k1-k2);
 
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 
-	if constexpr (std::is_same<expansion, T>::value) {
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
 		if (fetestexcept(FE_UNDERFLOW | FE_OVERFLOW)) return INT_MAX;
 	}
 	return sgn(kx);
@@ -2385,33 +2387,33 @@ template<class PT, class T> static inline int lessThanOnX_II_t(const genericPoin
 
 inline int lessThanOnX_II(const genericPoint& p1, const genericPoint& p2) {
 	int ret;
-	if ((ret = lessThanOnX_II_t<interval_number, interval_number>(p1, p2)) != 0) return ret;
-	return lessThanOnX_II_t<bigfloat, bigfloat>(p1, p2);
+	if ((ret = lessThanOnX_II_t<NFG::interval_number, NFG::interval_number>(p1, p2)) != 0) return ret;
+	return lessThanOnX_II_t<NFG::bigfloat, NFG::bigfloat>(p1, p2);
 }
 
 
 template<class PT, class T> static inline int lessThanOnY_IE_t(const genericPoint& p1, const PT& by) {
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundUP();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundUP();
 
-	std::conditional_t<(std::is_same<expansion, T>::value), expansionPool, char> pool;
+	std::conditional_t<(std::is_same<NFG::expansion, T>::value), NFG::expansionPool, char> pool;
 
-	if constexpr (std::is_same<expansion, T>::value) {
-		expansion::initPool(&pool);
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
+		NFG::expansion::initPool(&pool);
 		feclearexcept(FE_ALL_EXCEPT);
 	}
 
 	T l1x, l1y, l1z, d1;
 	if (!p1.getLambda3D(l1x, l1y, l1z, d1)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
 	const T dby = (by*d1);
 	const T ky = (l1y-dby);
 
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 
-	if constexpr (std::is_same<expansion, T>::value) {
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
 		if (fetestexcept(FE_UNDERFLOW | FE_OVERFLOW)) return INT_MAX;
 	}
 	return sgn(ky);
@@ -2419,30 +2421,30 @@ template<class PT, class T> static inline int lessThanOnY_IE_t(const genericPoin
 
 inline int lessThanOnY_IE(const genericPoint& p1, const double& by) {
 	int ret;
-	if ((ret = lessThanOnY_IE_t<interval_number, interval_number>(p1, by)) != 0) return ret;
-	return lessThanOnY_IE_t<bigfloat, bigfloat>(p1, by);
+	if ((ret = lessThanOnY_IE_t<NFG::interval_number, NFG::interval_number>(p1, by)) != 0) return ret;
+	return lessThanOnY_IE_t<NFG::bigfloat, NFG::bigfloat>(p1, by);
 }
 
 
 template<class PT, class T> static inline int lessThanOnY_II_t(const genericPoint& p1, const genericPoint& p2) {
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundUP();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundUP();
 
-	std::conditional_t<(std::is_same<expansion, T>::value), expansionPool, char> pool;
+	std::conditional_t<(std::is_same<NFG::expansion, T>::value), NFG::expansionPool, char> pool;
 
-	if constexpr (std::is_same<expansion, T>::value) {
-		expansion::initPool(&pool);
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
+		NFG::expansion::initPool(&pool);
 		feclearexcept(FE_ALL_EXCEPT);
 	}
 
 	T l1x, l1y, l1z, d1;
 	if (!p1.getLambda3D(l1x, l1y, l1z, d1)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
 	T l2x, l2y, l2z, d2;
 	if (!p2.getLambda3D(l2x, l2y, l2z, d2)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
@@ -2450,9 +2452,9 @@ template<class PT, class T> static inline int lessThanOnY_II_t(const genericPoin
 	const T k2 = (d1*l2y);
 	const T ky = (k1-k2);
 
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 
-	if constexpr (std::is_same<expansion, T>::value) {
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
 		if (fetestexcept(FE_UNDERFLOW | FE_OVERFLOW)) return INT_MAX;
 	}
 	return sgn(ky);
@@ -2460,33 +2462,33 @@ template<class PT, class T> static inline int lessThanOnY_II_t(const genericPoin
 
 inline int lessThanOnY_II(const genericPoint& p1, const genericPoint& p2) {
 	int ret;
-	if ((ret = lessThanOnY_II_t<interval_number, interval_number>(p1, p2)) != 0) return ret;
-	return lessThanOnY_II_t<bigfloat, bigfloat>(p1, p2);
+	if ((ret = lessThanOnY_II_t<NFG::interval_number, NFG::interval_number>(p1, p2)) != 0) return ret;
+	return lessThanOnY_II_t<NFG::bigfloat, NFG::bigfloat>(p1, p2);
 }
 
 
 template<class PT, class T> static inline int lessThanOnZ_IE_t(const genericPoint& p1, const PT& bz) {
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundUP();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundUP();
 
-	std::conditional_t<(std::is_same<expansion, T>::value), expansionPool, char> pool;
+	std::conditional_t<(std::is_same<NFG::expansion, T>::value), NFG::expansionPool, char> pool;
 
-	if constexpr (std::is_same<expansion, T>::value) {
-		expansion::initPool(&pool);
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
+		NFG::expansion::initPool(&pool);
 		feclearexcept(FE_ALL_EXCEPT);
 	}
 
 	T l1x, l1y, l1z, d1;
 	if (!p1.getLambda3D(l1x, l1y, l1z, d1)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
 	const T dbz = (bz*d1);
 	const T kz = (l1z-dbz);
 
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 
-	if constexpr (std::is_same<expansion, T>::value) {
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
 		if (fetestexcept(FE_UNDERFLOW | FE_OVERFLOW)) return INT_MAX;
 	}
 	return sgn(kz);
@@ -2494,30 +2496,30 @@ template<class PT, class T> static inline int lessThanOnZ_IE_t(const genericPoin
 
 inline int lessThanOnZ_IE(const genericPoint& p1, const double& bz) {
 	int ret;
-	if ((ret = lessThanOnZ_IE_t<interval_number, interval_number>(p1, bz)) != 0) return ret;
-	return lessThanOnZ_IE_t<bigfloat, bigfloat>(p1, bz);
+	if ((ret = lessThanOnZ_IE_t<NFG::interval_number, NFG::interval_number>(p1, bz)) != 0) return ret;
+	return lessThanOnZ_IE_t<NFG::bigfloat, NFG::bigfloat>(p1, bz);
 }
 
 
 template<class PT, class T> static inline int lessThanOnZ_II_t(const genericPoint& p1, const genericPoint& p2) {
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundUP();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundUP();
 
-	std::conditional_t<(std::is_same<expansion, T>::value), expansionPool, char> pool;
+	std::conditional_t<(std::is_same<NFG::expansion, T>::value), NFG::expansionPool, char> pool;
 
-	if constexpr (std::is_same<expansion, T>::value) {
-		expansion::initPool(&pool);
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
+		NFG::expansion::initPool(&pool);
 		feclearexcept(FE_ALL_EXCEPT);
 	}
 
 	T l1x, l1y, l1z, d1;
 	if (!p1.getLambda3D(l1x, l1y, l1z, d1)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
 	T l2x, l2y, l2z, d2;
 	if (!p2.getLambda3D(l2x, l2y, l2z, d2)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
@@ -2525,9 +2527,9 @@ template<class PT, class T> static inline int lessThanOnZ_II_t(const genericPoin
 	const T k2 = (d1*l2z);
 	const T kz = (k1-k2);
 
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 
-	if constexpr (std::is_same<expansion, T>::value) {
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
 		if (fetestexcept(FE_UNDERFLOW | FE_OVERFLOW)) return INT_MAX;
 	}
 	return sgn(kz);
@@ -2535,24 +2537,24 @@ template<class PT, class T> static inline int lessThanOnZ_II_t(const genericPoin
 
 inline int lessThanOnZ_II(const genericPoint& p1, const genericPoint& p2) {
 	int ret;
-	if ((ret = lessThanOnZ_II_t<interval_number, interval_number>(p1, p2)) != 0) return ret;
-	return lessThanOnZ_II_t<bigfloat, bigfloat>(p1, p2);
+	if ((ret = lessThanOnZ_II_t<NFG::interval_number, NFG::interval_number>(p1, p2)) != 0) return ret;
+	return lessThanOnZ_II_t<NFG::bigfloat, NFG::bigfloat>(p1, p2);
 }
 
 
 template<class PT, class T> static inline int orient2dxy_indirect_IEE_t(const genericPoint& p1, const PT& p2x, const PT& p2y, const PT& p3x, const PT& p3y) {
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundUP();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundUP();
 
-	std::conditional_t<(std::is_same<expansion, T>::value), expansionPool, char> pool;
+	std::conditional_t<(std::is_same<NFG::expansion, T>::value), NFG::expansionPool, char> pool;
 
-	if constexpr (std::is_same<expansion, T>::value) {
-		expansion::initPool(&pool);
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
+		NFG::expansion::initPool(&pool);
 		feclearexcept(FE_ALL_EXCEPT);
 	}
 
 	T l1x, l1y, l1z, d1;
 	if (!p1.getLambda3D(l1x, l1y, l1z, d1)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
@@ -2567,9 +2569,9 @@ template<class PT, class T> static inline int orient2dxy_indirect_IEE_t(const ge
 	const T dpr = (d1*pr);
 	const T det = (dpr+e);
 
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 
-	if constexpr (std::is_same<expansion, T>::value) {
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
 		if (fetestexcept(FE_UNDERFLOW | FE_OVERFLOW)) return INT_MAX;
 	}
 	return sgn(det);
@@ -2577,30 +2579,30 @@ template<class PT, class T> static inline int orient2dxy_indirect_IEE_t(const ge
 
 inline int orient2dxy_indirect_IEE(const genericPoint& p1, const double& p2x, const double& p2y, const double& p3x, const double& p3y) {
 	int ret;
-	if ((ret = orient2dxy_indirect_IEE_t<interval_number, interval_number>(p1, p2x, p2y, p3x, p3y)) != 0) return ret;
-	return orient2dxy_indirect_IEE_t<bigfloat, bigfloat>(p1, p2x, p2y, p3x, p3y);
+	if ((ret = orient2dxy_indirect_IEE_t<NFG::interval_number, NFG::interval_number>(p1, p2x, p2y, p3x, p3y)) != 0) return ret;
+	return orient2dxy_indirect_IEE_t<NFG::bigfloat, NFG::bigfloat>(p1, p2x, p2y, p3x, p3y);
 }
 
 
 template<class PT, class T> static inline int orient2dxy_indirect_IIE_t(const genericPoint& p1, const genericPoint& p2, const PT& op3x, const PT& op3y) {
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundUP();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundUP();
 
-	std::conditional_t<(std::is_same<expansion, T>::value), expansionPool, char> pool;
+	std::conditional_t<(std::is_same<NFG::expansion, T>::value), NFG::expansionPool, char> pool;
 
-	if constexpr (std::is_same<expansion, T>::value) {
-		expansion::initPool(&pool);
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
+		NFG::expansion::initPool(&pool);
 		feclearexcept(FE_ALL_EXCEPT);
 	}
 
 	T l1x, l1y, l1z, d1;
 	if (!p1.getLambda3D(l1x, l1y, l1z, d1)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
 	T l2x, l2y, l2z, d2;
 	if (!p2.getLambda3D(l2x, l2y, l2z, d2)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
@@ -2618,9 +2620,9 @@ template<class PT, class T> static inline int orient2dxy_indirect_IIE_t(const ge
 	const T efgh = (ef*gh);
 	const T L = (abcd-efgh);
 
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 
-	if constexpr (std::is_same<expansion, T>::value) {
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
 		if (fetestexcept(FE_UNDERFLOW | FE_OVERFLOW)) return INT_MAX;
 	}
 	return sgn(L);
@@ -2628,36 +2630,36 @@ template<class PT, class T> static inline int orient2dxy_indirect_IIE_t(const ge
 
 inline int orient2dxy_indirect_IIE(const genericPoint& p1, const genericPoint& p2, const double& op3x, const double& op3y) {
 	int ret;
-	if ((ret = orient2dxy_indirect_IIE_t<interval_number, interval_number>(p1, p2, op3x, op3y)) != 0) return ret;
-	return orient2dxy_indirect_IIE_t<bigfloat, bigfloat>(p1, p2, op3x, op3y);
+	if ((ret = orient2dxy_indirect_IIE_t<NFG::interval_number, NFG::interval_number>(p1, p2, op3x, op3y)) != 0) return ret;
+	return orient2dxy_indirect_IIE_t<NFG::bigfloat, NFG::bigfloat>(p1, p2, op3x, op3y);
 }
 
 
 template<class PT, class T> static inline int orient2dxy_indirect_III_t(const genericPoint& p1, const genericPoint& p2, const genericPoint& p3) {
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundUP();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundUP();
 
-	std::conditional_t<(std::is_same<expansion, T>::value), expansionPool, char> pool;
+	std::conditional_t<(std::is_same<NFG::expansion, T>::value), NFG::expansionPool, char> pool;
 
-	if constexpr (std::is_same<expansion, T>::value) {
-		expansion::initPool(&pool);
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
+		NFG::expansion::initPool(&pool);
 		feclearexcept(FE_ALL_EXCEPT);
 	}
 
 	T l1x, l1y, l1z, d1;
 	if (!p1.getLambda3D(l1x, l1y, l1z, d1)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
 	T l2x, l2y, l2z, d2;
 	if (!p2.getLambda3D(l2x, l2y, l2z, d2)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
 	T l3x, l3y, l3z, d3;
 	if (!p3.getLambda3D(l3x, l3y, l3z, d3)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
@@ -2677,9 +2679,9 @@ template<class PT, class T> static inline int orient2dxy_indirect_III_t(const ge
 	const T efgh = (ef*gh);
 	const T L = (abcd-efgh);
 
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 
-	if constexpr (std::is_same<expansion, T>::value) {
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
 		if (fetestexcept(FE_UNDERFLOW | FE_OVERFLOW)) return INT_MAX;
 	}
 	return sgn(L);
@@ -2687,24 +2689,24 @@ template<class PT, class T> static inline int orient2dxy_indirect_III_t(const ge
 
 inline int orient2dxy_indirect_III(const genericPoint& p1, const genericPoint& p2, const genericPoint& p3) {
 	int ret;
-	if ((ret = orient2dxy_indirect_III_t<interval_number, interval_number>(p1, p2, p3)) != 0) return ret;
-	return orient2dxy_indirect_III_t<bigfloat, bigfloat>(p1, p2, p3);
+	if ((ret = orient2dxy_indirect_III_t<NFG::interval_number, NFG::interval_number>(p1, p2, p3)) != 0) return ret;
+	return orient2dxy_indirect_III_t<NFG::bigfloat, NFG::bigfloat>(p1, p2, p3);
 }
 
 
 template<class PT, class T> static inline int orient2dyz_indirect_IEE_t(const genericPoint& p1, const PT& p2x, const PT& p2y, const PT& p3x, const PT& p3y) {
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundUP();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundUP();
 
-	std::conditional_t<(std::is_same<expansion, T>::value), expansionPool, char> pool;
+	std::conditional_t<(std::is_same<NFG::expansion, T>::value), NFG::expansionPool, char> pool;
 
-	if constexpr (std::is_same<expansion, T>::value) {
-		expansion::initPool(&pool);
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
+		NFG::expansion::initPool(&pool);
 		feclearexcept(FE_ALL_EXCEPT);
 	}
 
 	T l1z, l1x, l1y, d1;
 	if (!p1.getLambda3D(l1z, l1x, l1y, d1)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
@@ -2719,9 +2721,9 @@ template<class PT, class T> static inline int orient2dyz_indirect_IEE_t(const ge
 	const T dpr = (d1*pr);
 	const T det = (dpr+e);
 
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 
-	if constexpr (std::is_same<expansion, T>::value) {
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
 		if (fetestexcept(FE_UNDERFLOW | FE_OVERFLOW)) return INT_MAX;
 	}
 	return sgn(det);
@@ -2729,30 +2731,30 @@ template<class PT, class T> static inline int orient2dyz_indirect_IEE_t(const ge
 
 inline int orient2dyz_indirect_IEE(const genericPoint& p1, const double& p2x, const double& p2y, const double& p3x, const double& p3y) {
 	int ret;
-	if ((ret = orient2dyz_indirect_IEE_t<interval_number, interval_number>(p1, p2x, p2y, p3x, p3y)) != 0) return ret;
-	return orient2dyz_indirect_IEE_t<bigfloat, bigfloat>(p1, p2x, p2y, p3x, p3y);
+	if ((ret = orient2dyz_indirect_IEE_t<NFG::interval_number, NFG::interval_number>(p1, p2x, p2y, p3x, p3y)) != 0) return ret;
+	return orient2dyz_indirect_IEE_t<NFG::bigfloat, NFG::bigfloat>(p1, p2x, p2y, p3x, p3y);
 }
 
 
 template<class PT, class T> static inline int orient2dyz_indirect_IIE_t(const genericPoint& p1, const genericPoint& p2, const PT& op3x, const PT& op3y) {
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundUP();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundUP();
 
-	std::conditional_t<(std::is_same<expansion, T>::value), expansionPool, char> pool;
+	std::conditional_t<(std::is_same<NFG::expansion, T>::value), NFG::expansionPool, char> pool;
 
-	if constexpr (std::is_same<expansion, T>::value) {
-		expansion::initPool(&pool);
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
+		NFG::expansion::initPool(&pool);
 		feclearexcept(FE_ALL_EXCEPT);
 	}
 
 	T l1z, l1x, l1y, d1;
 	if (!p1.getLambda3D(l1z, l1x, l1y, d1)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
 	T l2z, l2x, l2y, d2;
 	if (!p2.getLambda3D(l2z, l2x, l2y, d2)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
@@ -2770,9 +2772,9 @@ template<class PT, class T> static inline int orient2dyz_indirect_IIE_t(const ge
 	const T efgh = (ef*gh);
 	const T L = (abcd-efgh);
 
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 
-	if constexpr (std::is_same<expansion, T>::value) {
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
 		if (fetestexcept(FE_UNDERFLOW | FE_OVERFLOW)) return INT_MAX;
 	}
 	return sgn(L);
@@ -2780,36 +2782,36 @@ template<class PT, class T> static inline int orient2dyz_indirect_IIE_t(const ge
 
 inline int orient2dyz_indirect_IIE(const genericPoint& p1, const genericPoint& p2, const double& op3x, const double& op3y) {
 	int ret;
-	if ((ret = orient2dyz_indirect_IIE_t<interval_number, interval_number>(p1, p2, op3x, op3y)) != 0) return ret;
-	return orient2dyz_indirect_IIE_t<bigfloat, bigfloat>(p1, p2, op3x, op3y);
+	if ((ret = orient2dyz_indirect_IIE_t<NFG::interval_number, NFG::interval_number>(p1, p2, op3x, op3y)) != 0) return ret;
+	return orient2dyz_indirect_IIE_t<NFG::bigfloat, NFG::bigfloat>(p1, p2, op3x, op3y);
 }
 
 
 template<class PT, class T> static inline int orient2dyz_indirect_III_t(const genericPoint& p1, const genericPoint& p2, const genericPoint& p3) {
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundUP();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundUP();
 
-	std::conditional_t<(std::is_same<expansion, T>::value), expansionPool, char> pool;
+	std::conditional_t<(std::is_same<NFG::expansion, T>::value), NFG::expansionPool, char> pool;
 
-	if constexpr (std::is_same<expansion, T>::value) {
-		expansion::initPool(&pool);
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
+		NFG::expansion::initPool(&pool);
 		feclearexcept(FE_ALL_EXCEPT);
 	}
 
 	T l1z, l1x, l1y, d1;
 	if (!p1.getLambda3D(l1z, l1x, l1y, d1)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
 	T l2z, l2x, l2y, d2;
 	if (!p2.getLambda3D(l2z, l2x, l2y, d2)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
 	T l3z, l3x, l3y, d3;
 	if (!p3.getLambda3D(l3z, l3x, l3y, d3)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
@@ -2829,9 +2831,9 @@ template<class PT, class T> static inline int orient2dyz_indirect_III_t(const ge
 	const T efgh = (ef*gh);
 	const T L = (abcd-efgh);
 
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 
-	if constexpr (std::is_same<expansion, T>::value) {
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
 		if (fetestexcept(FE_UNDERFLOW | FE_OVERFLOW)) return INT_MAX;
 	}
 	return sgn(L);
@@ -2839,24 +2841,24 @@ template<class PT, class T> static inline int orient2dyz_indirect_III_t(const ge
 
 inline int orient2dyz_indirect_III(const genericPoint& p1, const genericPoint& p2, const genericPoint& p3) {
 	int ret;
-	if ((ret = orient2dyz_indirect_III_t<interval_number, interval_number>(p1, p2, p3)) != 0) return ret;
-	return orient2dyz_indirect_III_t<bigfloat, bigfloat>(p1, p2, p3);
+	if ((ret = orient2dyz_indirect_III_t<NFG::interval_number, NFG::interval_number>(p1, p2, p3)) != 0) return ret;
+	return orient2dyz_indirect_III_t<NFG::bigfloat, NFG::bigfloat>(p1, p2, p3);
 }
 
 
 template<class PT, class T> static inline int orient2dzx_indirect_IEE_t(const genericPoint& p1, const PT& p2x, const PT& p2y, const PT& p3x, const PT& p3y) {
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundUP();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundUP();
 
-	std::conditional_t<(std::is_same<expansion, T>::value), expansionPool, char> pool;
+	std::conditional_t<(std::is_same<NFG::expansion, T>::value), NFG::expansionPool, char> pool;
 
-	if constexpr (std::is_same<expansion, T>::value) {
-		expansion::initPool(&pool);
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
+		NFG::expansion::initPool(&pool);
 		feclearexcept(FE_ALL_EXCEPT);
 	}
 
 	T l1y, l1z, l1x, d1;
 	if (!p1.getLambda3D(l1y, l1z, l1x, d1)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
@@ -2871,9 +2873,9 @@ template<class PT, class T> static inline int orient2dzx_indirect_IEE_t(const ge
 	const T dpr = (d1*pr);
 	const T det = (dpr+e);
 
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 
-	if constexpr (std::is_same<expansion, T>::value) {
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
 		if (fetestexcept(FE_UNDERFLOW | FE_OVERFLOW)) return INT_MAX;
 	}
 	return sgn(det);
@@ -2881,30 +2883,30 @@ template<class PT, class T> static inline int orient2dzx_indirect_IEE_t(const ge
 
 inline int orient2dzx_indirect_IEE(const genericPoint& p1, const double& p2x, const double& p2y, const double& p3x, const double& p3y) {
 	int ret;
-	if ((ret = orient2dzx_indirect_IEE_t<interval_number, interval_number>(p1, p2x, p2y, p3x, p3y)) != 0) return ret;
-	return orient2dzx_indirect_IEE_t<bigfloat, bigfloat>(p1, p2x, p2y, p3x, p3y);
+	if ((ret = orient2dzx_indirect_IEE_t<NFG::interval_number, NFG::interval_number>(p1, p2x, p2y, p3x, p3y)) != 0) return ret;
+	return orient2dzx_indirect_IEE_t<NFG::bigfloat, NFG::bigfloat>(p1, p2x, p2y, p3x, p3y);
 }
 
 
 template<class PT, class T> static inline int orient2dzx_indirect_IIE_t(const genericPoint& p1, const genericPoint& p2, const PT& op3x, const PT& op3y) {
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundUP();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundUP();
 
-	std::conditional_t<(std::is_same<expansion, T>::value), expansionPool, char> pool;
+	std::conditional_t<(std::is_same<NFG::expansion, T>::value), NFG::expansionPool, char> pool;
 
-	if constexpr (std::is_same<expansion, T>::value) {
-		expansion::initPool(&pool);
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
+		NFG::expansion::initPool(&pool);
 		feclearexcept(FE_ALL_EXCEPT);
 	}
 
 	T l1y, l1z, l1x, d1;
 	if (!p1.getLambda3D(l1y, l1z, l1x, d1)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
 	T l2y, l2z, l2x, d2;
 	if (!p2.getLambda3D(l2y, l2z, l2x, d2)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
@@ -2922,9 +2924,9 @@ template<class PT, class T> static inline int orient2dzx_indirect_IIE_t(const ge
 	const T efgh = (ef*gh);
 	const T L = (abcd-efgh);
 
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 
-	if constexpr (std::is_same<expansion, T>::value) {
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
 		if (fetestexcept(FE_UNDERFLOW | FE_OVERFLOW)) return INT_MAX;
 	}
 	return sgn(L);
@@ -2932,36 +2934,36 @@ template<class PT, class T> static inline int orient2dzx_indirect_IIE_t(const ge
 
 inline int orient2dzx_indirect_IIE(const genericPoint& p1, const genericPoint& p2, const double& op3x, const double& op3y) {
 	int ret;
-	if ((ret = orient2dzx_indirect_IIE_t<interval_number, interval_number>(p1, p2, op3x, op3y)) != 0) return ret;
-	return orient2dzx_indirect_IIE_t<bigfloat, bigfloat>(p1, p2, op3x, op3y);
+	if ((ret = orient2dzx_indirect_IIE_t<NFG::interval_number, NFG::interval_number>(p1, p2, op3x, op3y)) != 0) return ret;
+	return orient2dzx_indirect_IIE_t<NFG::bigfloat, NFG::bigfloat>(p1, p2, op3x, op3y);
 }
 
 
 template<class PT, class T> static inline int orient2dzx_indirect_III_t(const genericPoint& p1, const genericPoint& p2, const genericPoint& p3) {
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundUP();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundUP();
 
-	std::conditional_t<(std::is_same<expansion, T>::value), expansionPool, char> pool;
+	std::conditional_t<(std::is_same<NFG::expansion, T>::value), NFG::expansionPool, char> pool;
 
-	if constexpr (std::is_same<expansion, T>::value) {
-		expansion::initPool(&pool);
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
+		NFG::expansion::initPool(&pool);
 		feclearexcept(FE_ALL_EXCEPT);
 	}
 
 	T l1y, l1z, l1x, d1;
 	if (!p1.getLambda3D(l1y, l1z, l1x, d1)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
 	T l2y, l2z, l2x, d2;
 	if (!p2.getLambda3D(l2y, l2z, l2x, d2)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
 	T l3y, l3z, l3x, d3;
 	if (!p3.getLambda3D(l3y, l3z, l3x, d3)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
@@ -2981,9 +2983,9 @@ template<class PT, class T> static inline int orient2dzx_indirect_III_t(const ge
 	const T efgh = (ef*gh);
 	const T L = (abcd-efgh);
 
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 
-	if constexpr (std::is_same<expansion, T>::value) {
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
 		if (fetestexcept(FE_UNDERFLOW | FE_OVERFLOW)) return INT_MAX;
 	}
 	return sgn(L);
@@ -2991,24 +2993,24 @@ template<class PT, class T> static inline int orient2dzx_indirect_III_t(const ge
 
 inline int orient2dzx_indirect_III(const genericPoint& p1, const genericPoint& p2, const genericPoint& p3) {
 	int ret;
-	if ((ret = orient2dzx_indirect_III_t<interval_number, interval_number>(p1, p2, p3)) != 0) return ret;
-	return orient2dzx_indirect_III_t<bigfloat, bigfloat>(p1, p2, p3);
+	if ((ret = orient2dzx_indirect_III_t<NFG::interval_number, NFG::interval_number>(p1, p2, p3)) != 0) return ret;
+	return orient2dzx_indirect_III_t<NFG::bigfloat, NFG::bigfloat>(p1, p2, p3);
 }
 
 
 template<class PT, class T> static inline int orient2d_indirect_IEE_t(const genericPoint& p1, const PT& p2x, const PT& p2y, const PT& p3x, const PT& p3y) {
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundUP();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundUP();
 
-	std::conditional_t<(std::is_same<expansion, T>::value), expansionPool, char> pool;
+	std::conditional_t<(std::is_same<NFG::expansion, T>::value), NFG::expansionPool, char> pool;
 
-	if constexpr (std::is_same<expansion, T>::value) {
-		expansion::initPool(&pool);
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
+		NFG::expansion::initPool(&pool);
 		feclearexcept(FE_ALL_EXCEPT);
 	}
 
 	T l1x, l1y, d1;
 	if (!p1.getLambda2D(l1x, l1y, d1)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
@@ -3023,9 +3025,9 @@ template<class PT, class T> static inline int orient2d_indirect_IEE_t(const gene
 	const T dpr = (d1*pr);
 	const T det = (dpr+e);
 
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 
-	if constexpr (std::is_same<expansion, T>::value) {
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
 		if (fetestexcept(FE_UNDERFLOW | FE_OVERFLOW)) return INT_MAX;
 	}
 	return sgn(det);
@@ -3033,30 +3035,30 @@ template<class PT, class T> static inline int orient2d_indirect_IEE_t(const gene
 
 inline int orient2d_indirect_IEE(const genericPoint& p1, const double& p2x, const double& p2y, const double& p3x, const double& p3y) {
 	int ret;
-	if ((ret = orient2d_indirect_IEE_t<interval_number, interval_number>(p1, p2x, p2y, p3x, p3y)) != 0) return ret;
-	return orient2d_indirect_IEE_t<bigfloat, bigfloat>(p1, p2x, p2y, p3x, p3y);
+	if ((ret = orient2d_indirect_IEE_t<NFG::interval_number, NFG::interval_number>(p1, p2x, p2y, p3x, p3y)) != 0) return ret;
+	return orient2d_indirect_IEE_t<NFG::bigfloat, NFG::bigfloat>(p1, p2x, p2y, p3x, p3y);
 }
 
 
 template<class PT, class T> static inline int orient2d_indirect_IIE_t(const genericPoint& p1, const genericPoint& p2, const PT& p3x, const PT& p3y) {
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundUP();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundUP();
 
-	std::conditional_t<(std::is_same<expansion, T>::value), expansionPool, char> pool;
+	std::conditional_t<(std::is_same<NFG::expansion, T>::value), NFG::expansionPool, char> pool;
 
-	if constexpr (std::is_same<expansion, T>::value) {
-		expansion::initPool(&pool);
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
+		NFG::expansion::initPool(&pool);
 		feclearexcept(FE_ALL_EXCEPT);
 	}
 
 	T l1x, l1y, d1;
 	if (!p1.getLambda2D(l1x, l1y, d1)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
 	T l2x, l2y, d2;
 	if (!p2.getLambda2D(l2x, l2y, d2)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
@@ -3074,9 +3076,9 @@ template<class PT, class T> static inline int orient2d_indirect_IIE_t(const gene
 	const T efgh = (ef*gh);
 	const T L = (abcd-efgh);
 
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 
-	if constexpr (std::is_same<expansion, T>::value) {
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
 		if (fetestexcept(FE_UNDERFLOW | FE_OVERFLOW)) return INT_MAX;
 	}
 	return sgn(L);
@@ -3084,36 +3086,36 @@ template<class PT, class T> static inline int orient2d_indirect_IIE_t(const gene
 
 inline int orient2d_indirect_IIE(const genericPoint& p1, const genericPoint& p2, const double& p3x, const double& p3y) {
 	int ret;
-	if ((ret = orient2d_indirect_IIE_t<interval_number, interval_number>(p1, p2, p3x, p3y)) != 0) return ret;
-	return orient2d_indirect_IIE_t<bigfloat, bigfloat>(p1, p2, p3x, p3y);
+	if ((ret = orient2d_indirect_IIE_t<NFG::interval_number, NFG::interval_number>(p1, p2, p3x, p3y)) != 0) return ret;
+	return orient2d_indirect_IIE_t<NFG::bigfloat, NFG::bigfloat>(p1, p2, p3x, p3y);
 }
 
 
 template<class PT, class T> static inline int orient2d_indirect_III_t(const genericPoint& p1, const genericPoint& p2, const genericPoint& p3) {
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundUP();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundUP();
 
-	std::conditional_t<(std::is_same<expansion, T>::value), expansionPool, char> pool;
+	std::conditional_t<(std::is_same<NFG::expansion, T>::value), NFG::expansionPool, char> pool;
 
-	if constexpr (std::is_same<expansion, T>::value) {
-		expansion::initPool(&pool);
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
+		NFG::expansion::initPool(&pool);
 		feclearexcept(FE_ALL_EXCEPT);
 	}
 
 	T l1x, l1y, d1;
 	if (!p1.getLambda2D(l1x, l1y, d1)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
 	T l2x, l2y, d2;
 	if (!p2.getLambda2D(l2x, l2y, d2)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
 	T l3x, l3y, d3;
 	if (!p3.getLambda2D(l3x, l3y, d3)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
@@ -3133,9 +3135,9 @@ template<class PT, class T> static inline int orient2d_indirect_III_t(const gene
 	const T efgh = (ef*gh);
 	const T L = (abcd-efgh);
 
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 
-	if constexpr (std::is_same<expansion, T>::value) {
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
 		if (fetestexcept(FE_UNDERFLOW | FE_OVERFLOW)) return INT_MAX;
 	}
 	return sgn(L);
@@ -3143,24 +3145,24 @@ template<class PT, class T> static inline int orient2d_indirect_III_t(const gene
 
 inline int orient2d_indirect_III(const genericPoint& p1, const genericPoint& p2, const genericPoint& p3) {
 	int ret;
-	if ((ret = orient2d_indirect_III_t<interval_number, interval_number>(p1, p2, p3)) != 0) return ret;
-	return orient2d_indirect_III_t<bigfloat, bigfloat>(p1, p2, p3);
+	if ((ret = orient2d_indirect_III_t<NFG::interval_number, NFG::interval_number>(p1, p2, p3)) != 0) return ret;
+	return orient2d_indirect_III_t<NFG::bigfloat, NFG::bigfloat>(p1, p2, p3);
 }
 
 
 template<class PT, class T> static inline int orient3d_indirect_IEEE_t(const genericPoint& p1, const PT& p2x, const PT& p2y, const PT& p2z, const PT& p3x, const PT& p3y, const PT& p3z, const PT& p4x, const PT& p4y, const PT& p4z) {
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundUP();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundUP();
 
-	std::conditional_t<(std::is_same<expansion, T>::value), expansionPool, char> pool;
+	std::conditional_t<(std::is_same<NFG::expansion, T>::value), NFG::expansionPool, char> pool;
 
-	if constexpr (std::is_same<expansion, T>::value) {
-		expansion::initPool(&pool);
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
+		NFG::expansion::initPool(&pool);
 		feclearexcept(FE_ALL_EXCEPT);
 	}
 
 	T l1x, l1y, l1z, d1;
 	if (!p1.getLambda3D(l1x, l1y, l1z, d1)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
@@ -3175,9 +3177,9 @@ template<class PT, class T> static inline int orient3d_indirect_IEEE_t(const gen
 	const T v3z = (l1z-(p4z*d1));
 	const T det = (((((v3x*v1z)-(v3z*v1x))*v2y)-(((v3x*v1y)-(v3y*v1x))*v2z))-(((v3y*v1z)-(v3z*v1y))*v2x));
 
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 
-	if constexpr (std::is_same<expansion, T>::value) {
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
 		if (fetestexcept(FE_UNDERFLOW | FE_OVERFLOW)) return INT_MAX;
 	}
 	return sgn(det);
@@ -3185,30 +3187,30 @@ template<class PT, class T> static inline int orient3d_indirect_IEEE_t(const gen
 
 inline int orient3d_indirect_IEEE(const genericPoint& p1, const double& p2x, const double& p2y, const double& p2z, const double& p3x, const double& p3y, const double& p3z, const double& p4x, const double& p4y, const double& p4z) {
 	int ret;
-	if ((ret = orient3d_indirect_IEEE_t<interval_number, interval_number>(p1, p2x, p2y, p2z, p3x, p3y, p3z, p4x, p4y, p4z)) != 0) return ret;
-	return orient3d_indirect_IEEE_t<bigfloat, bigfloat>(p1, p2x, p2y, p2z, p3x, p3y, p3z, p4x, p4y, p4z);
+	if ((ret = orient3d_indirect_IEEE_t<NFG::interval_number, NFG::interval_number>(p1, p2x, p2y, p2z, p3x, p3y, p3z, p4x, p4y, p4z)) != 0) return ret;
+	return orient3d_indirect_IEEE_t<NFG::bigfloat, NFG::bigfloat>(p1, p2x, p2y, p2z, p3x, p3y, p3z, p4x, p4y, p4z);
 }
 
 
 template<class PT, class T> static inline int orient3d_indirect_IIEE_t(const genericPoint& p1, const genericPoint& p2, const PT& p3x, const PT& p3y, const PT& p3z, const PT& p4x, const PT& p4y, const PT& p4z) {
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundUP();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundUP();
 
-	std::conditional_t<(std::is_same<expansion, T>::value), expansionPool, char> pool;
+	std::conditional_t<(std::is_same<NFG::expansion, T>::value), NFG::expansionPool, char> pool;
 
-	if constexpr (std::is_same<expansion, T>::value) {
-		expansion::initPool(&pool);
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
+		NFG::expansion::initPool(&pool);
 		feclearexcept(FE_ALL_EXCEPT);
 	}
 
 	T l1x, l1y, l1z, d1;
 	if (!p1.getLambda3D(l1x, l1y, l1z, d1)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
 	T l2x, l2y, l2z, d2;
 	if (!p2.getLambda3D(l2x, l2y, l2z, d2)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
@@ -3223,9 +3225,9 @@ template<class PT, class T> static inline int orient3d_indirect_IIEE_t(const gen
 	const T v3z = (l1z-(p4z*d1));
 	const T det = (((((v3x*v1z)-(v3z*v1x))*v2y)-(((v3x*v1y)-(v3y*v1x))*v2z))-(((v3y*v1z)-(v3z*v1y))*v2x));
 
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 
-	if constexpr (std::is_same<expansion, T>::value) {
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
 		if (fetestexcept(FE_UNDERFLOW | FE_OVERFLOW)) return INT_MAX;
 	}
 	return sgn(det);
@@ -3233,36 +3235,36 @@ template<class PT, class T> static inline int orient3d_indirect_IIEE_t(const gen
 
 inline int orient3d_indirect_IIEE(const genericPoint& p1, const genericPoint& p2, const double& p3x, const double& p3y, const double& p3z, const double& p4x, const double& p4y, const double& p4z) {
 	int ret;
-	if ((ret = orient3d_indirect_IIEE_t<interval_number, interval_number>(p1, p2, p3x, p3y, p3z, p4x, p4y, p4z)) != 0) return ret;
-	return orient3d_indirect_IIEE_t<bigfloat, bigfloat>(p1, p2, p3x, p3y, p3z, p4x, p4y, p4z);
+	if ((ret = orient3d_indirect_IIEE_t<NFG::interval_number, NFG::interval_number>(p1, p2, p3x, p3y, p3z, p4x, p4y, p4z)) != 0) return ret;
+	return orient3d_indirect_IIEE_t<NFG::bigfloat, NFG::bigfloat>(p1, p2, p3x, p3y, p3z, p4x, p4y, p4z);
 }
 
 
 template<class PT, class T> static inline int orient3d_indirect_IIIE_t(const genericPoint& p1, const genericPoint& p2, const genericPoint& p3, const PT& p4x, const PT& p4y, const PT& p4z) {
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundUP();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundUP();
 
-	std::conditional_t<(std::is_same<expansion, T>::value), expansionPool, char> pool;
+	std::conditional_t<(std::is_same<NFG::expansion, T>::value), NFG::expansionPool, char> pool;
 
-	if constexpr (std::is_same<expansion, T>::value) {
-		expansion::initPool(&pool);
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
+		NFG::expansion::initPool(&pool);
 		feclearexcept(FE_ALL_EXCEPT);
 	}
 
 	T l1x, l1y, l1z, d1;
 	if (!p1.getLambda3D(l1x, l1y, l1z, d1)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
 	T l2x, l2y, l2z, d2;
 	if (!p2.getLambda3D(l2x, l2y, l2z, d2)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
 	T l3x, l3y, l3z, d3;
 	if (!p3.getLambda3D(l3x, l3y, l3z, d3)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
@@ -3277,9 +3279,9 @@ template<class PT, class T> static inline int orient3d_indirect_IIIE_t(const gen
 	const T v3z = (l1z-(p4z*d1));
 	const T det = (((((v3x*v1z)-(v3z*v1x))*v2y)-(((v3x*v1y)-(v3y*v1x))*v2z))-(((v3y*v1z)-(v3z*v1y))*v2x));
 
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 
-	if constexpr (std::is_same<expansion, T>::value) {
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
 		if (fetestexcept(FE_UNDERFLOW | FE_OVERFLOW)) return INT_MAX;
 	}
 	return sgn(det);
@@ -3287,42 +3289,42 @@ template<class PT, class T> static inline int orient3d_indirect_IIIE_t(const gen
 
 inline int orient3d_indirect_IIIE(const genericPoint& p1, const genericPoint& p2, const genericPoint& p3, const double& p4x, const double& p4y, const double& p4z) {
 	int ret;
-	if ((ret = orient3d_indirect_IIIE_t<interval_number, interval_number>(p1, p2, p3, p4x, p4y, p4z)) != 0) return ret;
-	return orient3d_indirect_IIIE_t<bigfloat, bigfloat>(p1, p2, p3, p4x, p4y, p4z);
+	if ((ret = orient3d_indirect_IIIE_t<NFG::interval_number, NFG::interval_number>(p1, p2, p3, p4x, p4y, p4z)) != 0) return ret;
+	return orient3d_indirect_IIIE_t<NFG::bigfloat, NFG::bigfloat>(p1, p2, p3, p4x, p4y, p4z);
 }
 
 
 template<class PT, class T> static inline int orient3d_indirect_IIII_t(const genericPoint& p1, const genericPoint& p2, const genericPoint& p3, const genericPoint& p4) {
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundUP();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundUP();
 
-	std::conditional_t<(std::is_same<expansion, T>::value), expansionPool, char> pool;
+	std::conditional_t<(std::is_same<NFG::expansion, T>::value), NFG::expansionPool, char> pool;
 
-	if constexpr (std::is_same<expansion, T>::value) {
-		expansion::initPool(&pool);
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
+		NFG::expansion::initPool(&pool);
 		feclearexcept(FE_ALL_EXCEPT);
 	}
 
 	T l1x, l1y, l1z, d1;
 	if (!p1.getLambda3D(l1x, l1y, l1z, d1)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
 	T l2x, l2y, l2z, d2;
 	if (!p2.getLambda3D(l2x, l2y, l2z, d2)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
 	T l3x, l3y, l3z, d3;
 	if (!p3.getLambda3D(l3x, l3y, l3z, d3)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
 	T l4x, l4y, l4z, d4;
 	if (!p4.getLambda3D(l4x, l4y, l4z, d4)) {
-		if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+		if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 		return 0;
 	}
 
@@ -3337,9 +3339,9 @@ template<class PT, class T> static inline int orient3d_indirect_IIII_t(const gen
 	const T v3z = ((l1z*d4)-(l4z*d1));
 	const T det = (((((v3x*v1z)-(v3z*v1x))*v2y)-(((v3x*v1y)-(v3y*v1x))*v2z))-(((v3y*v1z)-(v3z*v1y))*v2x));
 
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundNEAR();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundNEAR();
 
-	if constexpr (std::is_same<expansion, T>::value) {
+	if constexpr (std::is_same<NFG::expansion, T>::value) {
 		if (fetestexcept(FE_UNDERFLOW | FE_OVERFLOW)) return INT_MAX;
 	}
 	return sgn(det);
@@ -3347,8 +3349,10 @@ template<class PT, class T> static inline int orient3d_indirect_IIII_t(const gen
 
 inline int orient3d_indirect_IIII(const genericPoint& p1, const genericPoint& p2, const genericPoint& p3, const genericPoint& p4) {
 	int ret;
-	if ((ret = orient3d_indirect_IIII_t<interval_number, interval_number>(p1, p2, p3, p4)) != 0) return ret;
-	return orient3d_indirect_IIII_t<bigfloat, bigfloat>(p1, p2, p3, p4);
+	if ((ret = orient3d_indirect_IIII_t<NFG::interval_number, NFG::interval_number>(p1, p2, p3, p4)) != 0) return ret;
+	return orient3d_indirect_IIII_t<NFG::bigfloat, NFG::bigfloat>(p1, p2, p3, p4);
+}
+
 }
 
 

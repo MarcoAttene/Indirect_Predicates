@@ -31,12 +31,14 @@
 int orient2d(double p1x, double p1y, double p2x, double p2y, double p3x, double p3y);
 int orient3d(double px, double py, double pz, double qx, double qy, double qz, double rx, double ry, double rz, double sx, double sy, double sz);
 
+namespace IPs {
+
 template<class PT, class T>
 inline bool lambda2d_SSI(
 	const PT* l1, const PT* l2, const PT* m1, const PT* m2,
 	T& lambda_x, T& lambda_y, T& lambda_det)
 {
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundUP();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundUP();
 
 	const T t1 = l1[0] * l2[1] - l2[0] * l1[1];
 	const T t3 = m1[0] * m2[1] - m2[0] * m1[1];
@@ -48,8 +50,8 @@ inline bool lambda2d_SSI(
 	lambda_y = t1 * ty2 - t3 * ty4;
 	lambda_det = tx4 * ty2 - tx2 * ty4;
 
-	if constexpr (std::is_same<interval_number, T>::value) {
-		setFPUModeToRoundNEAR();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) {
+		NFG::setFPUModeToRoundNEAR();
 		return lambda_det.signIsReliable();
 	}
 	else return true;
@@ -57,7 +59,7 @@ inline bool lambda2d_SSI(
 
 template<class PT, class T>
 inline bool lambda3d_LPI(const PT* p, const PT* q, const PT* r, const PT* s, const PT* t, T& lambda_x, T& lambda_y, T& lambda_z, T& lambda_d) {
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundUP();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundUP();
 
 	const T trz = (t[2] * r[3] - r[2] * t[3]);
 	const T sry = (s[1] * r[3] - r[1] * s[3]);
@@ -87,8 +89,8 @@ inline bool lambda3d_LPI(const PT* p, const PT* q, const PT* r, const PT* s, con
 	lambda_z = corr * pzqd - (pzqd - qzpd) * conn;
 	lambda_d = corr * pdqd;
 
-	if constexpr (std::is_same<interval_number, T>::value) {
-		setFPUModeToRoundNEAR();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) {
+		NFG::setFPUModeToRoundNEAR();
 		return lambda_d.signIsReliable();
 	}
 	else return true;
@@ -96,7 +98,7 @@ inline bool lambda3d_LPI(const PT* p, const PT* q, const PT* r, const PT* s, con
 
 template<class PT, class T>
 inline bool lambda3d_TPI(const PT* v1, const PT* v2, const PT* v3, const PT* w1, const PT* w2, const PT* w3, const PT* u1, const PT* u2, const PT* u3, T& lambda_x, T& lambda_y, T& lambda_z, T& lambda_d) {
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundUP();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundUP();
 
 	const T v12y = v1[3] * v2[1] - v1[1] * v2[3];
 	const T v23z = v2[3] * v3[2] - v2[2] * v3[3];
@@ -136,8 +138,8 @@ inline bool lambda3d_TPI(const PT* v1, const PT* v2, const PT* v3, const PT* w1,
 	lambda_z = nuvw * (nvx0 * nwy0 - nvy0 * nwx0) + nvwu * (nwx0 * nuy0 - nwy0 * nux0) - nwvu * (nvx0 * nuy0 - nvy0 * nux0);
 	lambda_d = (nvx0 * (nwy0 * nuz0 - nwz0 * nuy0) + nvz0 * (nwx0 * nuy0 - nwy0 * nux0) - nvy0 * (nwx0 * nuz0 - nwz0 * nux0)) * v1[3] * w1[3] * u1[3];
 
-	if constexpr (std::is_same<interval_number, T>::value) {
-		setFPUModeToRoundNEAR();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) {
+		NFG::setFPUModeToRoundNEAR();
 		return lambda_d.signIsReliable();
 	}
 	else return true;
@@ -145,7 +147,7 @@ inline bool lambda3d_TPI(const PT* v1, const PT* v2, const PT* v3, const PT* w1,
 
 template<class PT, class UT, class T>
 inline bool lambda3d_LNC(const PT* p, const PT* q, const UT t, T& lambda_x, T& lambda_y, T& lambda_z, T& lambda_d) {
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundUP();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundUP();
 
 	const T a = (1.0 - t) * q[3];
 	const T b = p[3] * t;
@@ -154,8 +156,8 @@ inline bool lambda3d_LNC(const PT* p, const PT* q, const UT t, T& lambda_x, T& l
 	lambda_z = p[2] * a + q[2] * b;
 	lambda_d = p[3] * q[3];
 
-	if constexpr (std::is_same<interval_number, T>::value) {
-		setFPUModeToRoundNEAR();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) {
+		NFG::setFPUModeToRoundNEAR();
 		return lambda_d.signIsReliable();
 	}
 	else return true;
@@ -163,7 +165,7 @@ inline bool lambda3d_LNC(const PT* p, const PT* q, const UT t, T& lambda_x, T& l
 
 template<class PT, class UT, class T>
 inline bool lambda3d_BPT(const PT* p, const PT* q, const PT* r, const UT u, const UT v, T& lambda_x, T& lambda_y, T& lambda_z, T& lambda_d) {
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundUP();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundUP();
 
 	const T rdqd = r[3] * q[3];
 	const T pdrdu = p[3] * r[3] * u;
@@ -174,8 +176,8 @@ inline bool lambda3d_BPT(const PT* p, const PT* q, const PT* r, const UT u, cons
 	lambda_z = q[2] * pdrdu - r[2] * ccc + p[2] * rdvqd;
 	lambda_d = p[3] * rdqd;
 
-	if constexpr (std::is_same<interval_number, T>::value) {
-		setFPUModeToRoundNEAR();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) {
+		NFG::setFPUModeToRoundNEAR();
 		return lambda_d.signIsReliable();
 	}
 	else return true;
@@ -183,7 +185,7 @@ inline bool lambda3d_BPT(const PT* p, const PT* q, const PT* r, const UT u, cons
 
 template<class PT, class T>
 inline bool lambda3d_TBC(const PT* p, const PT* q, const PT* r, const PT* s, T& lambda_x, T& lambda_y, T& lambda_z, T& lambda_d) {
-	if constexpr (std::is_same<interval_number, T>::value) setFPUModeToRoundUP();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) NFG::setFPUModeToRoundUP();
 
 	lambda_d = p[3] * q[3] * r[3] * s[3];
 	const T dpqr = p[3] * q[3] * r[3];
@@ -194,8 +196,8 @@ inline bool lambda3d_TBC(const PT* p, const PT* q, const PT* r, const PT* s, T& 
 	lambda_y = (dqrs * p[1] + dprs * q[1] + dpqs * r[1] + dpqr * s[1]) * 0.25;
 	lambda_z = (dqrs * p[2] + dprs * q[2] + dpqs * r[2] + dpqr * s[2]) * 0.25;
 
-	if constexpr (std::is_same<interval_number, T>::value) {
-		setFPUModeToRoundNEAR();
+	if constexpr (std::is_same<NFG::interval_number, T>::value) {
+		NFG::setFPUModeToRoundNEAR();
 		return lambda_d.signIsReliable();
 	}
 	else return true;
@@ -783,7 +785,7 @@ inline int genericPoint::incirclexy(const genericPoint& a, const genericPoint& b
 
 
 // These functions assume that point is an SSI
-inline bool genericPoint::getIntervalLambda(interval_number& lx, interval_number& ly, interval_number& d) const {
+inline bool genericPoint::getIntervalLambda(NFG::interval_number& lx, NFG::interval_number& ly, NFG::interval_number& d) const {
 	if (isExplicit2D()) {
 		const explicitPoint2D& e = toExplicit2D();
 		lx = e.X(), ly = e.Y(), d = 1;
@@ -795,7 +797,7 @@ inline bool genericPoint::getIntervalLambda(interval_number& lx, interval_number
 	}
 }
 
-inline void genericPoint::getBigfloatLambda(bigfloat& lx, bigfloat& ly, bigfloat& d) const {
+inline void genericPoint::getBigfloatLambda(NFG::bigfloat& lx, NFG::bigfloat& ly, NFG::bigfloat& d) const {
 	if (isExplicit2D()) {
 		const explicitPoint2D& e = toExplicit2D();
 		lx = e.X(), ly = e.Y(), d = 1;
@@ -807,7 +809,7 @@ inline void genericPoint::getBigfloatLambda(bigfloat& lx, bigfloat& ly, bigfloat
 }
 
 // These functions assume that point is an implicit 3D
-inline bool genericPoint::getIntervalLambda(interval_number& lx, interval_number& ly, interval_number& lz, interval_number& d) const {
+inline bool genericPoint::getIntervalLambda(NFG::interval_number& lx, NFG::interval_number& ly, NFG::interval_number& lz, NFG::interval_number& d) const {
 	if (isExplicit3D()) {
 		const explicitPoint3D& e = toExplicit3D();
 		lx = e.X(), ly = e.Y(), lz = e.Z(); d = 1;
@@ -823,7 +825,7 @@ inline bool genericPoint::getIntervalLambda(interval_number& lx, interval_number
 	}
 }
 
-inline void genericPoint::getBigfloatLambda(bigfloat& lx, bigfloat& ly, bigfloat& lz, bigfloat& d) const {
+inline void genericPoint::getBigfloatLambda(NFG::bigfloat& lx, NFG::bigfloat& ly, NFG::bigfloat& lz, NFG::bigfloat& d) const {
 	if (isExplicit3D()) {
 		const explicitPoint3D& e = toExplicit3D();
 		lx = e.X(), ly = e.Y(), lz = e.Z(); d = 1;
@@ -840,7 +842,7 @@ inline void genericPoint::getBigfloatLambda(bigfloat& lx, bigfloat& ly, bigfloat
 
 // Type-specific lambdas
 
-inline bool implicitPoint2D_SSI::getIntervalLambda(interval_number& lx, interval_number& ly, interval_number &d) const
+inline bool implicitPoint2D_SSI::getIntervalLambda(NFG::interval_number& lx, NFG::interval_number& ly, NFG::interval_number &d) const
 {
 	lx = dfilter_lambda_x;
 	ly = dfilter_lambda_y;
@@ -852,12 +854,12 @@ inline implicitPoint2D_SSI::implicitPoint2D_SSI(const genericPoint& l11, const g
 	const genericPoint& l21, const genericPoint& l22)
 	: genericPoint(Point_Type::SSI), l1_1(l11), l1_2(l12), l2_1(l21), l2_2(l22)
 {
-	interval_number l1[3], l2[3], m1[3], m2[3];
+	NFG::interval_number l1[3], l2[3], m1[3], m2[3];
 	l1_1.getIntervalLambda(l1[0], l1[1], l1[2]);
 	l1_2.getIntervalLambda(l2[0], l2[1], l2[2]);
 	l2_1.getIntervalLambda(m1[0], m1[1], m1[2]);
 	l2_2.getIntervalLambda(m2[0], m2[1], m2[2]);
-	lambda2d_SSI<interval_number, interval_number>(l1, l2, m1, m2, dfilter_lambda_x, dfilter_lambda_y, dfilter_denominator);
+	lambda2d_SSI<NFG::interval_number, NFG::interval_number>(l1, l2, m1, m2, dfilter_lambda_x, dfilter_lambda_y, dfilter_denominator);
 	if (dfilter_denominator.isNegative()) {
 		dfilter_lambda_x.negate();
 		dfilter_lambda_y.negate();
@@ -865,7 +867,7 @@ inline implicitPoint2D_SSI::implicitPoint2D_SSI(const genericPoint& l11, const g
 	}
 }
 
-inline bool implicitPoint3D_LPI::getIntervalLambda(interval_number& lx, interval_number& ly, interval_number& lz, interval_number &d) const
+inline bool implicitPoint3D_LPI::getIntervalLambda(NFG::interval_number& lx, NFG::interval_number& ly, NFG::interval_number& lz, NFG::interval_number &d) const
 {
 	lx = dfilter_lambda_x;
 	ly = dfilter_lambda_y;
@@ -878,14 +880,14 @@ inline implicitPoint3D_LPI::implicitPoint3D_LPI(const genericPoint& _p, const ge
 	const genericPoint& _r, const genericPoint& _s, const genericPoint& _t)
 	: genericPoint(Point_Type::LPI), ip(_p), iq(_q), ir(_r), is(_s), it(_t)
 {
-	interval_number p[4], q[4], r[4], s[4], t[4];
+	NFG::interval_number p[4], q[4], r[4], s[4], t[4];
 	ip.getIntervalLambda(p[0], p[1], p[2], p[3]);
 	iq.getIntervalLambda(q[0], q[1], q[2], q[3]);
 	ir.getIntervalLambda(r[0], r[1], r[2], r[3]);
 	is.getIntervalLambda(s[0], s[1], s[2], s[3]);
 	it.getIntervalLambda(t[0], t[1], t[2], t[3]);
 
-	lambda3d_LPI<interval_number, interval_number>(p, q, r, s, t, dfilter_lambda_x, dfilter_lambda_y, dfilter_lambda_z, dfilter_denominator);
+	lambda3d_LPI<NFG::interval_number, NFG::interval_number>(p, q, r, s, t, dfilter_lambda_x, dfilter_lambda_y, dfilter_lambda_z, dfilter_denominator);
 	if (dfilter_denominator.isNegative()) {
 		dfilter_lambda_x.negate();
 		dfilter_lambda_y.negate();
@@ -894,7 +896,7 @@ inline implicitPoint3D_LPI::implicitPoint3D_LPI(const genericPoint& _p, const ge
 	}
 }
 
-inline bool implicitPoint3D_TPI::getIntervalLambda(interval_number& lx, interval_number& ly, interval_number& lz, interval_number& d) const
+inline bool implicitPoint3D_TPI::getIntervalLambda(NFG::interval_number& lx, NFG::interval_number& ly, NFG::interval_number& lz, NFG::interval_number& d) const
 {
 	lx = dfilter_lambda_x;
 	ly = dfilter_lambda_y;
@@ -908,7 +910,7 @@ inline implicitPoint3D_TPI::implicitPoint3D_TPI(const genericPoint& _v1, const g
 	const genericPoint& _u1, const genericPoint& _u2, const genericPoint& _u3)
 	: genericPoint(Point_Type::TPI), iv1(_v1), iv2(_v2), iv3(_v3), iw1(_w1), iw2(_w2), iw3(_w3), iu1(_u1), iu2(_u2), iu3(_u3)
 {
-	interval_number v1[4], v2[4], v3[4], w1[4], w2[4], w3[4], u1[4], u2[4], u3[4];
+	NFG::interval_number v1[4], v2[4], v3[4], w1[4], w2[4], w3[4], u1[4], u2[4], u3[4];
 	iv1.getIntervalLambda(v1[0], v1[1], v1[2], v1[3]);
 	iv2.getIntervalLambda(v2[0], v2[1], v2[2], v2[3]);
 	iv3.getIntervalLambda(v3[0], v3[1], v3[2], v3[3]);
@@ -919,7 +921,7 @@ inline implicitPoint3D_TPI::implicitPoint3D_TPI(const genericPoint& _v1, const g
 	iu2.getIntervalLambda(u2[0], u2[1], u2[2], u2[3]);
 	iu3.getIntervalLambda(u3[0], u3[1], u3[2], u3[3]);
 
-	lambda3d_TPI<interval_number, interval_number>(
+	lambda3d_TPI<NFG::interval_number, NFG::interval_number>(
 		v1, v2, v3, w1, w2, w3, u1 ,u2, u3,
 		dfilter_lambda_x, dfilter_lambda_y, dfilter_lambda_z, dfilter_denominator);
 	if (dfilter_denominator.isNegative()) {
@@ -930,7 +932,7 @@ inline implicitPoint3D_TPI::implicitPoint3D_TPI(const genericPoint& _v1, const g
 	}
 }
 
-inline bool implicitPoint3D_LNC::getIntervalLambda(interval_number& lx, interval_number& ly, interval_number& lz, interval_number& d) const
+inline bool implicitPoint3D_LNC::getIntervalLambda(NFG::interval_number& lx, NFG::interval_number& ly, NFG::interval_number& lz, NFG::interval_number& d) const
 {
 	lx = dfilter_lambda_x;
 	ly = dfilter_lambda_y;
@@ -947,10 +949,10 @@ inline implicitPoint3D_LNC::implicitPoint3D_LNC(const genericPoint& _p, const ge
 	const double _t)
 	: genericPoint(Point_Type::LNC), ip(_p), iq(_q), t(_t)
 {
-	interval_number p[4], q[4];
+	NFG::interval_number p[4], q[4];
 	ip.getIntervalLambda(p[0], p[1], p[2], p[3]);
 	iq.getIntervalLambda(q[0], q[1], q[2], q[3]);
-	lambda3d_LNC<interval_number, interval_number, interval_number>(p, q, t, dfilter_lambda_x, dfilter_lambda_y, dfilter_lambda_z, dfilter_denominator);
+	lambda3d_LNC<NFG::interval_number, NFG::interval_number, NFG::interval_number>(p, q, t, dfilter_lambda_x, dfilter_lambda_y, dfilter_lambda_z, dfilter_denominator);
 #ifndef NO_CASCADED_IMPLICIT_POINTS
 	if (dfilter_denominator.isNegative()) {
 		dfilter_lambda_x.negate();
@@ -961,7 +963,7 @@ inline implicitPoint3D_LNC::implicitPoint3D_LNC(const genericPoint& _p, const ge
 #endif
 }
 
-inline bool implicitPoint3D_BPT::getIntervalLambda(interval_number& lx, interval_number& ly, interval_number& lz, interval_number& d) const
+inline bool implicitPoint3D_BPT::getIntervalLambda(NFG::interval_number& lx, NFG::interval_number& ly, NFG::interval_number& lz, NFG::interval_number& d) const
 {
 	lx = dfilter_lambda_x;
 	ly = dfilter_lambda_y;
@@ -978,11 +980,11 @@ inline implicitPoint3D_BPT::implicitPoint3D_BPT(const genericPoint& _p, const ge
 	const double _v, const double _u)
 	: genericPoint(Point_Type::BPT), ip(_p), iq(_q), ir(_r), v(_v), u(_u)
 {
-	interval_number p[4], q[4], r[4];
+	NFG::interval_number p[4], q[4], r[4];
 	ip.getIntervalLambda(p[0], p[1], p[2], p[3]);
 	iq.getIntervalLambda(q[0], q[1], q[2], q[3]);
 	ir.getIntervalLambda(r[0], r[1], r[2], r[3]);
-	lambda3d_BPT<interval_number, interval_number, interval_number>(p, q, r, u, v, dfilter_lambda_x, dfilter_lambda_y, dfilter_lambda_z, dfilter_denominator);
+	lambda3d_BPT<NFG::interval_number, NFG::interval_number, NFG::interval_number>(p, q, r, u, v, dfilter_lambda_x, dfilter_lambda_y, dfilter_lambda_z, dfilter_denominator);
 #ifndef NO_CASCADED_IMPLICIT_POINTS
 	if (dfilter_denominator.isNegative()) {
 		dfilter_lambda_x.negate();
@@ -993,7 +995,7 @@ inline implicitPoint3D_BPT::implicitPoint3D_BPT(const genericPoint& _p, const ge
 #endif
 }
 
-inline bool implicitPoint3D_TBC::getIntervalLambda(interval_number& lx, interval_number& ly, interval_number& lz, interval_number& d) const
+inline bool implicitPoint3D_TBC::getIntervalLambda(NFG::interval_number& lx, NFG::interval_number& ly, NFG::interval_number& lz, NFG::interval_number& d) const
 {
 	lx = dfilter_lambda_x;
 	ly = dfilter_lambda_y;
@@ -1009,12 +1011,12 @@ inline bool implicitPoint3D_TBC::getIntervalLambda(interval_number& lx, interval
 inline implicitPoint3D_TBC::implicitPoint3D_TBC(const genericPoint& _p, const genericPoint& _q, const genericPoint& _r, const genericPoint& _s)
 	: genericPoint(Point_Type::TBC), ip(_p), iq(_q), ir(_r), is(_s)
 {
-	interval_number p[4], q[4], r[4], s[4];
+	NFG::interval_number p[4], q[4], r[4], s[4];
 	ip.getIntervalLambda(p[0], p[1], p[2], p[3]);
 	iq.getIntervalLambda(q[0], q[1], q[2], q[3]);
 	ir.getIntervalLambda(r[0], r[1], r[2], r[3]);
 	is.getIntervalLambda(s[0], s[1], s[2], s[3]);
-	lambda3d_TBC<interval_number, interval_number>(p, q, r, s, dfilter_lambda_x, dfilter_lambda_y, dfilter_lambda_z, dfilter_denominator);
+	lambda3d_TBC<NFG::interval_number, NFG::interval_number>(p, q, r, s, dfilter_lambda_x, dfilter_lambda_y, dfilter_lambda_z, dfilter_denominator);
 #ifndef NO_CASCADED_IMPLICIT_POINTS
 	if (dfilter_denominator.isNegative()) {
 		dfilter_lambda_x.negate();
@@ -1026,7 +1028,7 @@ inline implicitPoint3D_TBC::implicitPoint3D_TBC(const genericPoint& _p, const ge
 }
 
 
-inline void genericPoint::getExpansionLambda(expansion& lx, expansion& ly, expansion& d) const {
+inline void genericPoint::getExpansionLambda(NFG::expansion& lx, NFG::expansion& ly, NFG::expansion& d) const {
 	if (isExplicit2D()) {
 		const explicitPoint2D& e = toExplicit2D();
 		lx = e.X(), ly = e.Y(), d = 1;
@@ -1037,7 +1039,7 @@ inline void genericPoint::getExpansionLambda(expansion& lx, expansion& ly, expan
 	}
 }
 
-inline void genericPoint::getExpansionLambda(expansion& lx, expansion& ly, expansion& lz, expansion& d) const {
+inline void genericPoint::getExpansionLambda(NFG::expansion& lx, NFG::expansion& ly, NFG::expansion& lz, NFG::expansion& d) const {
 	if (isExplicit3D()) {
 		const explicitPoint3D& e = toExplicit3D();
 		lx = e.X(), ly = e.Y(), lz = e.Z(), d = 1;
@@ -1052,22 +1054,22 @@ inline void genericPoint::getExpansionLambda(expansion& lx, expansion& ly, expan
 	}
 }
 
-inline void implicitPoint2D_SSI::getExpansionLambda(expansion& lx, expansion& ly, expansion& d) const
+inline void implicitPoint2D_SSI::getExpansionLambda(NFG::expansion& lx, NFG::expansion& ly, NFG::expansion& d) const
 {
 	if (l1_1.isExplicit2D() && l1_2.isExplicit2D() && l2_1.isExplicit2D() && l2_2.isExplicit2D()) {
 		const explicitPoint2D& p1 = l1_1.toExplicit2D(), & p2 = l1_2.toExplicit2D();
 		const explicitPoint2D& q1 = l2_1.toExplicit2D(), & q2 = l2_2.toExplicit2D();
-		const s_expansion l1[3] = { p1.X(), p1.Y(), 1 }, l2[3] = { p2.X(), p2.Y(), 1 };
-		const s_expansion m1[3] = { q1.X(), q1.Y(), 1 }, m2[3] = { q2.X(), q2.Y(), 1 };
-		lambda2d_SSI<s_expansion, expansion>(l1, l2, m1, m2, lx, ly, d);
+		const NFG::s_expansion l1[3] = { p1.X(), p1.Y(), 1 }, l2[3] = { p2.X(), p2.Y(), 1 };
+		const NFG::s_expansion m1[3] = { q1.X(), q1.Y(), 1 }, m2[3] = { q2.X(), q2.Y(), 1 };
+		lambda2d_SSI<NFG::s_expansion, NFG::expansion>(l1, l2, m1, m2, lx, ly, d);
 	}
 	else {
-		expansion l1[3], l2[3], m1[3], m2[3];
+		NFG::expansion l1[3], l2[3], m1[3], m2[3];
 		l1_1.getExpansionLambda(l1[0], l1[1], l1[2]);
 		l1_2.getExpansionLambda(l2[0], l2[1], l2[2]);
 		l2_1.getExpansionLambda(m1[0], m1[1], m1[2]);
 		l2_2.getExpansionLambda(m2[0], m2[1], m2[2]);
-		lambda2d_SSI<expansion, expansion>(l1, l2, m1, m2, lx, ly, d);
+		lambda2d_SSI<NFG::expansion, NFG::expansion>(l1, l2, m1, m2, lx, ly, d);
 	}
 	if (sgn(d) < 0)
 	{
@@ -1085,26 +1087,26 @@ inline void implicitPoint2D_SSI::getExpansionLambda(expansion& lx, expansion& ly
 
 
 
-inline void implicitPoint3D_LPI::getExpansionLambda(expansion& lx, expansion& ly, expansion& lz, expansion& d) const
+inline void implicitPoint3D_LPI::getExpansionLambda(NFG::expansion& lx, NFG::expansion& ly, NFG::expansion& lz, NFG::expansion& d) const
 {
 	if (ip.isExplicit3D() && iq.isExplicit3D() && ir.isExplicit3D() && is.isExplicit3D() && it.isExplicit3D()) {
 		const explicitPoint3D& ep = ip.toExplicit3D(), & eq = iq.toExplicit3D(), & er = ir.toExplicit3D();
 		const explicitPoint3D& es = is.toExplicit3D(), & et = it.toExplicit3D();
-		const s_expansion p[4] = { ep.X(), ep.Y(), ep.Z(), 1 };
-		const s_expansion q[4] = { eq.X(), eq.Y(), eq.Z(), 1 };
-		const s_expansion r[4] = { er.X(), er.Y(), er.Z(), 1 };
-		const s_expansion s[4] = { es.X(), es.Y(), es.Z(), 1 };
-		const s_expansion t[4] = { et.X(), et.Y(), et.Z(), 1 };
-		lambda3d_LPI<s_expansion, expansion>(p, q, r, s, t, lx, ly, lz, d);
+		const NFG::s_expansion p[4] = { ep.X(), ep.Y(), ep.Z(), 1 };
+		const NFG::s_expansion q[4] = { eq.X(), eq.Y(), eq.Z(), 1 };
+		const NFG::s_expansion r[4] = { er.X(), er.Y(), er.Z(), 1 };
+		const NFG::s_expansion s[4] = { es.X(), es.Y(), es.Z(), 1 };
+		const NFG::s_expansion t[4] = { et.X(), et.Y(), et.Z(), 1 };
+		lambda3d_LPI<NFG::s_expansion, NFG::expansion>(p, q, r, s, t, lx, ly, lz, d);
 	}
 	else {
-		expansion p[4], q[4], r[4], s[4], t[4];
+		NFG::expansion p[4], q[4], r[4], s[4], t[4];
 		ip.getExpansionLambda(p[0], p[1], p[2], p[3]);
 		iq.getExpansionLambda(q[0], q[1], q[2], q[3]);
 		ir.getExpansionLambda(r[0], r[1], r[2], r[3]);
 		is.getExpansionLambda(s[0], s[1], s[2], s[3]);
 		it.getExpansionLambda(t[0], t[1], t[2], t[3]);
-		lambda3d_LPI<expansion, expansion>(p, q, r, s, t, lx, ly, lz, d);
+		lambda3d_LPI<NFG::expansion, NFG::expansion>(p, q, r, s, t, lx, ly, lz, d);
 	}
 	if (sgn(d) < 0)
 	{
@@ -1115,7 +1117,7 @@ inline void implicitPoint3D_LPI::getExpansionLambda(expansion& lx, expansion& ly
 	}
 }
 
-inline void implicitPoint3D_TPI::getExpansionLambda(expansion& lx, expansion& ly, expansion& lz, expansion& d) const
+inline void implicitPoint3D_TPI::getExpansionLambda(NFG::expansion& lx, NFG::expansion& ly, NFG::expansion& lz, NFG::expansion& d) const
 {
 	if (iv1.isExplicit3D() && iv2.isExplicit3D() && iv3.isExplicit3D() && 
 		iw1.isExplicit3D() && iw2.isExplicit3D() && iw3.isExplicit3D() &&
@@ -1123,19 +1125,19 @@ inline void implicitPoint3D_TPI::getExpansionLambda(expansion& lx, expansion& ly
 		const explicitPoint3D& ev1 = iv1.toExplicit3D(), & ev2 = iv2.toExplicit3D(), & ev3 = iv3.toExplicit3D();
 		const explicitPoint3D& ew1 = iw1.toExplicit3D(), & ew2 = iw2.toExplicit3D(), & ew3 = iw3.toExplicit3D();
 		const explicitPoint3D& eu1 = iu1.toExplicit3D(), & eu2 = iu2.toExplicit3D(), & eu3 = iu3.toExplicit3D();
-		const s_expansion v1[4] = { ev1.X(), ev1.Y(), ev1.Z(), 1 };
-		const s_expansion v2[4] = { ev2.X(), ev2.Y(), ev2.Z(), 1 };
-		const s_expansion v3[4] = { ev3.X(), ev3.Y(), ev3.Z(), 1 };
-		const s_expansion w1[4] = { ew1.X(), ew1.Y(), ew1.Z(), 1 };
-		const s_expansion w2[4] = { ew2.X(), ew2.Y(), ew2.Z(), 1 };
-		const s_expansion w3[4] = { ew3.X(), ew3.Y(), ew3.Z(), 1 };
-		const s_expansion u1[4] = { eu1.X(), eu1.Y(), eu1.Z(), 1 };
-		const s_expansion u2[4] = { eu2.X(), eu2.Y(), eu2.Z(), 1 };
-		const s_expansion u3[4] = { eu3.X(), eu3.Y(), eu3.Z(), 1 };
-		lambda3d_TPI<s_expansion, expansion>(v1, v2, v3, w1, w2, w3, u1, u2, u3, lx, ly, lz, d);
+		const NFG::s_expansion v1[4] = { ev1.X(), ev1.Y(), ev1.Z(), 1 };
+		const NFG::s_expansion v2[4] = { ev2.X(), ev2.Y(), ev2.Z(), 1 };
+		const NFG::s_expansion v3[4] = { ev3.X(), ev3.Y(), ev3.Z(), 1 };
+		const NFG::s_expansion w1[4] = { ew1.X(), ew1.Y(), ew1.Z(), 1 };
+		const NFG::s_expansion w2[4] = { ew2.X(), ew2.Y(), ew2.Z(), 1 };
+		const NFG::s_expansion w3[4] = { ew3.X(), ew3.Y(), ew3.Z(), 1 };
+		const NFG::s_expansion u1[4] = { eu1.X(), eu1.Y(), eu1.Z(), 1 };
+		const NFG::s_expansion u2[4] = { eu2.X(), eu2.Y(), eu2.Z(), 1 };
+		const NFG::s_expansion u3[4] = { eu3.X(), eu3.Y(), eu3.Z(), 1 };
+		lambda3d_TPI<NFG::s_expansion, NFG::expansion>(v1, v2, v3, w1, w2, w3, u1, u2, u3, lx, ly, lz, d);
 	}
 	else {
-		expansion v1[4], v2[4], v3[4], w1[4], w2[4], w3[4], u1[4], u2[4], u3[4];
+		NFG::expansion v1[4], v2[4], v3[4], w1[4], w2[4], w3[4], u1[4], u2[4], u3[4];
 		iv1.getExpansionLambda(v1[0], v1[1], v1[2], v1[3]);
 		iv2.getExpansionLambda(v2[0], v2[1], v2[2], v2[3]);
 		iv3.getExpansionLambda(v3[0], v3[1], v3[2], v3[3]);
@@ -1145,7 +1147,7 @@ inline void implicitPoint3D_TPI::getExpansionLambda(expansion& lx, expansion& ly
 		iu1.getExpansionLambda(u1[0], u1[1], u1[2], u1[3]);
 		iu2.getExpansionLambda(u2[0], u2[1], u2[2], u2[3]);
 		iu3.getExpansionLambda(u3[0], u3[1], u3[2], u3[3]);
-		lambda3d_TPI<expansion, expansion>(v1, v2, v3, w1, w2, w3, u1, u2, u3, lx, ly, lz, d);
+		lambda3d_TPI<NFG::expansion, NFG::expansion>(v1, v2, v3, w1, w2, w3, u1, u2, u3, lx, ly, lz, d);
 	}
 	if (sgn(d) < 0)
 	{
@@ -1156,57 +1158,57 @@ inline void implicitPoint3D_TPI::getExpansionLambda(expansion& lx, expansion& ly
 	}
 }
 
-inline void implicitPoint3D_LNC::getExpansionLambda(expansion& lx, expansion& ly, expansion& lz, expansion& d) const
+inline void implicitPoint3D_LNC::getExpansionLambda(NFG::expansion& lx, NFG::expansion& ly, NFG::expansion& lz, NFG::expansion& d) const
 {
 	if (ip.isExplicit3D() && iq.isExplicit3D()) {
 		const explicitPoint3D& ep = ip.toExplicit3D(), & eq = iq.toExplicit3D();
-		const s_expansion p[4] = { ep.X(), ep.Y(), ep.Z(), 1 };
-		const s_expansion q[4] = { eq.X(), eq.Y(), eq.Z(), 1 };
-		lambda3d_LNC<s_expansion, s_expansion, expansion>(p, q, T(), lx, ly, lz, d);
+		const NFG::s_expansion p[4] = { ep.X(), ep.Y(), ep.Z(), 1 };
+		const NFG::s_expansion q[4] = { eq.X(), eq.Y(), eq.Z(), 1 };
+		lambda3d_LNC<NFG::s_expansion, NFG::s_expansion, NFG::expansion>(p, q, T(), lx, ly, lz, d);
 	}
 	else {
-		expansion p[4], q[4];
+		NFG::expansion p[4], q[4];
 		ip.getExpansionLambda(p[0], p[1], p[2], p[3]);
 		iq.getExpansionLambda(q[0], q[1], q[2], q[3]);
-		lambda3d_LNC<expansion, s_expansion, expansion>(p, q, T(), lx, ly, lz, d);
+		lambda3d_LNC<NFG::expansion, NFG::s_expansion, NFG::expansion>(p, q, T(), lx, ly, lz, d);
 	}
 }
 
-inline void implicitPoint3D_BPT::getExpansionLambda(expansion& lx, expansion& ly, expansion& lz, expansion& d) const
+inline void implicitPoint3D_BPT::getExpansionLambda(NFG::expansion& lx, NFG::expansion& ly, NFG::expansion& lz, NFG::expansion& d) const
 {
 	if (ip.isExplicit3D() && iq.isExplicit3D() && ir.isExplicit3D()) {
 		const explicitPoint3D& ep = ip.toExplicit3D(), & eq = iq.toExplicit3D(), & er = ir.toExplicit3D();
-		const s_expansion p[4] = { ep.X(), ep.Y(), ep.Z(), 1 };
-		const s_expansion q[4] = { eq.X(), eq.Y(), eq.Z(), 1 };
-		const s_expansion r[4] = { er.X(), er.Y(), er.Z(), 1 };
-		lambda3d_BPT<s_expansion, s_expansion, expansion>(p, q, r, U(), V(), lx, ly, lz, d);
+		const NFG::s_expansion p[4] = { ep.X(), ep.Y(), ep.Z(), 1 };
+		const NFG::s_expansion q[4] = { eq.X(), eq.Y(), eq.Z(), 1 };
+		const NFG::s_expansion r[4] = { er.X(), er.Y(), er.Z(), 1 };
+		lambda3d_BPT<NFG::s_expansion, NFG::s_expansion, NFG::expansion>(p, q, r, U(), V(), lx, ly, lz, d);
 	}
 	else {
-		expansion p[4], q[4], r[4];
+		NFG::expansion p[4], q[4], r[4];
 		ip.getExpansionLambda(p[0], p[1], p[2], p[3]);
 		iq.getExpansionLambda(q[0], q[1], q[2], q[3]);
 		ir.getExpansionLambda(r[0], r[1], r[2], r[3]);
-		lambda3d_BPT<expansion, s_expansion, expansion>(p, q, r, U(), V(), lx, ly, lz, d);
+		lambda3d_BPT<NFG::expansion, NFG::s_expansion, NFG::expansion>(p, q, r, U(), V(), lx, ly, lz, d);
 	}
 }
 
-inline void implicitPoint3D_TBC::getExpansionLambda(expansion& lx, expansion& ly, expansion& lz, expansion& d) const
+inline void implicitPoint3D_TBC::getExpansionLambda(NFG::expansion& lx, NFG::expansion& ly, NFG::expansion& lz, NFG::expansion& d) const
 {
 	if (ip.isExplicit3D() && iq.isExplicit3D() && ir.isExplicit3D() && is.isExplicit3D()) {
 		const explicitPoint3D& ep = ip.toExplicit3D(), & eq = iq.toExplicit3D(), & er = ir.toExplicit3D(), & es = is.toExplicit3D();
-		const s_expansion p[4] = { ep.X(), ep.Y(), ep.Z(), 1 };
-		const s_expansion q[4] = { eq.X(), eq.Y(), eq.Z(), 1 };
-		const s_expansion r[4] = { er.X(), er.Y(), er.Z(), 1 };
-		const s_expansion s[4] = { es.X(), es.Y(), es.Z(), 1 };
-		lambda3d_TBC<s_expansion, expansion>(p, q, r, s, lx, ly, lz, d);
+		const NFG::s_expansion p[4] = { ep.X(), ep.Y(), ep.Z(), 1 };
+		const NFG::s_expansion q[4] = { eq.X(), eq.Y(), eq.Z(), 1 };
+		const NFG::s_expansion r[4] = { er.X(), er.Y(), er.Z(), 1 };
+		const NFG::s_expansion s[4] = { es.X(), es.Y(), es.Z(), 1 };
+		lambda3d_TBC<NFG::s_expansion, NFG::expansion>(p, q, r, s, lx, ly, lz, d);
 	}
 	else {
-		expansion p[4], q[4], r[4], s[4];
+		NFG::expansion p[4], q[4], r[4], s[4];
 		ip.getExpansionLambda(p[0], p[1], p[2], p[3]);
 		iq.getExpansionLambda(q[0], q[1], q[2], q[3]);
 		ir.getExpansionLambda(r[0], r[1], r[2], r[3]);
 		is.getExpansionLambda(s[0], s[1], s[2], s[3]);
-		lambda3d_TBC<expansion, expansion>(p, q, r, s, lx, ly, lz, d);
+		lambda3d_TBC<NFG::expansion, NFG::expansion>(p, q, r, s, lx, ly, lz, d);
 	}
 }
 
@@ -1223,14 +1225,14 @@ inline void implicitPoint3D_TBC::getExpansionLambda(expansion& lx, expansion& ly
 
 
 
-inline void implicitPoint2D_SSI::getBigfloatLambda(bigfloat& lx, bigfloat& ly, bigfloat& d) const
+inline void implicitPoint2D_SSI::getBigfloatLambda(NFG::bigfloat& lx, NFG::bigfloat& ly, NFG::bigfloat& d) const
 {
-	bigfloat l1[3], l2[3], m1[3], m2[3];
+	NFG::bigfloat l1[3], l2[3], m1[3], m2[3];
 	l1_1.getBigfloatLambda(l1[0], l1[1], l1[2]);
 	l1_2.getBigfloatLambda(l2[0], l2[1], l2[2]);
 	l2_1.getBigfloatLambda(m1[0], m1[1], m1[2]);
 	l2_2.getBigfloatLambda(m2[0], m2[1], m2[2]);
-	lambda2d_SSI<bigfloat, bigfloat>(l1, l2, m1, m2, lx, ly, d);
+	lambda2d_SSI<NFG::bigfloat, NFG::bigfloat>(l1, l2, m1, m2, lx, ly, d);
 	if (sgn(d) < 0)
 	{
 		lx = -lx;
@@ -1239,15 +1241,15 @@ inline void implicitPoint2D_SSI::getBigfloatLambda(bigfloat& lx, bigfloat& ly, b
 	}
 }
 
-inline void implicitPoint3D_LPI::getBigfloatLambda(bigfloat& lx, bigfloat& ly, bigfloat& lz, bigfloat& d) const
+inline void implicitPoint3D_LPI::getBigfloatLambda(NFG::bigfloat& lx, NFG::bigfloat& ly, NFG::bigfloat& lz, NFG::bigfloat& d) const
 {
-	bigfloat p[4], q[4], r[4], s[4], t[4];
+	NFG::bigfloat p[4], q[4], r[4], s[4], t[4];
 	ip.getBigfloatLambda(p[0], p[1], p[2], p[3]);
 	iq.getBigfloatLambda(q[0], q[1], q[2], q[3]);
 	ir.getBigfloatLambda(r[0], r[1], r[2], r[3]);
 	is.getBigfloatLambda(s[0], s[1], s[2], s[3]);
 	it.getBigfloatLambda(t[0], t[1], t[2], t[3]);
-	lambda3d_LPI<bigfloat, bigfloat>(p, q, r, s, t, lx, ly, lz, d);
+	lambda3d_LPI<NFG::bigfloat, NFG::bigfloat>(p, q, r, s, t, lx, ly, lz, d);
 	if (sgn(d) < 0)
 	{
 		lx = -lx;
@@ -1257,9 +1259,9 @@ inline void implicitPoint3D_LPI::getBigfloatLambda(bigfloat& lx, bigfloat& ly, b
 	}
 }
 
-inline void implicitPoint3D_TPI::getBigfloatLambda(bigfloat& lx, bigfloat& ly, bigfloat& lz, bigfloat& d) const
+inline void implicitPoint3D_TPI::getBigfloatLambda(NFG::bigfloat& lx, NFG::bigfloat& ly, NFG::bigfloat& lz, NFG::bigfloat& d) const
 {
-	bigfloat v1[4], v2[4], v3[4], w1[4], w2[4], w3[4], u1[4], u2[4], u3[4];
+	NFG::bigfloat v1[4], v2[4], v3[4], w1[4], w2[4], w3[4], u1[4], u2[4], u3[4];
 	iv1.getBigfloatLambda(v1[0], v1[1], v1[2], v1[3]);
 	iv2.getBigfloatLambda(v2[0], v2[1], v2[2], v2[3]);
 	iv3.getBigfloatLambda(v3[0], v3[1], v3[2], v3[3]);
@@ -1270,7 +1272,7 @@ inline void implicitPoint3D_TPI::getBigfloatLambda(bigfloat& lx, bigfloat& ly, b
 	iu2.getBigfloatLambda(u2[0], u2[1], u2[2], u2[3]);
 	iu3.getBigfloatLambda(u3[0], u3[1], u3[2], u3[3]);
 
-	lambda3d_TPI<bigfloat, bigfloat>(v1, v2, v3, w1, w2, w3, u1, u2, u3, lx, ly, lz, d);
+	lambda3d_TPI<NFG::bigfloat, NFG::bigfloat>(v1, v2, v3, w1, w2, w3, u1, u2, u3, lx, ly, lz, d);
 	if (sgn(d) < 0)
 	{
 		lx = -lx;
@@ -1280,31 +1282,31 @@ inline void implicitPoint3D_TPI::getBigfloatLambda(bigfloat& lx, bigfloat& ly, b
 	}
 }
 
-inline void implicitPoint3D_LNC::getBigfloatLambda(bigfloat& lx, bigfloat& ly, bigfloat& lz, bigfloat& d) const
+inline void implicitPoint3D_LNC::getBigfloatLambda(NFG::bigfloat& lx, NFG::bigfloat& ly, NFG::bigfloat& lz, NFG::bigfloat& d) const
 {
-	bigfloat p[4], q[4];
+	NFG::bigfloat p[4], q[4];
 	ip.getBigfloatLambda(p[0], p[1], p[2], p[3]);
 	iq.getBigfloatLambda(q[0], q[1], q[2], q[3]);
-	lambda3d_LNC<bigfloat, bigfloat, bigfloat>(p, q, T(), lx, ly, lz, d);
+	lambda3d_LNC<NFG::bigfloat, NFG::bigfloat, NFG::bigfloat>(p, q, T(), lx, ly, lz, d);
 }
 
-inline void implicitPoint3D_BPT::getBigfloatLambda(bigfloat& lx, bigfloat& ly, bigfloat& lz, bigfloat& d) const
+inline void implicitPoint3D_BPT::getBigfloatLambda(NFG::bigfloat& lx, NFG::bigfloat& ly, NFG::bigfloat& lz, NFG::bigfloat& d) const
 {
-	bigfloat p[4], q[4], r[4];
+	NFG::bigfloat p[4], q[4], r[4];
 	ip.getBigfloatLambda(p[0], p[1], p[2], p[3]);
 	iq.getBigfloatLambda(q[0], q[1], q[2], q[3]);
 	ir.getBigfloatLambda(r[0], r[1], r[2], r[3]);
-	lambda3d_BPT<bigfloat, bigfloat, bigfloat>(p, q, r, U(), V(), lx, ly, lz, d);
+	lambda3d_BPT<NFG::bigfloat, NFG::bigfloat, NFG::bigfloat>(p, q, r, U(), V(), lx, ly, lz, d);
 }
 
-inline void implicitPoint3D_TBC::getBigfloatLambda(bigfloat& lx, bigfloat& ly, bigfloat& lz, bigfloat& d) const
+inline void implicitPoint3D_TBC::getBigfloatLambda(NFG::bigfloat& lx, NFG::bigfloat& ly, NFG::bigfloat& lz, NFG::bigfloat& d) const
 {
-	bigfloat p[4], q[4], r[4], s[4];
+	NFG::bigfloat p[4], q[4], r[4], s[4];
 	ip.getBigfloatLambda(p[0], p[1], p[2], p[3]);
 	iq.getBigfloatLambda(q[0], q[1], q[2], q[3]);
 	ir.getBigfloatLambda(r[0], r[1], r[2], r[3]);
 	is.getBigfloatLambda(s[0], s[1], s[2], s[3]);
-	lambda3d_TBC<bigfloat, bigfloat>(p, q, r, s, lx, ly, lz, d);
+	lambda3d_TBC<NFG::bigfloat, NFG::bigfloat>(p, q, r, s, lx, ly, lz, d);
 }
 
 
@@ -1312,7 +1314,7 @@ inline bool genericPoint::apapExplicit(explicitPoint2D& e) const
 {
 	if (isExplicit2D()) e = toExplicit2D();
 	else {
-		bigfloat l1x, l1y, d1;
+		NFG::bigfloat l1x, l1y, d1;
 		getBigfloatLambda(l1x, l1y, d1);
 		const double lambda_x = l1x.get_d();
 		const double lambda_y = l1y.get_d();
@@ -1328,7 +1330,7 @@ inline bool genericPoint::approxExplicit(explicitPoint2D& e) const
 	if (isExplicit2D()) e = toExplicit2D();
 	else {
 		double lambda_x, lambda_y, lambda_d;
-		interval_number ilx, ily, id;
+		NFG::interval_number ilx, ily, id;
 		if (!getIntervalLambda(ilx, ily, id)) return apapExplicit(e);
 		else
 		{
@@ -1345,7 +1347,7 @@ inline bool genericPoint::apapExplicit(explicitPoint3D& e) const
 {
 	if (isExplicit3D()) e = toExplicit3D();
 	else {
-		bigfloat l1z, l1x, l1y, d1;
+		NFG::bigfloat l1z, l1x, l1y, d1;
 		getBigfloatLambda(l1x, l1y, l1z, d1);
 		const double lambda_x = l1x.get_d();
 		const double lambda_y = l1y.get_d();
@@ -1363,7 +1365,7 @@ inline bool genericPoint::approxExplicit(explicitPoint3D& e) const
 	if (isExplicit3D()) e = toExplicit3D();
 	else {
 		double lambda_x, lambda_y, lambda_z, lambda_d;
-		interval_number ilx, ily, ilz, id;
+		NFG::interval_number ilx, ily, ilz, id;
 		if (!getIntervalLambda(ilx, ily, ilz, id)) return apapExplicit(e);
 		else
 		{
@@ -1396,7 +1398,7 @@ inline bool genericPoint::getApproxXYCoordinates(double& x, double& y, bool apap
 		x = op.X(); y = op.Y();
 		return true;
 	}
-	ip_error("genericPoint::getApproxXYCoordinates - should not happen\n");
+	NFG::ip_error("genericPoint::getApproxXYCoordinates - should not happen\n");
 	return false;
 }
 
@@ -1410,19 +1412,19 @@ inline bool genericPoint::getApproxXYZCoordinates(double& x, double& y, double& 
 		x = op.X(); y = op.Y(); z = op.Z();
 		return true;
 	}
-	ip_error("genericPoint::getApproxXYZCoordinates - should not happen\n");
+	NFG::ip_error("genericPoint::getApproxXYZCoordinates - should not happen\n");
 	return false;
 }
 
-inline bool genericPoint::getExactXYCoordinates(bigrational& x, bigrational& y) const
+inline bool genericPoint::getExactXYCoordinates(NFG::bigrational& x, NFG::bigrational& y) const
 {
 	if (isExplicit2D()) return toExplicit2D().getExactXYCoordinates(x, y);
 	else if (isSSI()) return toSSI().getExactXYCoordinates(x, y);
-	else ip_error("genericPoint::getExactXYCoordinates - should not happen\n");
+	else NFG::ip_error("genericPoint::getExactXYCoordinates - should not happen\n");
 	return false;
 }
 
-inline bool genericPoint::getExactXYZCoordinates(bigrational& x, bigrational& y, bigrational& z) const
+inline bool genericPoint::getExactXYZCoordinates(NFG::bigrational& x, NFG::bigrational& y, NFG::bigrational& z) const
 {
 	if (isExplicit3D()) return toExplicit3D().getExactXYZCoordinates(x, y, z);
 	else if (isLPI()) return toLPI().getExactXYZCoordinates(x, y, z);
@@ -1430,97 +1432,97 @@ inline bool genericPoint::getExactXYZCoordinates(bigrational& x, bigrational& y,
 	else if (isLNC()) return toLNC().getExactXYZCoordinates(x, y, z);
 	else if (isBPT()) return toBPT().getExactXYZCoordinates(x, y, z);
 	else if (isTBC()) return toTBC().getExactXYZCoordinates(x, y, z);
-	else if (isExplicit2D()) { z = bigfloat(0); return toExplicit2D().getExactXYCoordinates(x, y); }
-	else if (isSSI()) { z = bigfloat(0); return toSSI().getExactXYCoordinates(x, y); }
-	else ip_error("genericPoint::getExactXYZCoordinates - should not happen\n");
+	else if (isExplicit2D()) { z = NFG::bigfloat(0); return toExplicit2D().getExactXYCoordinates(x, y); }
+	else if (isSSI()) { z = NFG::bigfloat(0); return toSSI().getExactXYCoordinates(x, y); }
+	else NFG::ip_error("genericPoint::getExactXYZCoordinates - should not happen\n");
 	return false;
 }
 
-inline bool implicitPoint2D_SSI::getExactXYCoordinates(bigrational& x, bigrational& y) const
+inline bool implicitPoint2D_SSI::getExactXYCoordinates(NFG::bigrational& x, NFG::bigrational& y) const
 {
-	bigfloat lx, ly, d;
+	NFG::bigfloat lx, ly, d;
 	getBigfloatLambda(lx, ly, d);
 	if (sgn(d) == 0) return false;
-	const bigrational rd(d);
-	x = bigrational(lx) / rd;
-	y = bigrational(ly) / rd;
+	const NFG::bigrational rd(d);
+	x = NFG::bigrational(lx) / rd;
+	y = NFG::bigrational(ly) / rd;
 	return true;
 }
 
-inline bool implicitPoint3D_LPI::getExactXYZCoordinates(bigrational& x, bigrational& y, bigrational& z) const
+inline bool implicitPoint3D_LPI::getExactXYZCoordinates(NFG::bigrational& x, NFG::bigrational& y, NFG::bigrational& z) const
 {
-	bigfloat lx, ly, lz, d;
+	NFG::bigfloat lx, ly, lz, d;
 	getBigfloatLambda(lx, ly, lz, d);
 	if (sgn(d) == 0) return false;
-	const bigrational rd(d);
-	x = bigrational(lx) / rd;
-	y = bigrational(ly) / rd;
-	z = bigrational(lz) / rd;
+	const NFG::bigrational rd(d);
+	x = NFG::bigrational(lx) / rd;
+	y = NFG::bigrational(ly) / rd;
+	z = NFG::bigrational(lz) / rd;
 	return true;
 }
 
-inline bool implicitPoint3D_TPI::getExactXYZCoordinates(bigrational& x, bigrational& y, bigrational& z) const
+inline bool implicitPoint3D_TPI::getExactXYZCoordinates(NFG::bigrational& x, NFG::bigrational& y, NFG::bigrational& z) const
 {
-	bigfloat lx, ly, lz, d;
+	NFG::bigfloat lx, ly, lz, d;
 	getBigfloatLambda(lx, ly, lz, d);
 	if (sgn(d) == 0) return false;
-	const bigrational rd(d);
-	x = bigrational(lx) / rd;
-	y = bigrational(ly) / rd;
-	z = bigrational(lz) / rd;
+	const NFG::bigrational rd(d);
+	x = NFG::bigrational(lx) / rd;
+	y = NFG::bigrational(ly) / rd;
+	z = NFG::bigrational(lz) / rd;
 	return true;
 }
 
-inline bool implicitPoint3D_LNC::getExactXYZCoordinates(bigrational& x, bigrational& y, bigrational& z) const
+inline bool implicitPoint3D_LNC::getExactXYZCoordinates(NFG::bigrational& x, NFG::bigrational& y, NFG::bigrational& z) const
 {
-	bigfloat lx, ly, lz, d;
+	NFG::bigfloat lx, ly, lz, d;
 	getBigfloatLambda(lx, ly, lz, d);
 #ifndef NO_CASCADED_IMPLICIT_POINTS
 	if (sgn(d) == 0) return false;
-	const bigrational rd(d);
-	x = bigrational(lx) / rd;
-	y = bigrational(ly) / rd;
-	z = bigrational(lz) / rd;
+	const NFG::bigrational rd(d);
+	x = NFG::bigrational(lx) / rd;
+	y = NFG::bigrational(ly) / rd;
+	z = NFG::bigrational(lz) / rd;
 #else
-	x = bigrational(lx);
-	y = bigrational(ly);
-	z = bigrational(lz);
+	x = NFG::bigrational(lx);
+	y = NFG::bigrational(ly);
+	z = NFG::bigrational(lz);
 #endif
 	return true;
 }
 
-inline bool implicitPoint3D_BPT::getExactXYZCoordinates(bigrational& x, bigrational& y, bigrational& z) const
+inline bool implicitPoint3D_BPT::getExactXYZCoordinates(NFG::bigrational& x, NFG::bigrational& y, NFG::bigrational& z) const
 {
-	bigfloat lx, ly, lz, d;
+	NFG::bigfloat lx, ly, lz, d;
 	getBigfloatLambda(lx, ly, lz, d);
 #ifndef NO_CASCADED_IMPLICIT_POINTS
 	if (sgn(d) == 0) return false;
-	const bigrational rd(d);
-	x = bigrational(lx) / rd;
-	y = bigrational(ly) / rd;
-	z = bigrational(lz) / rd;
+	const NFG::bigrational rd(d);
+	x = NFG::bigrational(lx) / rd;
+	y = NFG::bigrational(ly) / rd;
+	z = NFG::bigrational(lz) / rd;
 #else
-	x = bigrational(lx);
-	y = bigrational(ly);
-	z = bigrational(lz);
+	x = NFG::bigrational(lx);
+	y = NFG::bigrational(ly);
+	z = NFG::bigrational(lz);
 #endif
 	return true;
 }
 
-inline bool implicitPoint3D_TBC::getExactXYZCoordinates(bigrational& x, bigrational& y, bigrational& z) const
+inline bool implicitPoint3D_TBC::getExactXYZCoordinates(NFG::bigrational& x, NFG::bigrational& y, NFG::bigrational& z) const
 {
-	bigfloat lx, ly, lz, d;
+	NFG::bigfloat lx, ly, lz, d;
 	getBigfloatLambda(lx, ly, lz, d);
 #ifndef NO_CASCADED_IMPLICIT_POINTS
 	if (sgn(d) == 0) return false;
-	const bigrational rd(d);
-	x = bigrational(lx) / rd;
-	y = bigrational(ly) / rd;
-	z = bigrational(lz) / rd;
+	const NFG::bigrational rd(d);
+	x = NFG::bigrational(lx) / rd;
+	y = NFG::bigrational(ly) / rd;
+	z = NFG::bigrational(lz) / rd;
 #else
-	x = bigrational(lx);
-	y = bigrational(ly);
-	z = bigrational(lz);
+	x = NFG::bigrational(lx);
+	y = NFG::bigrational(ly);
+	z = NFG::bigrational(lz);
 #endif
 	return true;
 }
@@ -1535,7 +1537,7 @@ inline ostream& operator<<(ostream& os, const genericPoint& p)
 	else if (p.isLNC()) return os << p.toLNC();
 	else if (p.isBPT()) return os << p.toBPT();
 	else if (p.isTBC()) return os << p.toTBC();
-	else ip_error("genericPoint::operator<< - should not happen\n");
+	else NFG::ip_error("genericPoint::operator<< - should not happen\n");
 	return os;
 }
 
@@ -1584,7 +1586,7 @@ inline int maxComponentInTriangleNormal_filtered(double ov1x, double ov1y, doubl
 
 inline int maxComponentInTriangleNormal_exact(double ov1x, double ov1y, double ov1z, double ov2x, double ov2y, double ov2z, double ov3x, double ov3y, double ov3z)
 {
-	expansionObject o;
+	NFG::expansionObject o;
 	double v3x[2];
 	o.two_Diff(ov3x, ov2x, v3x);
 	double v3y[2];
@@ -2239,4 +2241,6 @@ inline bool explicitPoint3D::innerSegmentsCross(const explicitPoint3D& A, const 
 
 inline bool explicitPoint3D::segmentsCross(const explicitPoint3D& A, const explicitPoint3D& B, const explicitPoint3D& P, const explicitPoint3D& Q, int xyz) {
 	return segmentsCross_t<explicitPoint3D>(A, B, P, Q, xyz);
+}
+
 }
