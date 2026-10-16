@@ -1390,7 +1390,7 @@ inline bool genericPoint::getApproxXYCoordinates(double& x, double& y, bool apap
 		x = op.X(); y = op.Y();
 		return true;
 	}
-	if (is3D())
+	assert(is3D());
 	{
 		explicitPoint3D op;
 		if (apap && !apapExplicit(op)) return false;
@@ -1404,7 +1404,7 @@ inline bool genericPoint::getApproxXYCoordinates(double& x, double& y, bool apap
 
 inline bool genericPoint::getApproxXYZCoordinates(double& x, double& y, double& z, bool apap) const
 {
-	if (is3D())
+	assert(is3D());
 	{
 		explicitPoint3D op;
 		if (apap && !apapExplicit(op)) return false;
@@ -1419,8 +1419,9 @@ inline bool genericPoint::getApproxXYZCoordinates(double& x, double& y, double& 
 inline bool genericPoint::getExactXYCoordinates(NFG::bigrational& x, NFG::bigrational& y) const
 {
 	if (isExplicit2D()) return toExplicit2D().getExactXYCoordinates(x, y);
-	else if (isSSI()) return toSSI().getExactXYCoordinates(x, y);
-	else NFG::ip_error("genericPoint::getExactXYCoordinates - should not happen\n");
+	assert(isSSI());
+	return toSSI().getExactXYCoordinates(x, y);
+	NFG::ip_error("genericPoint::getExactXYCoordinates - should not happen\n");
 	return false;
 }
 
